@@ -1,7 +1,7 @@
 /**
- * @sonicjs/core - Main Entry Point
+ * @warpcms/core - Main Entry Point
  *
- * Core framework for SonicJS headless CMS
+ * Core framework for WarpCMS headless CMS
  * Built for Cloudflare's edge platform with TypeScript
  *
  * Phase 2 Migration Status:
@@ -20,8 +20,8 @@
 // Main Application API (Phase 2 Week 1)
 // ============================================================================
 
-export { createSonicJSApp, setupCoreMiddleware, setupCoreRoutes } from './app'
-export type { SonicJSConfig, SonicJSApp, Bindings, Variables } from './app'
+export { createWarpCMSApp, createSonicJSApp, setupCoreMiddleware, setupCoreRoutes } from './app'
+export type { WarpCMSConfig, SonicJSConfig, WarpCMSApp, SonicJSApp, Bindings, Variables } from './app'
 
 // ============================================================================
 // Placeholders - To be populated in Phase 2
@@ -111,15 +111,8 @@ export {
   authRoutes,
   adminContentRoutes,
   adminUsersRoutes,
-  adminMediaRoutes,
   adminLogsRoutes,
-  adminPluginRoutes,
-  adminDesignRoutes,
-  adminCheckboxRoutes,
-  adminTestimonialsRoutes,
-  adminCodeExamplesRoutes,
   adminDashboardRoutes,
-  adminCollectionsRoutes,
   adminSettingsRoutes,
 } from './routes'
 
@@ -212,7 +205,9 @@ export {
   // Metrics
   metricsTracker,
   // Version
+  WARPJS_VERSION,
   SONICJS_VERSION,
+  getWarpCMSVersion,
   getCoreVersion,
 } from './utils'
 
@@ -296,9 +291,6 @@ export type {
   NewLogConfig,
 } from './db'
 
-// Plugin SDK (Beta)
-export { PluginBuilder, PluginHelpers } from './plugins/sdk'
-
 // ============================================================================
 // Version
 // ============================================================================
@@ -312,7 +304,7 @@ export const VERSION = packageJson.version
 // ============================================================================
 
 /**
- * This is a work-in-progress package being extracted from the main SonicJS codebase.
+ * This is a work-in-progress package being extracted from the main WarpCMS codebase.
  *
  * Current Phase: 2 (Core Module Migration)
  * Current Week: 1 (Types, Utils, Database)

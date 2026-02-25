@@ -1,18 +1,7 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../alert.template'
-import { renderDynamicField, renderFieldGroup, FieldDefinition } from '../components/dynamic-field.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../confirmation-dialog.template'
-import { getTinyMCEScript, getTinyMCEInitScript } from '../../plugins/available/tinymce-plugin'
-import { getQuillCDN, getQuillInitScript } from '../../plugins/core-plugins/quill-editor'
-import { getMDXEditorScripts, getMDXEditorInitScript } from '../../plugins/available/easy-mdx'
-
-export interface Collection {
-  id: string
-  name: string
-  display_name: string
-  description?: string
-  schema: any
-}
+import type { ContentType, ContentTypeField } from '../../content-types'
 
 export interface ContentFormData {
   id?: string
@@ -20,40 +9,12 @@ export interface ContentFormData {
   slug?: string
   data?: any
   status?: string
-  scheduled_publish_at?: number
-  scheduled_unpublish_at?: number
-  review_status?: string
-  meta_title?: string
-  meta_description?: string
-  collection: Collection
-  fields: FieldDefinition[]
+  contentType: ContentType
   isEdit?: boolean
   error?: string
   success?: string
   validationErrors?: Record<string, string[]>
-  workflowEnabled?: boolean // New flag to indicate if workflow plugin is active
-  tinymceEnabled?: boolean // Flag to indicate if TinyMCE plugin is active
-  tinymceSettings?: {
-    apiKey?: string
-    defaultHeight?: number
-    defaultToolbar?: string
-    skin?: string
-  }
-  quillEnabled?: boolean // Flag to indicate if Quill plugin is active
-  quillSettings?: {
-    version?: string
-    defaultHeight?: number
-    defaultToolbar?: string
-    theme?: string
-  }
-  mdxeditorEnabled?: boolean // Flag to indicate if MDXEditor plugin is active
-  mdxeditorSettings?: {
-    defaultHeight?: number
-    theme?: string
-    toolbar?: string
-    placeholder?: string
-  }
-  referrerParams?: string // URL parameters to preserve filters when returning to list
+  referrerParams?: string
   user?: {
     name: string
     email: string
@@ -62,64 +23,186 @@ export interface ContentFormData {
   version?: string
 }
 
+/** Render a single field based on its ContentTypeField definition */
+function renderField(field: ContentTypeField, value: any, errors?: string[]): string {
+  const errorHTML = errors && errors.length > 0
+    ? `<p class="mt-1 text-sm text-red-600 dark:text-red-400">${errors.join(', ')}</p>`
+    : ''
+  const requiredMark = field.required ? '<span class="text-red-500">*</span>' : ''
+  const helpHTML = field.helpText
+    ? `<p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${field.helpText}</p>`
+    : ''
+
+  const inputClasses = 'w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow'
+
+  switch (field.type) {
+    case 'text':
+      return `
+        <div>
+          <label for="field-${field.name}" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label} ${requiredMark}</label>
+          <div class="mt-2">
+            <input type="text" id="field-${field.name}" name="${field.name}" value="${escapeAttr(String(value || ''))}"
+              placeholder="${escapeAttr(field.placeholder || '')}"
+              ${field.required ? 'required' : ''}
+              class="${inputClasses}"
+            />
+          </div>
+          ${helpHTML}
+          ${errorHTML}
+        </div>
+      `
+
+    case 'textarea':
+      return `
+        <div>
+          <label for="field-${field.name}" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label} ${requiredMark}</label>
+          <div class="mt-2">
+            <textarea id="field-${field.name}" name="${field.name}" rows="8"
+              placeholder="${escapeAttr(field.placeholder || '')}"
+              ${field.required ? 'required' : ''}
+              class="${inputClasses}"
+            >${escapeHtml(String(value || ''))}</textarea>
+          </div>
+          ${helpHTML}
+          ${errorHTML}
+        </div>
+      `
+
+    case 'richtext':
+      return `
+        <div>
+          <label for="field-${field.name}" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label} ${requiredMark}</label>
+          <div class="mt-2">
+            <div id="quill-editor-${field.name}" class="quill-editor bg-white dark:bg-zinc-800 rounded-lg ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10" style="min-height: 300px;"></div>
+            <input type="hidden" id="field-${field.name}" name="${field.name}" value="${escapeAttr(String(value || ''))}">
+          </div>
+          ${helpHTML}
+          ${errorHTML}
+        </div>
+      `
+
+    case 'file':
+      return `
+        <div>
+          <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label} ${requiredMark}</label>
+          <input type="hidden" id="field-${field.name}" name="${field.name}" value="${escapeAttr(String(value || ''))}">
+          <div class="mt-2">
+            <!-- Preview area -->
+            <div id="file-preview-${field.name}" class="${value ? '' : 'hidden'} mb-3">
+              ${value ? renderFilePreview(String(value), field.accept) : ''}
+            </div>
+            <!-- Drop zone -->
+            <div id="dropzone-${field.name}"
+              class="relative rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-600 p-6 text-center hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors cursor-pointer"
+              ondragover="event.preventDefault(); this.classList.add('border-cyan-500', 'bg-cyan-50/50', 'dark:bg-cyan-500/5')"
+              ondragleave="this.classList.remove('border-cyan-500', 'bg-cyan-50/50', 'dark:bg-cyan-500/5')"
+              ondrop="handleFileDrop(event, '${field.name}', '${escapeAttr(field.accept || '')}')"
+              onclick="document.getElementById('file-input-${field.name}').click()"
+            >
+              <svg class="mx-auto h-10 w-10 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <span class="font-semibold text-cyan-600 dark:text-cyan-400">Click to upload</span> or drag and drop
+              </p>
+              <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${field.helpText || 'Any file'}</p>
+              <div id="upload-progress-${field.name}" class="hidden mt-3">
+                <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+                  <div id="upload-bar-${field.name}" class="bg-cyan-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+                <p id="upload-status-${field.name}" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Uploading...</p>
+              </div>
+            </div>
+            <input type="file" id="file-input-${field.name}" class="hidden"
+              ${field.accept ? `accept="${escapeAttr(field.accept)}"` : ''}
+              onchange="handleFileSelect(this, '${field.name}', '${escapeAttr(field.accept || '')}')"
+            />
+            ${value ? `
+              <button type="button" onclick="clearFileField('${field.name}')"
+                class="mt-2 inline-flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Remove file
+              </button>
+            ` : ''}
+          </div>
+          ${errorHTML}
+        </div>
+      `
+
+    case 'tags':
+      const tagsValue = Array.isArray(value) ? value.join(', ') : String(value || '')
+      return `
+        <div>
+          <label for="field-${field.name}" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label}</label>
+          <div class="mt-2">
+            <input type="text" id="field-${field.name}" name="${field.name}" value="${escapeAttr(tagsValue)}"
+              placeholder="${escapeAttr(field.placeholder || 'Comma-separated tags')}"
+              class="${inputClasses}"
+            />
+          </div>
+          <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Separate tags with commas</p>
+          ${errorHTML}
+        </div>
+      `
+
+    default:
+      return ''
+  }
+}
+
+/** Render file preview based on mime type */
+function renderFilePreview(url: string, accept?: string): string {
+  if (!url) return ''
+  const isImage = accept?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url)
+  if (isImage) {
+    return `<img src="${escapeAttr(url)}" alt="Preview" class="h-32 w-32 object-cover rounded-lg ring-1 ring-zinc-950/10 dark:ring-white/10">`
+  }
+  return `
+    <div class="inline-flex items-center gap-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 px-3 py-2 ring-1 ring-zinc-950/10 dark:ring-white/10">
+      <svg class="h-5 w-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="text-sm text-zinc-700 dark:text-zinc-300 truncate max-w-xs">${escapeHtml(url.split('/').pop() || url)}</span>
+    </div>
+  `
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function escapeAttr(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 export function renderContentFormPage(data: ContentFormData): string {
   const isEdit = data.isEdit || !!data.id
-  const title = isEdit ? `Edit: ${data.title || 'Content'}` : `New ${data.collection.display_name}`
+  const ct = data.contentType
+  const title = isEdit ? `Edit: ${data.title || 'Content'}` : `New ${ct.displayName}`
 
-  // Construct back URL with preserved filters
   const backUrl = data.referrerParams
     ? `/admin/content?${data.referrerParams}`
-    : `/admin/content?collection=${data.collection.id}`
+    : `/admin/content?type=${ct.name}`
 
-  // Group fields by category
-  const coreFields = data.fields.filter(f => ['title', 'slug', 'content'].includes(f.field_name))
-  const contentFields = data.fields.filter(f => !['title', 'slug', 'content'].includes(f.field_name) && !f.field_name.startsWith('meta_'))
-  const metaFields = data.fields.filter(f => f.field_name.startsWith('meta_'))
-  
-  // Helper function to get field value - title and slug are stored as columns, others in data JSON
   const getFieldValue = (fieldName: string) => {
     if (fieldName === 'title') return data.title || data.data?.[fieldName] || ''
     if (fieldName === 'slug') return data.slug || data.data?.[fieldName] || ''
     return data.data?.[fieldName] || ''
   }
 
-  // Prepare plugin statuses for field rendering
-  const pluginStatuses = {
-    quillEnabled: data.quillEnabled || false,
-    mdxeditorEnabled: data.mdxeditorEnabled || false,
-    tinymceEnabled: data.tinymceEnabled || false
-  }
+  // Separate fields into groups: core (title), content fields, tag fields
+  const titleField = ct.fields.find(f => f.name === 'title')
+  const contentFields = ct.fields.filter(f => f.name !== 'title' && f.type !== 'tags')
+  const tagFields = ct.fields.filter(f => f.type === 'tags')
 
-  // Render field groups
-  const coreFieldsHTML = coreFields
-    .sort((a, b) => a.field_order - b.field_order)
-    .map(field => renderDynamicField(field, {
-      value: getFieldValue(field.field_name),
-      errors: data.validationErrors?.[field.field_name] || [],
-      pluginStatuses,
-      collectionId: data.collection.id,
-      contentId: data.id // Pass content ID when editing
-    }))
-
-  const contentFieldsHTML = contentFields
-    .sort((a, b) => a.field_order - b.field_order)
-    .map(field => renderDynamicField(field, {
-      value: getFieldValue(field.field_name),
-      errors: data.validationErrors?.[field.field_name] || [],
-      pluginStatuses,
-      collectionId: data.collection.id,
-      contentId: data.id
-    }))
-
-  const metaFieldsHTML = metaFields
-    .sort((a, b) => a.field_order - b.field_order)
-    .map(field => renderDynamicField(field, {
-      value: getFieldValue(field.field_name),
-      errors: data.validationErrors?.[field.field_name] || [],
-      pluginStatuses,
-      collectionId: data.collection.id,
-      contentId: data.id
-    }))
+  const hasRichtext = ct.fields.some(f => f.type === 'richtext')
+  const hasFileUpload = ct.fields.some(f => f.type === 'file')
+  const descriptionText = ct.description || `Manage ${ct.displayName.toLowerCase()} content`
 
   const pageContent = `
     <div class="space-y-6">
@@ -128,7 +211,7 @@ export function renderContentFormPage(data: ContentFormData): string {
         <div>
           <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${isEdit ? 'Edit Content' : 'New Content'}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
-            ${data.collection.description || `Manage ${data.collection.display_name.toLowerCase()} content`}
+            ${descriptionText}
           </p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -146,13 +229,11 @@ export function renderContentFormPage(data: ContentFormData): string {
         <!-- Form Header -->
         <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
           <div class="flex items-center gap-x-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-950/10 dark:ring-white/10">
-              <svg class="h-6 w-6 text-zinc-950 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-              </svg>
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              ${ct.icon}
             </div>
             <div>
-              <h2 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${data.collection.display_name}</h2>
+              <h2 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${ct.displayName}</h2>
               <p class="text-sm/6 text-zinc-500 dark:text-zinc-400">${isEdit ? 'Update your content' : 'Create new content'}</p>
             </div>
           </div>
@@ -175,19 +256,38 @@ export function renderContentFormPage(data: ContentFormData): string {
             hx-encoding="multipart/form-data"
             class="space-y-6"
           >
-            <input type="hidden" name="collection_id" value="${data.collection.id}">
+            <input type="hidden" name="content_type" value="${ct.name}">
             ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
-            ${data.referrerParams ? `<input type="hidden" name="referrer_params" value="${data.referrerParams}">` : ''}
-            
-            <!-- Core Fields -->
-            ${renderFieldGroup('Basic Information', coreFieldsHTML)}
-            
+            ${data.referrerParams ? `<input type="hidden" name="referrer_params" value="${escapeAttr(data.referrerParams)}">` : ''}
+
+            <!-- Title Field -->
+            ${titleField ? `
+              <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Basic Information</h3>
+                ${renderField(titleField, getFieldValue('title'), data.validationErrors?.['title'])}
+              </div>
+            ` : ''}
+
             <!-- Content Fields -->
-            ${contentFields.length > 0 ? renderFieldGroup('Content Details', contentFieldsHTML) : ''}
-            
-            <!-- SEO & Meta Fields -->
-            ${metaFields.length > 0 ? renderFieldGroup('SEO & Metadata', metaFieldsHTML, true) : ''}
-            
+            ${contentFields.length > 0 ? `
+              <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Content Details</h3>
+                <div class="space-y-4">
+                  ${contentFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name])).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Tags -->
+            ${tagFields.length > 0 ? `
+              <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Organization</h3>
+                <div class="space-y-4">
+                  ${tagFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name])).join('')}
+                </div>
+              </div>
+            ` : ''}
+
             <div id="form-messages"></div>
           </form>
         </div>
@@ -197,83 +297,34 @@ export function renderContentFormPage(data: ContentFormData): string {
           <!-- Publishing Options -->
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
             <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Publishing</h3>
-
-            ${data.workflowEnabled ? `
-              <!-- Workflow Status (when workflow plugin is enabled) -->
-              <div class="mb-4">
-                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
-                <div class="mt-2 grid grid-cols-1">
-                  <select
-                    id="status"
-                    name="status"
-                    form="content-form"
-                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
-                  >
-                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                    <option value="review" ${data.status === 'review' ? 'selected' : ''}>Under Review</option>
-                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                    <option value="archived" ${data.status === 'archived' ? 'selected' : ''}>Archived</option>
-                  </select>
-                  <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
-                    <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Scheduled Publishing -->
-              <div class="mb-4">
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Schedule Publish</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_publish_at"
+            <div class="mb-6">
+              <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+              <div class="mt-2 grid grid-cols-1">
+                <select
+                  id="status"
+                  name="status"
                   form="content-form"
-                  value="${data.scheduled_publish_at ? new Date(data.scheduled_publish_at).toISOString().slice(0, 16) : ''}"
-                  class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
+                  class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
                 >
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Leave empty to publish immediately</p>
+                  <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
+                  <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
+                </select>
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
+                  <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                </svg>
               </div>
-
-              <!-- Scheduled Unpublishing -->
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Schedule Unpublish</label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_unpublish_at"
-                  form="content-form"
-                  value="${data.scheduled_unpublish_at ? new Date(data.scheduled_unpublish_at).toISOString().slice(0, 16) : ''}"
-                  class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
-                >
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Automatically unpublish at this time</p>
-              </div>
-            ` : `
-              <!-- Simple Status (when workflow plugin is disabled) -->
-              <div class="mb-6">
-                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
-                <div class="mt-2 grid grid-cols-1">
-                  <select
-                    id="status"
-                    name="status"
-                    form="content-form"
-                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
-                  >
-                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                  </select>
-                  <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
-                    <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                  </svg>
-                </div>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Enable Workflow plugin for advanced status management</p>
-              </div>
-            `}
+            </div>
           </div>
 
           <!-- Content Info -->
           ${isEdit ? `
             <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
               <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Content Info</h3>
-
               <dl class="space-y-3 text-sm">
+                <div>
+                  <dt class="text-zinc-500 dark:text-zinc-400">Type</dt>
+                  <dd class="mt-1 text-zinc-950 dark:text-white">${ct.displayName}</dd>
+                </div>
                 <div>
                   <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
                   <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.created_at ? new Date(data.data.created_at).toLocaleDateString() : 'Unknown'}</dd>
@@ -282,18 +333,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                   <dt class="text-zinc-500 dark:text-zinc-400">Last Modified</dt>
                   <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.updated_at ? new Date(data.data.updated_at).toLocaleDateString() : 'Unknown'}</dd>
                 </div>
-                <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Author</dt>
-                  <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.author || 'Unknown'}</dd>
-                </div>
-                ${data.data?.published_at ? `
-                  <div>
-                    <dt class="text-zinc-500 dark:text-zinc-400">Published</dt>
-                    <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.data.published_at).toLocaleDateString()}</dd>
-                  </div>
-                ` : ''}
               </dl>
-
               <div class="mt-4 pt-4 border-t border-zinc-950/5 dark:border-white/10">
                 <button
                   type="button"
@@ -312,20 +352,7 @@ export function renderContentFormPage(data: ContentFormData): string {
           <!-- Quick Actions -->
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
             <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Quick Actions</h3>
-
             <div class="space-y-2">
-              <button
-                type="button"
-                onclick="previewContent()"
-                class="w-full inline-flex items-center gap-x-2 px-3 py-2 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
-              >
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                Preview Content
-              </button>
-
               <button
                 type="button"
                 onclick="duplicateContent()"
@@ -336,7 +363,6 @@ export function renderContentFormPage(data: ContentFormData): string {
                 </svg>
                 Duplicate Content
               </button>
-
               ${isEdit ? `
                 <button
                   type="button"
@@ -354,14 +380,13 @@ export function renderContentFormPage(data: ContentFormData): string {
         </div>
 
         <!-- Action Buttons -->
-        <div class="mt-6 pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
+        <div class="lg:col-span-3 mt-6 pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
           <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
             Cancel
           </a>
-
           <div class="flex items-center gap-x-3">
             <button
               type="submit"
@@ -375,7 +400,6 @@ export function renderContentFormPage(data: ContentFormData): string {
               </svg>
               ${isEdit ? 'Update' : 'Save'}
             </button>
-
             ${data.user?.role !== 'viewer' ? `
               <button
                 type="submit"
@@ -416,542 +440,34 @@ export function renderContentFormPage(data: ContentFormData): string {
       cancelText: 'Cancel',
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
-      onConfirm: `performDeleteContent('${data.id}')`
+      onConfirm: `performDeleteContent('\${data.id}')`
     })}
 
     ${getConfirmationDialogScript()}
 
-    ${data.tinymceEnabled ? getTinyMCEScript(data.tinymceSettings?.apiKey) : '<!-- TinyMCE plugin not active -->'}
+    ${hasRichtext ? getQuillCDNAndInit(ct.fields.filter(f => f.type === 'richtext')) : ''}
 
-    ${data.quillEnabled ? getQuillCDN(data.quillSettings?.version) : '<!-- Quill plugin not active -->'}
-
-    ${data.quillEnabled ? getQuillInitScript() : '<!-- Quill init script not needed -->'}
-
-    ${data.mdxeditorEnabled ? getMDXEditorScripts() : '<!-- MDXEditor plugin not active -->'}
-
-    <!-- Dynamic Field Scripts -->
     <script>
-      // Field group toggle
-      function toggleFieldGroup(groupId) {
-        const content = document.getElementById(groupId + '-content');
-        const icon = document.getElementById(groupId + '-icon');
-        
-        if (content.classList.contains('hidden')) {
-          content.classList.remove('hidden');
-          icon.classList.remove('rotate-[-90deg]');
-        } else {
-          content.classList.add('hidden');
-          icon.classList.add('rotate-[-90deg]');
-        }
-      }
-
-      // Media field functions
-      let currentMediaFieldId = null;
-
-      function openMediaSelector(fieldId) {
-        currentMediaFieldId = fieldId;
-        // Store the original value in case user cancels
-        const originalValue = document.getElementById(fieldId)?.value || '';
-
-        // Open media library modal
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
-        modal.id = 'media-selector-modal';
-        modal.innerHTML = \`
-          <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-lg font-semibold text-zinc-950 dark:text-white mb-4">Select Media</h3>
-            <div id="media-grid-container" hx-get="/admin/media/selector" hx-trigger="load"></div>
-            <div class="mt-4 flex justify-end space-x-2">
-              <button
-                onclick="cancelMediaSelection('\${fieldId}', '\${originalValue}')"
-                class="rounded-lg bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                Cancel
-              </button>
-              <button
-                onclick="closeMediaSelector()"
-                class="rounded-lg bg-zinc-950 dark:bg-white px-4 py-2 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors">
-                OK
-              </button>
-            </div>
-          </div>
-        \`;
-        document.body.appendChild(modal);
-        // Trigger HTMX for the modal content
-        if (window.htmx) {
-          htmx.process(modal);
-        }
-      }
-
-      function closeMediaSelector() {
-        const modal = document.getElementById('media-selector-modal');
-        if (modal) {
-          modal.remove();
-        }
-        currentMediaFieldId = null;
-      }
-
-      function cancelMediaSelection(fieldId, originalValue) {
-        // Restore original value
-        const hiddenInput = document.getElementById(fieldId);
-        if (hiddenInput) {
-          hiddenInput.value = originalValue;
-        }
-
-        // If original value was empty, hide the preview and show select button
-        if (!originalValue) {
-          const preview = document.getElementById(fieldId + '-preview');
-          if (preview) {
-            preview.classList.add('hidden');
-          }
-        }
-
-        // Close modal
-        closeMediaSelector();
-      }
-
-      function clearMediaField(fieldId) {
-        const hiddenInput = document.getElementById(fieldId);
-        const preview = document.getElementById(fieldId + '-preview');
-
-        if (hiddenInput) {
-          hiddenInput.value = '';
-        }
-
-        if (preview) {
-          // Clear all children if it's a grid, or hide it
-          if (preview.classList.contains('media-preview-grid')) {
-            preview.innerHTML = '';
-          }
-          preview.classList.add('hidden');
-        }
-      }
-
-      // Global function to remove a single media from multiple selection
-      window.removeMediaFromMultiple = function(fieldId, urlToRemove) {
-        const hiddenInput = document.getElementById(fieldId);
-        if (!hiddenInput) return;
-
-        const values = hiddenInput.value.split(',').filter(url => url !== urlToRemove);
-        hiddenInput.value = values.join(',');
-
-        // Remove preview item
-        const previewItem = document.querySelector(\`[data-url="\${urlToRemove}"]\`);
-        if (previewItem) {
-          previewItem.remove();
-        }
-
-        // Hide preview grid if empty
-        if (values.length === 0) {
-          const preview = document.getElementById(fieldId + '-preview');
-          if (preview) {
-            preview.classList.add('hidden');
-          }
-        }
-      };
-
-      // Global function called by media selector buttons
-      window.selectMediaFile = function(mediaId, mediaUrl, filename) {
-        if (!currentMediaFieldId) {
-          console.error('No field ID set for media selection');
-          return;
-        }
-
-        const fieldId = currentMediaFieldId;
-
-        // Set the hidden input value to the media URL (not ID)
-        const hiddenInput = document.getElementById(fieldId);
-        if (hiddenInput) {
-          hiddenInput.value = mediaUrl;
-        }
-
-        // Update the preview
-        const preview = document.getElementById(fieldId + '-preview');
-        if (preview) {
-          preview.innerHTML = \`<img src="\${mediaUrl}" alt="\${filename}" class="w-32 h-32 object-cover rounded-lg border border-white/20">\`;
-          preview.classList.remove('hidden');
-        }
-
-        // Show the remove button by finding the media actions container and updating it
-        const mediaField = hiddenInput?.closest('.media-field-container');
-        if (mediaField) {
-          const actionsDiv = mediaField.querySelector('.media-actions');
-          if (actionsDiv && !actionsDiv.querySelector('button:has-text("Remove")')) {
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.onclick = () => clearMediaField(fieldId);
-            removeBtn.className = 'inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all';
-            removeBtn.textContent = 'Remove';
-            actionsDiv.appendChild(removeBtn);
-          }
-        }
-
-        // DON'T close the modal - let user click OK button
-        // Visual feedback: highlight the selected item
-        document.querySelectorAll('#media-selector-grid [data-media-id]').forEach(el => {
-          el.classList.remove('ring-2', 'ring-lime-500', 'dark:ring-lime-400');
-        });
-        const selectedItem = document.querySelector(\`#media-selector-grid [data-media-id="\${mediaId}"]\`);
-        if (selectedItem) {
-          selectedItem.classList.add('ring-2', 'ring-lime-500', 'dark:ring-lime-400');
-        }
-      };
-
-      function setMediaField(fieldId, mediaUrl) {
-        document.getElementById(fieldId).value = mediaUrl;
-        const preview = document.getElementById(fieldId + '-preview');
-        preview.innerHTML = \`<img src="\${mediaUrl}" alt="Selected media" class="w-32 h-32 object-cover rounded-lg ring-1 ring-zinc-950/10 dark:ring-white/10">\`;
-        preview.classList.remove('hidden');
-
-        // Close modal
-        document.querySelector('.fixed.inset-0')?.remove();
-      }
-
-      // Reference field functions
-      let currentReferenceFieldId = null;
-      let referenceSearchTimeout = null;
-
-      function getReferenceContainer(fieldId) {
-        const input = document.getElementById(fieldId);
-        return input ? input.closest('[data-reference-field]') : null;
-      }
-
-      function getReferenceCollections(container) {
-        if (!container) return [];
-        const rawCollections = container.dataset.referenceCollections || '';
-        const collections = rawCollections
-          .split(',')
-          .map((value) => value.trim())
-          .filter(Boolean);
-        if (collections.length > 0) {
-          return collections;
-        }
-        const singleCollection = container.dataset.referenceCollection;
-        return singleCollection ? [singleCollection] : [];
-      }
-
-      async function fetchReferenceItems(collections, search = '', limit = 20) {
-        const params = new URLSearchParams({ limit: String(limit) });
-        collections.forEach((collection) => params.append('collection', collection));
-        if (search) {
-          params.set('search', search);
-        }
-        const response = await fetch('/admin/api/references?' + params.toString());
-        if (!response.ok) {
-          throw new Error('Failed to load references');
-        }
-        const data = await response.json();
-        return data?.data || [];
-      }
-
-      async function fetchReferenceById(collections, id) {
-        if (!id) return null;
-        const params = new URLSearchParams({ id });
-        collections.forEach((collection) => params.append('collection', collection));
-        const response = await fetch('/admin/api/references?' + params.toString());
-        if (!response.ok) {
-          return null;
-        }
-        const data = await response.json();
-        return data?.data || null;
-      }
-
-      function renderReferenceDisplay(container, item, fallbackMessage = 'No reference selected.') {
-        const display = container.querySelector('[data-reference-display]');
-        const removeButton = container.querySelector('[data-reference-clear]');
-        if (!display) return;
-
-        display.innerHTML = '';
-
-        if (!item) {
-          display.textContent = fallbackMessage;
-          if (removeButton) {
-            removeButton.disabled = true;
-          }
-          return;
-        }
-
-        const title = item.title || item.slug || item.id || 'Untitled';
-        const titleEl = document.createElement('div');
-        titleEl.className = 'font-medium text-zinc-900 dark:text-white';
-        titleEl.textContent = title;
-
-        const row = document.createElement('div');
-        row.className = 'flex flex-wrap items-center justify-between gap-2';
-        row.appendChild(titleEl);
-
-        const metaRow = document.createElement('div');
-        metaRow.className = 'flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400';
-
-        if (item.collection?.display_name || item.collection?.name) {
-          const collectionLabel = document.createElement('span');
-          collectionLabel.className = 'inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 dark:bg-white/10 dark:text-zinc-200';
-          collectionLabel.textContent = item.collection.display_name || item.collection.name;
-          metaRow.appendChild(collectionLabel);
-        }
-
-        if (item.slug) {
-          const slugEl = document.createElement('span');
-          slugEl.textContent = item.slug;
-          metaRow.appendChild(slugEl);
-        }
-
-        if (metaRow.childElementCount > 0) {
-          row.appendChild(metaRow);
-        }
-
-        display.appendChild(row);
-
-        if (removeButton) {
-          removeButton.disabled = false;
-        }
-      }
-
-      function updateReferenceField(fieldId, item) {
-        const input = document.getElementById(fieldId);
-        const container = getReferenceContainer(fieldId);
-        if (!input || !container) return;
-
-        input.value = item?.id || '';
-        renderReferenceDisplay(container, item, 'No reference selected.');
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-
-      function clearReferenceField(fieldId) {
-        updateReferenceField(fieldId, null);
-      }
-
-      function closeReferenceSelector() {
-        const modal = document.getElementById('reference-selector-modal');
-        if (modal) {
-          modal.remove();
-        }
-        currentReferenceFieldId = null;
-      }
-
-      function openReferenceSelector(fieldId) {
-        const container = getReferenceContainer(fieldId);
-        const collections = getReferenceCollections(container);
-        if (!container || collections.length === 0) {
-          console.error('Reference collection is missing for field', fieldId);
-          return;
-        }
-
-        currentReferenceFieldId = fieldId;
-
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
-        modal.id = 'reference-selector-modal';
-        modal.innerHTML = \`
-          <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between gap-3">
-              <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Select Reference</h3>
-              <button
-                type="button"
-                onclick="closeReferenceSelector()"
-                class="rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-            <div class="mt-4">
-              <input
-                type="search"
-                id="reference-search-input"
-                placeholder="Search by title or slug..."
-                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 dark:border-white/10 dark:bg-zinc-900 dark:text-white"
-              >
-            </div>
-            <div id="reference-results" class="mt-4 space-y-2"></div>
-            <div class="mt-4 flex justify-end">
-              <button
-                type="button"
-                onclick="closeReferenceSelector()"
-                class="rounded-lg bg-zinc-950 dark:bg-white px-4 py-2 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        \`;
-
-        document.body.appendChild(modal);
-
-        const resultsContainer = modal.querySelector('#reference-results');
-        const searchInput = modal.querySelector('#reference-search-input');
-
-        const renderResults = (items) => {
-          resultsContainer.innerHTML = '';
-          if (!items || items.length === 0) {
-            resultsContainer.innerHTML = '<div class="rounded-lg border border-dashed border-zinc-200 p-4 text-sm text-zinc-500 dark:border-white/10 dark:text-zinc-400">No items found.</div>';
-            return;
-          }
-
-          const selectedId = document.getElementById(fieldId)?.value;
-
-          items.forEach((item) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'w-full text-left rounded-lg border border-zinc-200 px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5';
-            if (item.id === selectedId) {
-              button.classList.add('ring-2', 'ring-cyan-500', 'dark:ring-cyan-400');
-            }
-
-            const title = item.title || item.slug || item.id || 'Untitled';
-            const titleEl = document.createElement('div');
-            titleEl.className = 'font-medium text-zinc-900 dark:text-white';
-            titleEl.textContent = title;
-
-            button.appendChild(titleEl);
-
-            const metaRow = document.createElement('div');
-            metaRow.className = 'mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400';
-
-            if (item.collection?.display_name || item.collection?.name) {
-              const collectionLabel = document.createElement('span');
-              collectionLabel.className = 'inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 dark:bg-white/10 dark:text-zinc-200';
-              collectionLabel.textContent = item.collection.display_name || item.collection.name;
-              metaRow.appendChild(collectionLabel);
-            }
-
-            if (item.slug) {
-              const slugEl = document.createElement('span');
-              slugEl.textContent = item.slug;
-              metaRow.appendChild(slugEl);
-            }
-
-            if (metaRow.childElementCount > 0) {
-              button.appendChild(metaRow);
-            }
-
-            button.addEventListener('click', () => {
-              updateReferenceField(fieldId, item);
-              closeReferenceSelector();
-            });
-
-            resultsContainer.appendChild(button);
-          });
-        };
-
-        const loadResults = async (searchValue = '') => {
-          try {
-            const items = await fetchReferenceItems(collections, searchValue);
-            renderResults(items);
-          } catch (error) {
-            resultsContainer.innerHTML = '<div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">Failed to load references.</div>';
-          }
-        };
-
-        loadResults();
-
-        searchInput.addEventListener('input', () => {
-          if (referenceSearchTimeout) {
-            clearTimeout(referenceSearchTimeout);
-          }
-          referenceSearchTimeout = setTimeout(() => {
-            loadResults(searchInput.value.trim());
-          }, 250);
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('[data-reference-field]').forEach(async (container) => {
-          const input = container.querySelector('input[type="hidden"]');
-          const collections = getReferenceCollections(container);
-          if (!input || collections.length === 0) return;
-
-          if (!input.value) {
-            renderReferenceDisplay(container, null, 'No reference selected.');
-            return;
-          }
-
-          const item = await fetchReferenceById(collections, input.value);
-          if (item) {
-            renderReferenceDisplay(container, item);
-          } else {
-            renderReferenceDisplay(container, null, 'Reference not found.');
-          }
-        });
-      });
-
-      document.addEventListener('click', (event) => {
-        const trigger = event.target.closest('[data-reference-trigger]');
-        if (!trigger) return;
-        const container = trigger.closest('[data-reference-field]');
-        if (!container || container.dataset.referenceEnabled !== 'true') return;
-        const input = container.querySelector('input[type="hidden"]');
-        if (!input) return;
-        openReferenceSelector(input.id);
-      });
-
-      document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        const trigger = event.target.closest('[data-reference-trigger]');
-        if (!trigger) return;
-        const container = trigger.closest('[data-reference-field]');
-        if (!container || container.dataset.referenceEnabled !== 'true') return;
-        const input = container.querySelector('input[type="hidden"]');
-        if (!input) return;
-        event.preventDefault();
-        openReferenceSelector(input.id);
-      });
-
-      // Custom select options
-      function addCustomOption(input, selectId) {
-        const value = input.value.trim();
-        if (value) {
-          const select = document.getElementById(selectId);
-          const option = document.createElement('option');
-          option.value = value;
-          option.text = value;
-          option.selected = true;
-          select.appendChild(option);
-          input.value = '';
-        }
-      }
+      ${hasFileUpload ? getFileUploadScript() : ''}
 
       // Quick actions
-      function previewContent() {
-        const form = document.getElementById('content-form');
-        const formData = new FormData(form);
-        
-        // Open preview in new window
-        const preview = window.open('', '_blank');
-        preview.document.write('<p>Loading preview...</p>');
-        
-        fetch('/admin/content/preview', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.text())
-        .then(html => {
-          preview.document.open();
-          preview.document.write(html);
-          preview.document.close();
-        })
-        .catch(error => {
-          preview.document.write('<p>Error loading preview</p>');
-        });
-      }
-
       function duplicateContent() {
         showConfirmDialog('duplicate-content-confirm');
       }
 
       function performDuplicateContent() {
-        const form = document.getElementById('content-form');
-        const formData = new FormData(form);
+        var form = document.getElementById('content-form');
+        var formData = new FormData(form);
         formData.append('action', 'duplicate');
 
         fetch('/admin/content/duplicate', {
           method: 'POST',
           body: formData
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
           if (data.success) {
-            window.location.href = \`/admin/content/\${data.id}/edit\`;
+            window.location.href = '/admin/content/' + data.id + '/edit';
           } else {
             alert('Error duplicating content');
           }
@@ -963,10 +479,10 @@ export function renderContentFormPage(data: ContentFormData): string {
       }
 
       function performDeleteContent(contentId) {
-        fetch(\`/admin/content/\${contentId}\`, {
+        fetch('/admin/content/' + contentId, {
           method: 'DELETE'
         })
-        .then(response => {
+        .then(function(response) {
           if (response.ok) {
             window.location.href = '/admin/content';
           } else {
@@ -976,31 +492,23 @@ export function renderContentFormPage(data: ContentFormData): string {
       }
 
       function showVersionHistory(contentId) {
-        // Create and show version history modal
-        const modal = document.createElement('div');
+        var modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
-        modal.innerHTML = \`
-          <div id="version-history-content">
-            <div class="flex items-center justify-center h-32">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
-            </div>
-          </div>
-        \`;
+        modal.innerHTML = '<div id="version-history-content"><div class="flex items-center justify-center h-32"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div></div></div>';
         document.body.appendChild(modal);
 
-        // Load version history
-        fetch(\`/admin/content/\${contentId}/versions\`)
-        .then(response => response.text())
-        .then(html => {
+        fetch('/admin/content/' + contentId + '/versions')
+        .then(function(response) { return response.text(); })
+        .then(function(html) {
           document.getElementById('version-history-content').innerHTML = html;
         })
-        .catch(error => {
+        .catch(function(error) {
           console.error('Error loading version history:', error);
           document.getElementById('version-history-content').innerHTML = '<p class="text-zinc-950 dark:text-white">Error loading version history</p>';
         });
       }
 
-      // Auto-save functionality
+      // Auto-save
       let autoSaveTimeout;
       function scheduleAutoSave() {
         clearTimeout(autoSaveTimeout);
@@ -1008,38 +516,19 @@ export function renderContentFormPage(data: ContentFormData): string {
           const form = document.getElementById('content-form');
           const formData = new FormData(form);
           formData.append('action', 'autosave');
-          
-          fetch(form.action, {
-            method: 'POST',
-            body: formData
-          })
-          .then(response => {
-            if (response.ok) {
-              console.log('Auto-saved');
-            }
-          })
-          .catch(error => console.error('Auto-save failed:', error));
-        }, 30000); // Auto-save every 30 seconds
+          fetch(form.action, { method: 'POST', body: formData })
+            .then(r => { if (r.ok) console.log('Auto-saved'); })
+            .catch(e => console.error('Auto-save failed:', e));
+        }, 30000);
       }
 
-      // Bind auto-save to form changes
       document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('content-form');
-        form.addEventListener('input', scheduleAutoSave);
-        form.addEventListener('change', scheduleAutoSave);
+        if (form) {
+          form.addEventListener('input', scheduleAutoSave);
+          form.addEventListener('change', scheduleAutoSave);
+        }
       });
-
-      ${data.tinymceEnabled ? getTinyMCEInitScript({
-        skin: data.tinymceSettings?.skin,
-        defaultHeight: data.tinymceSettings?.defaultHeight,
-        defaultToolbar: data.tinymceSettings?.defaultToolbar
-      }) : ''}
-
-      ${data.mdxeditorEnabled ? getMDXEditorInitScript({
-        defaultHeight: data.mdxeditorSettings?.defaultHeight,
-        toolbar: data.mdxeditorSettings?.toolbar,
-        placeholder: data.mdxeditorSettings?.placeholder
-      }) : ''}
     </script>
   `
 
@@ -1053,4 +542,150 @@ export function renderContentFormPage(data: ContentFormData): string {
   }
 
   return renderAdminLayoutCatalyst(layoutData)
+}
+
+/** Quill editor CDN + init script for richtext fields */
+function getQuillCDNAndInit(richtextFields: ContentTypeField[]): string {
+  return `
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        ${richtextFields.map(f => `
+          (function() {
+            var quill = new Quill('#quill-editor-${f.name}', {
+              theme: 'snow',
+              modules: {
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['blockquote', 'code-block'],
+                  ['link', 'image'],
+                  ['clean']
+                ]
+              },
+              placeholder: 'Write your content here...'
+            });
+            var hiddenInput = document.getElementById('field-${f.name}');
+            if (hiddenInput && hiddenInput.value) {
+              quill.root.innerHTML = hiddenInput.value;
+            }
+            quill.on('text-change', function() {
+              hiddenInput.value = quill.root.innerHTML;
+            });
+            var form = document.getElementById('content-form');
+            if (form) {
+              form.addEventListener('submit', function() {
+                hiddenInput.value = quill.root.innerHTML;
+              });
+            }
+          })();
+        `).join('')}
+      });
+    </script>
+  `
+}
+
+/** File upload handling script */
+function getFileUploadScript(): string {
+  return `
+    function handleFileDrop(event, fieldName, accept) {
+      event.preventDefault();
+      event.currentTarget.classList.remove('border-cyan-500', 'bg-cyan-50/50', 'dark:bg-cyan-500/5');
+      var files = event.dataTransfer.files;
+      if (files.length > 0) {
+        uploadFile(files[0], fieldName, accept);
+      }
+    }
+
+    function handleFileSelect(input, fieldName, accept) {
+      if (input.files.length > 0) {
+        uploadFile(input.files[0], fieldName, accept);
+      }
+    }
+
+    function uploadFile(file, fieldName, accept) {
+      // Validate file type if accept is specified
+      if (accept && accept !== '*') {
+        var acceptTypes = accept.split(',').map(function(t) { return t.trim(); });
+        var accepted = acceptTypes.some(function(type) {
+          if (type.endsWith('/*')) {
+            return file.type.startsWith(type.replace('/*', '/'));
+          }
+          return file.type === type;
+        });
+        if (!accepted) {
+          alert('Invalid file type. Accepted: ' + accept);
+          return;
+        }
+      }
+
+      var progressEl = document.getElementById('upload-progress-' + fieldName);
+      var barEl = document.getElementById('upload-bar-' + fieldName);
+      var statusEl = document.getElementById('upload-status-' + fieldName);
+      progressEl.classList.remove('hidden');
+      barEl.style.width = '10%';
+      statusEl.textContent = 'Uploading ' + file.name + '...';
+
+      var formData = new FormData();
+      formData.append('file', file);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/media/upload');
+
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          var pct = Math.round((e.loaded / e.total) * 100);
+          barEl.style.width = pct + '%';
+          statusEl.textContent = 'Uploading... ' + pct + '%';
+        }
+      });
+
+      xhr.addEventListener('load', function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            var result = JSON.parse(xhr.responseText);
+            var url = result.url || result.data?.url || '';
+            document.getElementById('field-' + fieldName).value = url;
+
+            // Show preview
+            var previewEl = document.getElementById('file-preview-' + fieldName);
+            if (url && previewEl) {
+              var isImage = file.type.startsWith('image/');
+              if (isImage) {
+                previewEl.innerHTML = '<img src="' + url + '" alt="Preview" class="h-32 w-32 object-cover rounded-lg ring-1 ring-zinc-950/10 dark:ring-white/10">';
+              } else {
+                previewEl.innerHTML = '<div class="inline-flex items-center gap-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 px-3 py-2 ring-1 ring-zinc-950/10 dark:ring-white/10"><span class="text-sm text-zinc-700 dark:text-zinc-300">' + file.name + '</span></div>';
+              }
+              previewEl.classList.remove('hidden');
+            }
+
+            barEl.style.width = '100%';
+            statusEl.textContent = 'Upload complete!';
+            setTimeout(function() { progressEl.classList.add('hidden'); }, 2000);
+          } catch(e) {
+            statusEl.textContent = 'Upload failed: could not parse response';
+          }
+        } else {
+          statusEl.textContent = 'Upload failed: ' + xhr.statusText;
+        }
+      });
+
+      xhr.addEventListener('error', function() {
+        statusEl.textContent = 'Upload failed: network error';
+      });
+
+      xhr.send(formData);
+    }
+
+    function clearFileField(fieldName) {
+      document.getElementById('field-' + fieldName).value = '';
+      var previewEl = document.getElementById('file-preview-' + fieldName);
+      if (previewEl) {
+        previewEl.innerHTML = '';
+        previewEl.classList.add('hidden');
+      }
+    }
+  `
 }

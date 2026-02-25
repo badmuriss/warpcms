@@ -98,13 +98,13 @@ export const mockContent = {
   blog_post_1: {
     id: 'content-blog-1',
     collectionId: 'collection-blog-posts-1',
-    slug: 'welcome-to-sonicjs',
-    title: 'Welcome to SonicJS AI',
+    slug: 'welcome-to-warpcms',
+    title: 'Welcome to WarpCMS AI',
     data: {
-      title: 'Welcome to SonicJS AI',
-      content: '<h1>Welcome to SonicJS AI</h1><p>This is your first blog post.</p>',
-      excerpt: 'Welcome to SonicJS AI, a modern headless CMS.',
-      tags: ['welcome', 'cms', 'sonicjs'],
+      title: 'Welcome to WarpCMS AI',
+      content: '<h1>Welcome to WarpCMS AI</h1><p>This is your first blog post.</p>',
+      excerpt: 'Welcome to WarpCMS AI, a modern headless CMS.',
+      tags: ['welcome', 'cms', 'warpcms'],
       status: 'published'
     },
     status: 'published',
@@ -153,7 +153,7 @@ export const mockContent = {
 export const mockUsers = {
   admin: {
     id: 'admin-user-id',
-    email: 'admin@sonicjs.com',
+    email: 'admin@warpcms.com',
     username: 'admin',
     firstName: 'Admin',
     lastName: 'User',
@@ -165,7 +165,7 @@ export const mockUsers = {
 
   editor: {
     id: 'editor-user-id',
-    email: 'editor@sonicjs.com',
+    email: 'editor@warpcms.com',
     username: 'editor',
     firstName: 'Editor',
     lastName: 'User',

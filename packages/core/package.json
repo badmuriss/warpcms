@@ -1,12 +1,13 @@
 {
-  "name": "@sonicjs-cms/core",
+  "name": "@warpcms/core",
   "version": "2.8.0",
-  "description": "Core framework for SonicJS headless CMS - Edge-first, TypeScript-native CMS built for Cloudflare Workers",
+  "description": "Core framework for WarpCMS headless CMS - Edge-first, TypeScript-native CMS built for Cloudflare Workers",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
+    "warpcms-db-reset": "./bin/db-reset.js",
     "sonicjs-db-reset": "./bin/db-reset.js"
   },
   "exports": {
@@ -82,19 +83,19 @@
     "hono",
     "content-management",
     "api",
-    "sonicjs"
+    "warpcms"
   ],
-  "author": "SonicJS Team",
+  "author": "WarpCMS",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sonicjs/sonicjs.git",
+    "url": "git+https://github.com/badmuriss/warpcms.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/sonicjs/sonicjs/issues"
+    "url": "https://github.com/badmuriss/warpcms/issues"
   },
-  "homepage": "https://sonicjs.com",
+  "homepage": "https://github.com/badmuriss/warpcms",
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "drizzle-orm": "^0.44.0",

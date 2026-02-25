@@ -166,7 +166,7 @@ describe('renderAdminLayoutCatalyst', () => {
   it('should render page title', () => {
     const html = renderAdminLayoutCatalyst(baseData);
 
-    expect(html).toContain('<title>Test Page - SonicJS AI Admin</title>');
+    expect(html).toContain('<title>Test Page - WarpCMS AI Admin</title>');
   });
 
   it('should render content', () => {
@@ -279,7 +279,6 @@ describe('renderAdminLayoutCatalyst', () => {
 
       expect(html).toContain('Dashboard');
       expect(html).toContain('Collections');
-      expect(html).toContain('Forms');
       expect(html).toContain('Content');
       expect(html).toContain('Media');
       expect(html).toContain('Users');
@@ -505,14 +504,14 @@ describe('renderAdminLayoutCatalyst', () => {
     it('should render logo in desktop sidebar', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('SonicJS');
+      expect(html).toContain('WarpCMS');
     });
 
     it('should render logo in mobile header', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
       // Mobile header should have logo - check both desktop and mobile sections
-      expect(html).toContain('SonicJS');
+      expect(html).toContain('WarpCMS');
     });
   });
 

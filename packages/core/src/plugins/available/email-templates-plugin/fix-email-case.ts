@@ -27,7 +27,7 @@ async function fixEmailCases() {
     
     // Connect to the local SQLite database
     const db = createClient({
-      url: `file:${dbPath}/sonicjs-dev.sqlite`
+      url: `file:${dbPath}/warpcms-dev.sqlite`
     })
     
     console.log('📂 Connected to local database')

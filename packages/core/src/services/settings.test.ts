@@ -278,7 +278,7 @@ describe('SettingsService', () => {
       const result = await settingsService.getGeneralSettings()
 
       expect(result).toEqual({
-        siteName: 'SonicJS AI',
+        siteName: 'WarpCMS AI',
         siteDescription: 'A modern headless CMS powered by AI',
         adminEmail: 'admin@example.com',
         timezone: 'UTC',

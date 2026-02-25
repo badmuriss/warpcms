@@ -7,10 +7,10 @@ import { getDragSortableScript } from './drag-sortable.template'
 function getReadFieldValueScript(): string {
   return `
     <script>
-      if (!window.__sonicReadFieldValueInit) {
-        window.__sonicReadFieldValueInit = true;
+      if (!window.__warpReadFieldValueInit) {
+        window.__warpReadFieldValueInit = true;
 
-        window.sonicReadFieldValue = function(fieldWrapper) {
+        window.warpReadFieldValue = function(fieldWrapper) {
           const fieldType = fieldWrapper.dataset.fieldType;
           const select = fieldWrapper.querySelector('select');
           const textarea = fieldWrapper.querySelector('textarea');
@@ -1288,11 +1288,11 @@ function getStructuredFieldScript(): string {
   return `
     ${getReadFieldValueScript()}
     <script>
-      if (!window.__sonicStructuredFieldInit) {
-        window.__sonicStructuredFieldInit = true;
+      if (!window.__warpStructuredFieldInit) {
+        window.__warpStructuredFieldInit = true;
 
         function initializeStructuredFields() {
-          const readFieldValue = window.sonicReadFieldValue;
+          const readFieldValue = window.warpReadFieldValue;
 
           const readStructuredValue = (container) => {
             const fields = Array.from(container.querySelectorAll('.structured-subfield'));
@@ -1471,8 +1471,8 @@ function getBlocksFieldScript(): string {
   return `
     ${getReadFieldValueScript()}
     <script>
-      if (!window.__sonicBlocksFieldInit) {
-        window.__sonicBlocksFieldInit = true;
+      if (!window.__warpBlocksFieldInit) {
+        window.__warpBlocksFieldInit = true;
 
         function initializeBlocksFields() {
           document.querySelectorAll('.blocks-field').forEach((container) => {
@@ -1506,7 +1506,7 @@ function getBlocksFieldScript(): string {
               });
             };
 
-            const readFieldValue = window.sonicReadFieldValue;
+            const readFieldValue = window.warpReadFieldValue;
 
             const readBlockItem = (item) => {
               if (item.dataset.blockRaw) {

@@ -7,8 +7,8 @@ export interface DragSortableOptions {
 export function getDragSortableScript(): string {
   return `
     <script>
-      if (!window.__sonicDragSortableInit) {
-        window.__sonicDragSortableInit = true;
+      if (!window.__warpDragSortableInit) {
+        window.__warpDragSortableInit = true;
 
         window.initializeDragSortable = function(container, options) {
           if (!container || container.dataset.dragSortableInit === 'true') {

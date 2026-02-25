@@ -1,7 +1,7 @@
 /**
  * Telemetry Types
  *
- * Privacy-first telemetry types for SonicJS
+ * Privacy-first telemetry types for WarpCMS
  * No PII (Personally Identifiable Information) is collected
  */
 

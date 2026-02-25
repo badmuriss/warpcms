@@ -17,8 +17,8 @@ const builder = PluginBuilder.create({
 
 builder.metadata({
   author: {
-    name: 'SonicJS Team',
-    email: 'team@sonicjs.com'
+    name: 'WarpCMS Team',
+    email: 'team@warpcms.com'
   },
   license: 'MIT',
   compatibility: '^2.0.0'

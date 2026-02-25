@@ -1,7 +1,7 @@
 /**
  * Templates Module Exports
  *
- * Reusable HTML template components for SonicJS
+ * Reusable HTML template components for WarpCMS
  */
 
 // Form templates
@@ -37,14 +37,3 @@ export type { AdminLayoutCatalystData } from './layouts/admin-layout-catalyst.te
 // Component templates
 export { renderLogo } from './components/logo.template'
 
-// Page templates - Admin
-export { renderDesignPage } from './pages/admin-design.template'
-export type { DesignPageData } from './pages/admin-design.template'
-export { renderCheckboxPage } from './pages/admin-checkboxes.template'
-export type { CheckboxPageData } from './pages/admin-checkboxes.template'
-export { renderTestimonialsList } from './pages/admin-testimonials-list.template'
-export { renderCodeExamplesList } from './pages/admin-code-examples-list.template'
-export { renderFormsDocsPage } from './pages/admin-forms-docs.template'
-export type { FormsDocsPageData } from './pages/admin-forms-docs.template'
-export { renderFormsExamplesPage } from './pages/admin-forms-examples.template'
-export type { FormsExamplesPageData } from './pages/admin-forms-examples.template'

@@ -1,6 +1,6 @@
 import * as hono from 'hono';
 import { Context, Next, MiddlewareHandler } from 'hono';
-import { S as SonicJSConfig } from './app-CYEm1ytG.js';
+import { b as WarpCMSConfig } from './app-CrLkcj7q.js';
 import '@cloudflare/workers-types';
 
 type Bindings = {
@@ -11,7 +11,7 @@ type Bindings = {
  * Bootstrap middleware that ensures system initialization
  * Runs once per worker instance
  */
-declare function bootstrapMiddleware(config?: SonicJSConfig): (c: Context<{
+declare function bootstrapMiddleware(config?: WarpCMSConfig): (c: Context<{
     Bindings: Bindings;
 }>, next: Next) => Promise<void>;
 
@@ -59,7 +59,7 @@ declare const metricsMiddleware: () => MiddlewareHandler;
 /**
  * Middleware Module Exports
  *
- * Request processing middleware for SonicJS
+ * Request processing middleware for WarpCMS
  *
  * Note: Most middleware is currently in the monolith and will be migrated later.
  * For now, we only export the bootstrap middleware which is used for system initialization.

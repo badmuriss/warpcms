@@ -1,5 +1,5 @@
 // import { Hono } from 'hono'
-import { Plugin } from '@sonicjs-cms/core'
+import { Plugin } from '@warpcms/core'
 import { PluginBuilder } from '../../sdk/plugin-builder'
 import { workflowMigration } from './migrations'
 // import { createWorkflowRoutes } from './routes'
@@ -23,8 +23,8 @@ export function createWorkflowPlugin(): Plugin {
 
   builder.metadata({
     author: {
-      name: 'SonicJS',
-      email: 'info@sonicjs.com'
+      name: 'WarpCMS',
+      email: 'info@warpcms.com'
     },
     license: 'MIT',
     compatibility: '^1.0.0',

@@ -95,7 +95,7 @@ apiMediaRoutes.post('/upload', async (c) => {
     }
 
     // Generate public URL using environment variable for bucket name
-    const bucketName = c.env.BUCKET_NAME || 'sonicjs-media-dev'
+    const bucketName = c.env.BUCKET_NAME || 'warpcms-media-dev'
     const publicUrl = `https://pub-${bucketName}.r2.dev/${r2Key}`
     
     // Extract image dimensions if it's an image
@@ -254,7 +254,7 @@ apiMediaRoutes.post('/upload-multiple', async (c) => {
         }
 
         // Generate public URL using environment variable for bucket name
-        const bucketName = c.env.BUCKET_NAME || 'sonicjs-media-dev'
+        const bucketName = c.env.BUCKET_NAME || 'warpcms-media-dev'
         const publicUrl = `https://pub-${bucketName}.r2.dev/${r2Key}`
         
         // Extract image dimensions if it's an image
@@ -582,7 +582,7 @@ apiMediaRoutes.post('/bulk-move', async (c) => {
         }
 
         // Update database with new folder and R2 key
-        const bucketName = c.env.BUCKET_NAME || 'sonicjs-media-dev'
+        const bucketName = c.env.BUCKET_NAME || 'warpcms-media-dev'
         const newPublicUrl = `https://pub-${bucketName}.r2.dev/${newR2Key}`
 
         const updateStmt = c.env.DB.prepare(`

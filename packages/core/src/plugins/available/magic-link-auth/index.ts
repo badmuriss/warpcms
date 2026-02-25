@@ -228,8 +228,8 @@ export function createMagicLinkAuthPlugin(): Plugin {
     version: '1.0.0',
     description: 'Passwordless authentication via email magic links',
     author: {
-      name: 'SonicJS Team',
-      email: 'team@sonicjs.com'
+      name: 'WarpCMS Team',
+      email: 'team@warpcms.com'
     },
     dependencies: ['email'],
 
@@ -360,7 +360,7 @@ function renderMagicLinkEmail(magicLink: string, expiryMinutes: number): string 
         </div>
 
         <div class="footer">
-          <p>This is an automated email from SonicJS.</p>
+          <p>This is an automated email from WarpCMS.</p>
           <p>For security, this link can only be used once.</p>
         </div>
       </div>

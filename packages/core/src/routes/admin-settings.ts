@@ -40,7 +40,7 @@ adminSettingsRoutes.use('*', requireAuth())
 function getMockSettings(user: any) {
   return {
     general: {
-      siteName: 'SonicJS AI',
+      siteName: 'WarpCMS AI',
       siteDescription: 'A modern headless CMS powered by AI',
       adminEmail: user?.email || 'admin@example.com',
       timezone: 'UTC',

@@ -213,16 +213,16 @@ export class WebhookService {
       // Prepare headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'User-Agent': 'SonicJS-Webhooks/1.0',
-        'X-SonicJS-Event': eventType,
-        'X-SonicJS-Delivery': deliveryId,
-        'X-SonicJS-Timestamp': timestamp
+        'User-Agent': 'WarpCMS-Webhooks/1.0',
+        'X-WarpCMS-Event': eventType,
+        'X-WarpCMS-Delivery': deliveryId,
+        'X-WarpCMS-Timestamp': timestamp
       }
 
       // Add signature if secret is provided
       if (webhook.secret) {
         const signature = await this.createSignature(JSON.stringify(webhookPayload), webhook.secret)
-        headers['X-SonicJS-Signature'] = signature
+        headers['X-WarpCMS-Signature'] = signature
       }
 
       // Make the request

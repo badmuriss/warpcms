@@ -1,6 +1,6 @@
 # Route Migration Guide
 
-This document tracks the gradual migration of routes from the SonicJS monolith to the `@sonicjs-cms/core` package.
+This document tracks the gradual migration of routes from the WarpCMS monolith to the `@warpcms-cms/core` package.
 
 ## Migration Strategy
 
@@ -23,7 +23,7 @@ npm run build
 npm link
 
 # In test project
-npm link @sonicjs-cms/core
+npm link @warpcms-cms/core
 
 # After making changes to core
 cd packages/core
@@ -92,7 +92,7 @@ See the create-app templates for testing setup.
 - `CACHE_CONFIGS` - Cache configuration presets
 
 **Changes from Monolith**:
-- Updated imports to use `@sonicjs-cms/core` types
+- Updated imports to use `@warpcms-cms/core` types
 - Replaced monolith cache plugin with core `CacheService`
 - Removed references to external plugin system
 
@@ -226,8 +226,8 @@ curl -X POST http://localhost:8787/auth/register \
 curl -X POST http://localhost:8787/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@sonicjs.com",
-    "password": "sonicjs!"
+    "email": "admin@warpcms.com",
+    "password": "warpcms!"
   }'
 
 # Get current user (requires auth cookie)
@@ -314,7 +314,7 @@ curl -X POST http://localhost:8787/api/media/create-folder \
 **Dependencies**:
 - R2 Bucket (`MEDIA_BUCKET` binding)
 - Optional: Cloudflare Images (`IMAGES_ACCOUNT_ID` env var)
-- Optional: Custom bucket name (`BUCKET_NAME` env var, defaults to 'sonicjs-media-dev')
+- Optional: Custom bucket name (`BUCKET_NAME` env var, defaults to 'warpcms-media-dev')
 
 **Known Issues**:
 - Event system is placeholder (console logging only)
@@ -580,7 +580,7 @@ For each migrated route:
 ## Known Issues
 
 ### Circular Import
-Some monolith routes import from `@sonicjs-cms/core` while being part of it. Solution: Use relative imports for internal dependencies.
+Some monolith routes import from `@warpcms-cms/core` while being part of it. Solution: Use relative imports for internal dependencies.
 
 ### Cache Service Limitations
 Current `CacheService` is memory-based. For production:
@@ -665,4 +665,4 @@ After analyzing all remaining route files, here's what we found:
 ## Resources
 
 - [npm link documentation](https://docs.npmjs.com/cli/v8/commands/npm-link)
-- [SonicJS Documentation](https://docs.sonicjs.com)
+- [WarpCMS Documentation](https://docs.warpcms.com)

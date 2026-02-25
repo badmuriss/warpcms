@@ -1,23 +1,23 @@
-# @sonicjs-cms/core
+# @warpcms-cms/core
 
-> Core framework for SonicJS - A modern, TypeScript-first headless CMS built for Cloudflare's edge platform.
+> Core framework for WarpCMS - A modern, TypeScript-first headless CMS built for Cloudflare's edge platform.
 
-[![Version](https://img.shields.io/npm/v/@sonicjs-cms/core)](https://www.npmjs.com/package/@sonicjs-cms/core)
-[![License](https://img.shields.io/npm/l/@sonicjs-cms/core)](./LICENSE)
+[![Version](https://img.shields.io/npm/v/@warpcms-cms/core)](https://www.npmjs.com/package/@warpcms-cms/core)
+[![License](https://img.shields.io/npm/l/@warpcms-cms/core)](./LICENSE)
 
 ---
 
-## 🏠 New to SonicJS?
+## 🏠 New to WarpCMS?
 
-**Visit [sonicjs.com](https://sonicjs.com) for full documentation and guides.**
+**Visit [warpcms.com](https://warpcms.com) for full documentation and guides.**
 
-To create a new SonicJS project, use:
+To create a new WarpCMS project, use:
 
 ```bash
-npx create-sonicjs my-app
+npx create-warpcms my-app
 ```
 
-This is the recommended way to get started with SonicJS. It sets up everything you need with a single command.
+This is the recommended way to get started with WarpCMS. It sets up everything you need with a single command.
 
 ---
 
@@ -37,7 +37,7 @@ This is the recommended way to get started with SonicJS. It sets up everything y
 ## 📦 Installation
 
 ```bash
-npm install @sonicjs-cms/core
+npm install @warpcms-cms/core
 ```
 
 ### Required Peer Dependencies
@@ -58,10 +58,10 @@ npm install wrangler drizzle-kit  # For development
 
 ```typescript
 // src/index.ts
-import { createSonicJSApp } from '@sonicjs-cms/core'
-import type { SonicJSConfig } from '@sonicjs-cms/core'
+import { createWarpCMSApp } from '@warpcms-cms/core'
+import type { WarpCMSConfig } from '@warpcms-cms/core'
 
-const config: SonicJSConfig = {
+const config: WarpCMSConfig = {
   collections: {
     directory: './src/collections',
     autoSync: true
@@ -72,14 +72,14 @@ const config: SonicJSConfig = {
   }
 }
 
-export default createSonicJSApp(config)
+export default createWarpCMSApp(config)
 ```
 
 ### 2. Define Collections
 
 ```typescript
 // src/collections/blog-posts.collection.ts
-import type { CollectionConfig } from '@sonicjs-cms/core'
+import type { CollectionConfig } from '@warpcms-cms/core'
 
 export default {
   name: 'blog-posts',
@@ -120,19 +120,19 @@ export default {
 
 ```toml
 # wrangler.toml
-name = "my-sonicjs-app"
+name = "my-warpcms-app"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "my-sonicjs-db"
+database_name = "my-warpcms-db"
 database_id = "your-database-id"
-migrations_dir = "./node_modules/@sonicjs-cms/core/migrations"
+migrations_dir = "./node_modules/@warpcms-cms/core/migrations"
 
 [[r2_buckets]]
 binding = "BUCKET"
-bucket_name = "my-sonicjs-media"
+bucket_name = "my-warpcms-media"
 ```
 
 ### 4. Start Development
@@ -152,8 +152,8 @@ Visit `http://localhost:8787/admin` to access the admin interface.
 ### Main Application
 
 ```typescript
-import { createSonicJSApp } from '@sonicjs-cms/core'
-import type { SonicJSConfig, SonicJSApp, Bindings, Variables } from '@sonicjs-cms/core'
+import { createWarpCMSApp } from '@warpcms-cms/core'
+import type { WarpCMSConfig, WarpCMSApp, Bindings, Variables } from '@warpcms-cms/core'
 ```
 
 ### Services
@@ -165,7 +165,7 @@ import {
   MigrationService,
   Logger,
   PluginService
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ### Middleware
@@ -178,7 +178,7 @@ import {
   loggingMiddleware,
   cacheHeaders,
   securityHeaders
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ### Types
@@ -192,7 +192,7 @@ import type {
   User,
   Content,
   Media
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ### Templates
@@ -203,7 +203,7 @@ import {
   renderTable,
   renderPagination,
   renderAlert
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ### Utilities
@@ -214,7 +214,7 @@ import {
   TemplateRenderer,
   QueryFilterBuilder,
   metricsTracker
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ### Database
@@ -226,7 +226,7 @@ import {
   collections,
   content,
   media
-} from '@sonicjs-cms/core'
+} from '@warpcms-cms/core'
 ```
 
 ## 🔌 Subpath Exports
@@ -235,22 +235,22 @@ The package provides organized subpath exports:
 
 ```typescript
 // Services only
-import { MigrationService } from '@sonicjs-cms/core/services'
+import { MigrationService } from '@warpcms-cms/core/services'
 
 // Middleware only
-import { requireAuth } from '@sonicjs-cms/core/middleware'
+import { requireAuth } from '@warpcms-cms/core/middleware'
 
 // Types only
-import type { CollectionConfig } from '@sonicjs-cms/core/types'
+import type { CollectionConfig } from '@warpcms-cms/core/types'
 
 // Templates only
-import { renderForm } from '@sonicjs-cms/core/templates'
+import { renderForm } from '@warpcms-cms/core/templates'
 
 // Utilities only
-import { sanitizeInput } from '@sonicjs-cms/core/utils'
+import { sanitizeInput } from '@warpcms-cms/core/utils'
 
 // Plugins only
-import { HookSystemImpl } from '@sonicjs-cms/core/plugins'
+import { HookSystemImpl } from '@warpcms-cms/core/plugins'
 ```
 
 ## 🎯 Usage Examples
@@ -259,8 +259,8 @@ import { HookSystemImpl } from '@sonicjs-cms/core/plugins'
 
 ```typescript
 import { Hono } from 'hono'
-import { requireAuth } from '@sonicjs-cms/core/middleware'
-import type { Bindings } from '@sonicjs-cms/core'
+import { requireAuth } from '@warpcms-cms/core/middleware'
+import type { Bindings } from '@warpcms-cms/core'
 
 const customRoutes = new Hono<{ Bindings: Bindings }>()
 
@@ -271,7 +271,7 @@ customRoutes.get('/api/custom', requireAuth(), async (c) => {
 })
 
 // In your app config
-export default createSonicJSApp({
+export default createWarpCMSApp({
   routes: [{ path: '/custom', handler: customRoutes }]
 })
 ```
@@ -279,7 +279,7 @@ export default createSonicJSApp({
 ### Custom Plugin
 
 ```typescript
-import type { Plugin } from '@sonicjs-cms/core'
+import type { Plugin } from '@warpcms-cms/core'
 
 export default {
   name: 'my-plugin',
@@ -303,7 +303,7 @@ export default {
 ### Accessing Services
 
 ```typescript
-import { Logger, MigrationService } from '@sonicjs-cms/core'
+import { Logger, MigrationService } from '@warpcms-cms/core'
 
 const logger = new Logger({ category: 'custom', level: 'info' })
 logger.info('Application started')
@@ -315,7 +315,7 @@ await migrationService.runAllMigrations()
 ## 🏗️ Architecture
 
 ```
-@sonicjs-cms/core
+@warpcms-cms/core
 ├── src/
 │   ├── app.ts              # Application factory
 │   ├── db/                 # Database schemas & utilities
@@ -337,7 +337,7 @@ await migrationService.runAllMigrations()
 
 ### Migration System
 
-SonicJS uses a **build-time migration bundler** because Cloudflare Workers cannot access the filesystem at runtime. All migration SQL is bundled into TypeScript during the build process.
+WarpCMS uses a **build-time migration bundler** because Cloudflare Workers cannot access the filesystem at runtime. All migration SQL is bundled into TypeScript during the build process.
 
 #### Creating New Migrations
 
@@ -371,7 +371,7 @@ SonicJS uses a **build-time migration bundler** because Cloudflare Workers canno
 
 5. **Apply to your test database**:
    ```bash
-   cd ../my-sonicjs-app
+   cd ../my-warpcms-app
    wrangler d1 migrations apply DB --local
    ```
 
@@ -406,7 +406,7 @@ The `generate-migrations.ts` script:
 
 ## 🔄 Versioning
 
-SonicJS follows semantic versioning:
+WarpCMS follows semantic versioning:
 
 - **v2.x.x** - Current npm package (core extracted)
 - **v1.x.x** - Legacy monolith (deprecated)
@@ -417,7 +417,7 @@ SonicJS follows semantic versioning:
 
 ```bash
 # Install the new package
-npm install @sonicjs-cms/core@2.0.0-alpha.1
+npm install @warpcms-cms/core@2.0.0-alpha.1
 
 # Run any new migrations
 wrangler d1 migrations apply DB
@@ -428,11 +428,11 @@ npm run dev
 
 ## 📖 Documentation
 
-- [Getting Started](https://sonicjs.com/installation)
-- [API Reference](https://sonicjs.com/api)
-- [Collections Guide](https://sonicjs.com/collections)
-- [Plugin Development](https://sonicjs.com/plugins)
-- [Deployment](https://sonicjs.com/deployment)
+- [Getting Started](https://warpcms.com/installation)
+- [API Reference](https://warpcms.com/api)
+- [Collections Guide](https://warpcms.com/collections)
+- [Plugin Development](https://warpcms.com/plugins)
+- [Deployment](https://warpcms.com/deployment)
 
 ## 🤝 Contributing
 
@@ -440,18 +440,18 @@ We welcome contributions! Please see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## 📄 License
 
-MIT © SonicJS Team - See [LICENSE](./LICENSE) for details.
+MIT © WarpCMS Team - See [LICENSE](./LICENSE) for details.
 
 ## 💬 Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/lane711/sonicjs/issues)
+- **Issues**: [GitHub Issues](https://github.com/badmuriss/warpcms/issues)
 - **Discord**: [Join our community](https://discord.gg/8bMy6bv3sZ)
-- **Docs**: [sonicjs.com](https://sonicjs.com)
-- **Twitter**: [@sonicjscms](https://twitter.com/sonicjscms)
+- **Docs**: [warpcms.com](https://warpcms.com)
+- **Twitter**: [@warpcmscms](https://twitter.com/warpcmscms)
 
 ## 🔖 Resources
 
-- [Create SonicJS App](../../packages/create-app) - Scaffold a new project
+- [Create WarpCMS App](../../packages/create-app) - Scaffold a new project
 - [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
 - [D1 Database](https://developers.cloudflare.com/d1/)
 - [R2 Storage](https://developers.cloudflare.com/r2/)

@@ -1,8 +1,8 @@
-export { H as HookSystemImpl, a as HookUtils, b as PluginManager, P as PluginRegistryImpl, c as PluginValidator, S as ScopedHookSystem } from './plugin-manager-vBal9Zip.cjs';
+export { H as HookSystemImpl, a as HookUtils, P as PluginManager, b as PluginRegistryImpl, c as PluginValidator, S as ScopedHookSystem } from './plugin-manager-COxzL2R_.cjs';
 import { D1Database } from '@cloudflare/workers-types';
 import * as hono from 'hono';
 import { Context, Next } from 'hono';
-import './plugin-zvZpaiP5.cjs';
+import './plugin-s6JZLdGa.cjs';
 import 'zod';
 
 interface TurnstileSettings {
@@ -46,7 +46,7 @@ declare class TurnstileService {
  *
  * Usage:
  * ```typescript
- * import { verifyTurnstile } from '@sonicjs-cms/core/plugins'
+ * import { verifyTurnstile } from '@warpcms/core/plugins'
  *
  * app.post('/api/contact', verifyTurnstile, async (c) => {
  *   // Token already verified, process form...

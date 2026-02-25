@@ -1,6 +1,6 @@
-export { C as CorePlugin, n as LogCategory, o as LogEntry, p as LogFilter, m as LogLevel, L as Logger, e as Migration, M as MigrationService, h as MigrationStatus, q as PluginBootstrapService, P as PluginService, d as cleanupRemovedCollections, f as fullCollectionSync, g as getAvailableCollectionNames, j as getLogger, c as getManagedCollections, k as initLogger, i as isCollectionManaged, a as loadCollectionConfig, l as loadCollectionConfigs, r as registerCollections, b as syncCollection, s as syncCollections, v as validateCollectionConfig } from './plugin-bootstrap-DKB5f8-E.cjs';
-import { b as TelemetryConfig, c as TelemetryIdentity, T as TelemetryEvent, a as TelemetryProperties } from './telemetry-UiD1i9GS.cjs';
-import './collection-config-BF95LgQb.cjs';
+export { b as CorePlugin, L as LogCategory, e as LogEntry, f as LogFilter, g as LogLevel, h as Logger, i as Migration, j as MigrationService, k as MigrationStatus, z as PluginBootstrapService, B as PluginService, E as cleanupRemovedCollections, I as fullCollectionSync, J as getAvailableCollectionNames, K as getLogger, O as getManagedCollections, Q as initLogger, a4 as isCollectionManaged, a5 as loadCollectionConfig, a6 as loadCollectionConfigs, ae as registerCollections, ar as syncCollection, as as syncCollections, av as validateCollectionConfig } from './plugin-bootstrap-Bb4lM9Qt.cjs';
+import { T as TelemetryConfig, b as TelemetryIdentity, a as TelemetryEvent, c as TelemetryProperties } from './telemetry-NcAScOzA.cjs';
+import './collection-config-D_PFMBug.cjs';
 import '@cloudflare/workers-types';
 import 'drizzle-zod';
 import 'drizzle-orm/sqlite-core';
@@ -132,7 +132,7 @@ declare class SettingsService {
 /**
  * Telemetry Service
  *
- * Privacy-first telemetry service using custom SonicJS stats endpoint
+ * Privacy-first telemetry service using custom WarpCMS stats endpoint
  * - No PII collection
  * - Opt-out by default
  * - Silent failures (never blocks app)
@@ -199,7 +199,7 @@ declare class TelemetryService {
      */
     private sanitizeProperties;
     /**
-     * Get SonicJS version
+     * Get WarpCMS version
      */
     private getVersion;
     /**

@@ -1,8 +1,8 @@
 import { NewEmailTheme } from '../schema';
 
 export const DEFAULT_EMAIL_THEME: Omit<NewEmailTheme, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> = {
-  name: 'SonicJS AI Default',
-  description: 'Professional email theme matching SonicJS AI branding',
+  name: 'WarpCMS AI Default',
+  description: 'Professional email theme matching WarpCMS AI branding',
   isDefault: true,
   isActive: true,
   

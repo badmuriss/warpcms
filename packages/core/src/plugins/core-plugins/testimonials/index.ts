@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { Plugin } from '@sonicjs-cms/core'
+import { Plugin } from '@warpcms/core'
 import { PluginBuilder } from '../../sdk/plugin-builder'
 
 const testimonialSchema = z.object({
@@ -270,8 +270,8 @@ export function createTestimonialPlugin(): Plugin {
 
   builder.metadata({
     author: {
-      name: 'SonicJS',
-      email: 'info@sonicjs.com'
+      name: 'WarpCMS',
+      email: 'info@warpcms.com'
     },
     license: 'MIT',
     compatibility: '^1.0.0'

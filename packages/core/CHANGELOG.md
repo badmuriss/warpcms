@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@sonicjs-cms/core` will be documented in this file.
+All notable changes to `@warpcms-cms/core` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🔧 Fixes
 
-- **Package Name**: Confirmed use of `@sonicjs-cms` organization (not `@sonicjs`)
+- **Package Name**: Confirmed use of `@warpcms-cms` organization (not `@warpcms`)
 - **Version Bump**: Updated to alpha.2 for npm publication
 
 ### 📝 Notes
@@ -23,13 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎉 Initial Alpha Release
 
-First alpha release of `@sonicjs-cms/core` as a standalone npm package.
+First alpha release of `@warpcms-cms/core` as a standalone npm package.
 
 ### ✨ Features
 
 #### Core Application
-- **Application Factory**: `createSonicJSApp()` for easy app initialization
-- **Configuration API**: Type-safe `SonicJSConfig` for collections, plugins, routes
+- **Application Factory**: `createWarpCMSApp()` for easy app initialization
+- **Configuration API**: Type-safe `WarpCMSConfig` for collections, plugins, routes
 - **Health Endpoint**: Built-in `/health` endpoint for monitoring
 
 #### Services
@@ -113,8 +113,8 @@ First alpha release of `@sonicjs-cms/core` as a standalone npm package.
 
 This is a complete rewrite from the monolith architecture:
 
-- **New Package Name**: `@sonicjs-cms/core` → `@sonicjs-cms/core`
-- **New API**: `createSonicJSApp()` instead of manual setup
+- **New Package Name**: `@warpcms-cms/core` → `@warpcms-cms/core`
+- **New API**: `createWarpCMSApp()` instead of manual setup
 - **Collection Schema**: New structure with `schema.properties`
 - **Plugin Configuration**: New plugin directory structure
 - **Migration Path**: No automatic migration from v1.x (greenfield only)
@@ -143,7 +143,7 @@ This is a complete rewrite from the monolith architecture:
 
 ### 🙏 Credits
 
-Built by the SonicJS team with contributions from the community.
+Built by the WarpCMS team with contributions from the community.
 
 ---
 
@@ -162,10 +162,10 @@ Built by the SonicJS team with contributions from the community.
 
 ## Links
 
-- [GitHub Repository](https://github.com/sonicjs/sonicjs)
-- [npm Package](https://www.npmjs.com/package/@sonicjs-cms/core)
-- [Documentation](https://docs.sonicjs.com)
-- [Discord Community](https://discord.gg/sonicjs)
+- [GitHub Repository](https://github.com/warpcms/warpcms)
+- [npm Package](https://www.npmjs.com/package/@warpcms-cms/core)
+- [Documentation](https://docs.warpcms.com)
+- [Discord Community](https://discord.gg/warpcms)
 
 ---
 

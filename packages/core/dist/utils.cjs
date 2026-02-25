@@ -1,7 +1,7 @@
 'use strict';
 
-var chunkDMZI7OU3_cjs = require('./chunk-DMZI7OU3.cjs');
-var chunkP3XDZL6Q_cjs = require('./chunk-P3XDZL6Q.cjs');
+var chunkJLNQTGWQ_cjs = require('./chunk-JLNQTGWQ.cjs');
+var chunkTOACTYOV_cjs = require('./chunk-TOACTYOV.cjs');
 var chunkRCQ2HIQD_cjs = require('./chunk-RCQ2HIQD.cjs');
 require('./chunk-IGJUBJBW.cjs');
 
@@ -9,87 +9,95 @@ require('./chunk-IGJUBJBW.cjs');
 
 Object.defineProperty(exports, "QueryFilterBuilder", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.QueryFilterBuilder; }
+  get: function () { return chunkJLNQTGWQ_cjs.QueryFilterBuilder; }
 });
 Object.defineProperty(exports, "SONICJS_VERSION", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.SONICJS_VERSION; }
+  get: function () { return chunkJLNQTGWQ_cjs.SONICJS_VERSION; }
 });
 Object.defineProperty(exports, "TemplateRenderer", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.TemplateRenderer; }
+  get: function () { return chunkJLNQTGWQ_cjs.TemplateRenderer; }
+});
+Object.defineProperty(exports, "WARPJS_VERSION", {
+  enumerable: true,
+  get: function () { return chunkJLNQTGWQ_cjs.WARPJS_VERSION; }
 });
 Object.defineProperty(exports, "buildQuery", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.buildQuery; }
+  get: function () { return chunkJLNQTGWQ_cjs.buildQuery; }
 });
 Object.defineProperty(exports, "escapeHtml", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.escapeHtml; }
+  get: function () { return chunkJLNQTGWQ_cjs.escapeHtml; }
 });
 Object.defineProperty(exports, "generateSlug", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.generateSlug; }
+  get: function () { return chunkJLNQTGWQ_cjs.generateSlug; }
 });
 Object.defineProperty(exports, "getBlocksFieldConfig", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.getBlocksFieldConfig; }
+  get: function () { return chunkJLNQTGWQ_cjs.getBlocksFieldConfig; }
 });
 Object.defineProperty(exports, "getCoreVersion", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.getCoreVersion; }
+  get: function () { return chunkJLNQTGWQ_cjs.getCoreVersion; }
+});
+Object.defineProperty(exports, "getWarpCMSVersion", {
+  enumerable: true,
+  get: function () { return chunkJLNQTGWQ_cjs.getWarpCMSVersion; }
 });
 Object.defineProperty(exports, "parseBlocksValue", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.parseBlocksValue; }
+  get: function () { return chunkJLNQTGWQ_cjs.parseBlocksValue; }
 });
 Object.defineProperty(exports, "renderTemplate", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.renderTemplate; }
+  get: function () { return chunkJLNQTGWQ_cjs.renderTemplate; }
 });
 Object.defineProperty(exports, "sanitizeInput", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.sanitizeInput; }
+  get: function () { return chunkJLNQTGWQ_cjs.sanitizeInput; }
 });
 Object.defineProperty(exports, "sanitizeObject", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.sanitizeObject; }
+  get: function () { return chunkJLNQTGWQ_cjs.sanitizeObject; }
 });
 Object.defineProperty(exports, "templateRenderer", {
   enumerable: true,
-  get: function () { return chunkDMZI7OU3_cjs.templateRenderer; }
+  get: function () { return chunkJLNQTGWQ_cjs.templateRenderer; }
 });
 Object.defineProperty(exports, "generateInstallationId", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.generateInstallationId; }
+  get: function () { return chunkTOACTYOV_cjs.generateInstallationId; }
 });
 Object.defineProperty(exports, "generateProjectId", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.generateProjectId; }
+  get: function () { return chunkTOACTYOV_cjs.generateProjectId; }
 });
 Object.defineProperty(exports, "getDefaultTelemetryConfig", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.getDefaultTelemetryConfig; }
+  get: function () { return chunkTOACTYOV_cjs.getDefaultTelemetryConfig; }
 });
 Object.defineProperty(exports, "getTelemetryConfig", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.getTelemetryConfig; }
+  get: function () { return chunkTOACTYOV_cjs.getTelemetryConfig; }
 });
 Object.defineProperty(exports, "isTelemetryEnabled", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.isTelemetryEnabled; }
+  get: function () { return chunkTOACTYOV_cjs.isTelemetryEnabled; }
 });
 Object.defineProperty(exports, "sanitizeErrorMessage", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.sanitizeErrorMessage; }
+  get: function () { return chunkTOACTYOV_cjs.sanitizeErrorMessage; }
 });
 Object.defineProperty(exports, "sanitizeRoute", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.sanitizeRoute; }
+  get: function () { return chunkTOACTYOV_cjs.sanitizeRoute; }
 });
 Object.defineProperty(exports, "shouldSkipEvent", {
   enumerable: true,
-  get: function () { return chunkP3XDZL6Q_cjs.shouldSkipEvent; }
+  get: function () { return chunkTOACTYOV_cjs.shouldSkipEvent; }
 });
 Object.defineProperty(exports, "metricsTracker", {
   enumerable: true,

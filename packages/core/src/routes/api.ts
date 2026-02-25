@@ -61,13 +61,13 @@ apiRoutes.get('/', (c) => {
   return c.json({
     openapi: '3.0.0',
     info: {
-      title: 'SonicJS AI API',
+      title: 'WarpCMS API',
       version: '0.1.0',
-      description: 'RESTful API for SonicJS headless CMS - a modern, AI-powered content management system built on Cloudflare Workers',
+      description: 'RESTful API for WarpCMS headless CMS - a modern, edge-first content management system built on Cloudflare Workers',
       contact: {
-        name: 'SonicJS Support',
+        name: 'WarpCMS Support',
         url: `${serverUrl}/docs`,
-        email: 'support@sonicjs.com'
+        email: 'support@warpcms.dev'
       },
       license: {
         name: 'MIT',
@@ -84,7 +84,7 @@ apiRoutes.get('/', (c) => {
       '/api/': {
         get: {
           summary: 'API Information',
-          description: 'Returns OpenAPI specification for the SonicJS API',
+          description: 'Returns OpenAPI specification for the WarpCMS API',
           operationId: 'getApiInfo',
           tags: ['System'],
           responses: {

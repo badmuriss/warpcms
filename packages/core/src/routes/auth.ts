@@ -585,12 +585,12 @@ authRoutes.post('/seed-admin', async (c) => {
     
     // Check if admin user already exists
     const existingAdmin = await db.prepare('SELECT id FROM users WHERE email = ? OR username = ?')
-      .bind('admin@sonicjs.com', 'admin')
+      .bind('admin@warpcms.com', 'admin')
       .first()
 
     if (existingAdmin) {
       // Update the password to ensure it's correct for testing
-      const passwordHash = await AuthManager.hashPassword('sonicjs!')
+      const passwordHash = await AuthManager.hashPassword('warpcms!')
       await db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
         .bind(passwordHash, Date.now(), existingAdmin.id)
         .run()
@@ -599,7 +599,7 @@ authRoutes.post('/seed-admin', async (c) => {
         message: 'Admin user already exists (password updated)',
         user: {
           id: existingAdmin.id,
-          email: 'admin@sonicjs.com',
+          email: 'admin@warpcms.com',
           username: 'admin',
           role: 'admin'
         }
@@ -607,12 +607,12 @@ authRoutes.post('/seed-admin', async (c) => {
     }
 
     // Hash password
-    const passwordHash = await AuthManager.hashPassword('sonicjs!')
+    const passwordHash = await AuthManager.hashPassword('warpcms!')
     
     // Create admin user
     const userId = 'admin-user-id'
     const now = Date.now()
-    const adminEmail = 'admin@sonicjs.com'.toLowerCase()
+    const adminEmail = 'admin@warpcms.com'.toLowerCase()
     
     await db.prepare(`
       INSERT INTO users (id, email, username, first_name, last_name, password_hash, role, is_active, created_at, updated_at)
@@ -712,7 +712,7 @@ authRoutes.get('/accept-invitation', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Accept Invitation - SonicJS AI</title>
+        <title>Accept Invitation - WarpCMS AI</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {
@@ -1040,7 +1040,7 @@ authRoutes.get('/reset-password', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reset Password - SonicJS AI</title>
+        <title>Reset Password - WarpCMS AI</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {

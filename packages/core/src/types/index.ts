@@ -1,7 +1,7 @@
 /**
  * Types Module Exports
  *
- * TypeScript type definitions for SonicJS
+ * TypeScript type definitions for WarpCMS
  */
 
 // Collection Configuration Types

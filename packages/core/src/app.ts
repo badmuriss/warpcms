@@ -1,7 +1,7 @@
 /**
  * Main Application Factory
  *
- * Creates a configured SonicJS application with all core functionality
+ * Creates a configured WarpCMS application with all core functionality
  */
 
 import { Hono } from 'hono'
@@ -16,26 +16,13 @@ import {
   testCleanupRoutes,
   adminContentRoutes,
   adminUsersRoutes,
-  adminMediaRoutes,
-  adminPluginRoutes,
   adminLogsRoutes,
   adminDashboardRoutes,
-  adminCollectionsRoutes,
   adminSettingsRoutes,
-  adminFormsRoutes,
-  publicFormsRoutes,
-  adminApiReferenceRoutes
 } from './routes'
 import { getCoreVersion } from './utils/version'
 import { bootstrapMiddleware } from './middleware/bootstrap'
 import { metricsMiddleware } from './middleware/metrics'
-import { createDatabaseToolsAdminRoutes } from './plugins/core-plugins/database-tools-plugin/admin-routes'
-import { createSeedDataAdminRoutes } from './plugins/core-plugins/seed-data-plugin/admin-routes'
-import { emailPlugin } from './plugins/core-plugins/email-plugin'
-import { otpLoginPlugin } from './plugins/core-plugins/otp-login-plugin'
-import { aiSearchPlugin } from './plugins/core-plugins/ai-search-plugin'
-import { createMagicLinkAuthPlugin } from './plugins/available/magic-link-auth'
-import cachePlugin from './plugins/cache'
 import { faviconSvg } from './assets/favicon'
 
 // ============================================================================
@@ -70,20 +57,7 @@ export interface Variables {
   appVersion?: string
 }
 
-export interface SonicJSConfig {
-  // Collections configuration
-  collections?: {
-    directory?: string
-    autoSync?: boolean
-  }
-
-  // Plugins configuration
-  plugins?: {
-    directory?: string
-    autoLoad?: boolean
-    disableAll?: boolean  // Disable all plugins including core plugins
-  }
-
+export interface WarpCMSConfig {
   // Custom routes
   routes?: Array<{
     path: string
@@ -101,23 +75,23 @@ export interface SonicJSConfig {
   name?: string
 }
 
-export type SonicJSApp = Hono<{ Bindings: Bindings; Variables: Variables }>
+export type WarpCMSApp = Hono<{ Bindings: Bindings; Variables: Variables }>
 
 // ============================================================================
 // Application Factory
 // ============================================================================
 
 /**
- * Create a SonicJS application with core functionality
+ * Create a WarpCMS application with core functionality
  *
  * @param config - Application configuration
  * @returns Configured Hono application
  *
  * @example
  * ```typescript
- * import { createSonicJSApp } from '@sonicjs-cms/core'
+ * import { createWarpCMSApp } from '@warpcms/core'
  *
- * const app = createSonicJSApp({
+ * const app = createWarpCMSApp({
  *   collections: {
  *     directory: './src/collections',
  *     autoSync: true
@@ -131,12 +105,12 @@ export type SonicJSApp = Hono<{ Bindings: Bindings; Variables: Variables }>
  * export default app
  * ```
  */
-export function createSonicJSApp(config: SonicJSConfig = {}): SonicJSApp {
+export function createWarpCMSApp(config: WarpCMSConfig = {}): WarpCMSApp {
   const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
   // Set app metadata
   const appVersion = config.version || getCoreVersion()
-  const appName = config.name || 'SonicJS AI'
+  const appName = config.name || 'WarpCMS'
 
   // App version middleware
   app.use('*', async (c, next) => {
@@ -184,58 +158,14 @@ export function createSonicJSApp(config: SonicJSConfig = {}): SonicJSApp {
   app.route('/api/system', apiSystemRoutes)
   app.route('/admin/api', adminApiRoutes)
   app.route('/admin/dashboard', adminDashboardRoutes)
-  app.route('/admin/collections', adminCollectionsRoutes)
-  app.route('/admin/forms', adminFormsRoutes)
   app.route('/admin/settings', adminSettingsRoutes)
-  app.route('/forms', publicFormsRoutes)
-  app.route('/api/forms', publicFormsRoutes) // API endpoint for form submissions
-  app.route('/admin/api-reference', adminApiReferenceRoutes)
-  app.route('/admin/database-tools', createDatabaseToolsAdminRoutes())
-  app.route('/admin/seed-data', createSeedDataAdminRoutes())
   app.route('/admin/content', adminContentRoutes)
-  app.route('/admin/media', adminMediaRoutes)
-  // Plugin routes - AI Search (MUST be registered BEFORE admin/plugins to avoid route conflict)
-  // Register AI Search routes first so they take precedence over the generic /:id handler
-  if (aiSearchPlugin.routes && aiSearchPlugin.routes.length > 0) {
-    for (const route of aiSearchPlugin.routes) {
-      app.route(route.path, route.handler)
-    }
-  }
-
-  // Plugin routes - Cache (dashboard and management API)
-  // Fixes GitHub Issue #461: Cache routes were not registered
-  app.route('/admin/cache', cachePlugin.getRoutes())
-
-  // Plugin routes - OTP Login (MUST be registered BEFORE admin/plugins to avoid route conflict)
-  // Register OTP Login routes first so they take precedence over the generic /:id handler
-  if (otpLoginPlugin.routes && otpLoginPlugin.routes.length > 0) {
-    for (const route of otpLoginPlugin.routes) {
-      app.route(route.path, route.handler as any)
-    }
-  }
-
-  app.route('/admin/plugins', adminPluginRoutes)
   app.route('/admin/logs', adminLogsRoutes)
   app.route('/admin', adminUsersRoutes)
   app.route('/auth', authRoutes)
 
   // Test cleanup routes (only for development/test environments)
   app.route('/', testCleanupRoutes)
-
-  // Plugin routes - Email
-  if (emailPlugin.routes && emailPlugin.routes.length > 0) {
-    for (const route of emailPlugin.routes) {
-      app.route(route.path, route.handler as any)
-    }
-  }
-
-  // Plugin routes - Magic Link Auth (passwordless authentication via email links)
-  const magicLinkPlugin = createMagicLinkAuthPlugin()
-  if (magicLinkPlugin.routes && magicLinkPlugin.routes.length > 0) {
-    for (const route of magicLinkPlugin.routes) {
-      app.route(route.path, route.handler as any)
-    }
-  }
 
   // Serve favicon
   app.get('/favicon.svg', (c) => {
@@ -322,14 +252,21 @@ export function createSonicJSApp(config: SonicJSConfig = {}): SonicJSApp {
   return app
 }
 
+/** @deprecated Use WarpCMSConfig */
+export type SonicJSConfig = WarpCMSConfig
+/** @deprecated Use WarpCMSApp */
+export type SonicJSApp = WarpCMSApp
+/** @deprecated Use createWarpCMSApp */
+export const createSonicJSApp = createWarpCMSApp
+
 /**
  * Setup core middleware (backward compatibility)
  *
  * @param _app - Hono application
- * @deprecated Use createSonicJSApp() instead
+ * @deprecated Use createWarpCMSApp() instead
  */
-export function setupCoreMiddleware(_app: SonicJSApp): void {
-  console.warn('setupCoreMiddleware is deprecated. Use createSonicJSApp() instead.')
+export function setupCoreMiddleware(_app: WarpCMSApp): void {
+  console.warn('setupCoreMiddleware is deprecated. Use createWarpCMSApp() instead.')
   // Backward compatibility implementation
 }
 
@@ -337,9 +274,9 @@ export function setupCoreMiddleware(_app: SonicJSApp): void {
  * Setup core routes (backward compatibility)
  *
  * @param _app - Hono application
- * @deprecated Use createSonicJSApp() instead
+ * @deprecated Use createWarpCMSApp() instead
  */
-export function setupCoreRoutes(_app: SonicJSApp): void {
-  console.warn('setupCoreRoutes is deprecated. Use createSonicJSApp() instead.')
+export function setupCoreRoutes(_app: WarpCMSApp): void {
+  console.warn('setupCoreRoutes is deprecated. Use createWarpCMSApp() instead.')
   // Backward compatibility implementation
 }

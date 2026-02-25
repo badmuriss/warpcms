@@ -74,16 +74,6 @@ router.get('/stats', async (c) => {
   try {
     const db = c.env.DB
 
-    // Get collections count
-    let collectionsCount = 0
-    try {
-      const collectionsStmt = db.prepare('SELECT COUNT(*) as count FROM collections WHERE is_active = 1')
-      const collectionsResult = await collectionsStmt.first()
-      collectionsCount = (collectionsResult as any)?.count || 0
-    } catch (error) {
-      console.error('Error fetching collections count:', error)
-    }
-
     // Get content count
     let contentCount = 0
     try {
@@ -117,7 +107,6 @@ router.get('/stats', async (c) => {
     }
 
     const html = renderStatsCards({
-      collections: collectionsCount,
       contentItems: contentCount,
       mediaFiles: mediaCount,
       users: usersCount,
@@ -187,7 +176,7 @@ router.get('/recent-activity', async (c) => {
         u.last_name
       FROM activity_logs a
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE a.resource_type IN ('content', 'collections', 'users', 'media')
+      WHERE a.resource_type IN ('content', 'users', 'media')
       ORDER BY a.created_at DESC
       LIMIT ?
     `)

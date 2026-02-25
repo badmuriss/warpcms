@@ -4,7 +4,6 @@ import {
 } from "../layouts/admin-layout-v2.template";
 
 export interface DashboardStats {
-  collections: number;
   contentItems: number;
   mediaFiles: number;
   users: number;
@@ -16,7 +15,7 @@ export interface DashboardStats {
 
 export interface ActivityItem {
   id: string;
-  type: "content" | "media" | "user" | "collection";
+  type: "content" | "media" | "user";
   action: string;
   description: string;
   timestamp: string;
@@ -52,20 +51,14 @@ export function renderDashboardPage(data: DashboardPageData): string {
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your SonicJS AI admin dashboard</p>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your WarpCMS AI admin dashboard</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
-        <a href="https://sonicjs.com" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-700 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm">
+        <a href="/admin/content/new" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-700 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
-          Developer Docs
-        </a>
-        <a href="/admin/api-reference" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
-          </svg>
-          API Docs
+          New Content
         </a>
         <a href="/api" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -148,14 +141,14 @@ export function renderDashboardPageWithDynamicMenu(
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your SonicJS AI admin dashboard</p>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your WarpCMS AI admin dashboard</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
-        <a href="/admin/api-reference" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
+        <a href="/admin/content/new" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-700 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
-          API Docs
+          New Content
         </a>
         <a href="/api" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -168,7 +161,6 @@ export function renderDashboardPageWithDynamicMenu(
 
     <div id="stats-container" class="mb-8" hx-get="/admin/dashboard/stats" hx-trigger="load">
       ${renderStatsCards({
-        collections: 0,
         contentItems: 0,
         mediaFiles: 0,
         users: 0,
@@ -231,12 +223,6 @@ export function renderDashboardPageWithDynamicMenu(
 export function renderStatsCards(stats: DashboardStats): string {
   const cards = [
     {
-      title: "Total Collections",
-      value: stats.collections.toString(),
-      change: "12.5",
-      isPositive: true,
-    },
-    {
       title: "Content Items",
       value: stats.contentItems.toString(),
       change: "8.2",
@@ -256,12 +242,12 @@ export function renderStatsCards(stats: DashboardStats): string {
     },
   ];
 
-  const cardColors = ['text-cyan-400', 'text-lime-400', 'text-pink-400', 'text-purple-400'];
+  const cardColors = ['text-cyan-400', 'text-lime-400', 'text-purple-400'];
 
   return `
     <div>
       <h3 class="text-base font-semibold text-zinc-950 dark:text-white">Last 30 days</h3>
-      <dl class="mt-5 grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
+      <dl class="mt-5 grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
         ${cards.map((card, index) => `
           <div class="px-4 py-5 sm:p-6">
             <dt class="text-base font-normal text-zinc-700 dark:text-zinc-100">${card.title}</dt>
@@ -291,8 +277,8 @@ function renderStatsCardsSkeleton(): string {
   return `
     <div>
       <div class="h-6 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-5"></div>
-      <div class="grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
-        ${Array(4)
+      <div class="grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+        ${Array(3)
           .fill(0)
           .map(
             () => `
@@ -542,11 +528,6 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
           bgColor: 'bg-pink-500/10 dark:bg-pink-400/10',
           textColor: 'text-pink-700 dark:text-pink-300'
         }
-      case 'collection':
-        return {
-          bgColor: 'bg-purple-500/10 dark:bg-purple-400/10',
-          textColor: 'text-purple-700 dark:text-purple-300'
-        }
       default:
         return {
           bgColor: 'bg-gray-500/10 dark:bg-gray-400/10',
@@ -623,19 +604,27 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
 function renderQuickActions(): string {
   const actions = [
     {
-      title: "Create Content",
-      description: "Add new blog post or page",
-      href: "/admin/content/new",
+      title: "New Image",
+      description: "Upload and manage images",
+      href: "/admin/content/new?type=image",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>`,
     },
     {
-      title: "Upload Media",
-      description: "Add images and files",
-      href: "/admin/media",
+      title: "New Text",
+      description: "Create plain text content",
+      href: "/admin/content/new?type=text",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+      </svg>`,
+    },
+    {
+      title: "New HTML",
+      description: "Create rich HTML content",
+      href: "/admin/content/new?type=html",
+      icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
       </svg>`,
     },
     {

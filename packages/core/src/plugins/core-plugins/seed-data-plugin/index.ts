@@ -1,5 +1,5 @@
 import { PluginBuilder } from '../../sdk/plugin-builder'
-import { Plugin } from '@sonicjs-cms/core'
+import { Plugin } from '@warpcms/core'
 // import { createSeedDataAdminRoutes } from './admin-routes'
 import { SeedDataService } from './services/seed-data-service'
 
@@ -11,7 +11,7 @@ export function createSeedDataPlugin(): Plugin {
   })
 
   builder.metadata({
-    author: { name: 'SonicJS', email: 'admin@sonicjs.com' },
+    author: { name: 'WarpCMS', email: 'admin@warpcms.com' },
     license: 'MIT',
     compatibility: '^1.0.0',
     dependencies: []

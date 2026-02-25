@@ -359,7 +359,7 @@ export class PluginValidator implements IPluginValidator {
   }
 
   /**
-   * Validate plugin compatibility with SonicJS version
+   * Validate plugin compatibility with WarpCMS version
    */
   validateCompatibility(plugin: Plugin, sonicVersion: string): PluginValidationResult {
     const errors: string[] = []
@@ -372,7 +372,7 @@ export class PluginValidator implements IPluginValidator {
 
     try {
       if (!semver.satisfies(sonicVersion, plugin.compatibility)) {
-        errors.push(`Plugin requires SonicJS ${plugin.compatibility}, but current version is ${sonicVersion}`)
+        errors.push(`Plugin requires WarpCMS ${plugin.compatibility}, but current version is ${sonicVersion}`)
       }
     } catch (error) {
       errors.push(`Invalid compatibility version format: ${plugin.compatibility}`)

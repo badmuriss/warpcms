@@ -38,7 +38,7 @@ export interface ContentListPageData {
 export function renderContentListPage(data: ContentListPageData): string {
   // Build current URL parameters to pass to edit page
   const urlParams = new URLSearchParams()
-  if (data.modelName && data.modelName !== 'all') urlParams.set('model', data.modelName)
+  if (data.modelName && data.modelName !== 'all') urlParams.set('type', data.modelName)
   if (data.status && data.status !== 'all') urlParams.set('status', data.status)
   if (data.search) urlParams.set('search', data.search)
   if (data.page && data.page !== 1) urlParams.set('page', data.page.toString())
@@ -51,10 +51,10 @@ export function renderContentListPage(data: ContentListPageData): string {
   const filterBarData: FilterBarData = {
     filters: [
       {
-        name: 'model',
-        label: 'Model',
+        name: 'type',
+        label: 'Type',
         options: [
-          { value: 'all', label: 'All Models', selected: data.modelName === 'all' },
+          { value: 'all', label: 'All Types', selected: data.modelName === 'all' },
           ...data.models.map(model => ({
             value: model.name,
             label: model.displayName,
@@ -115,7 +115,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     },
     {
       key: 'modelName',
-      label: 'Model',
+      label: 'Type',
       sortable: true,
       sortType: 'string',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
@@ -207,7 +207,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     endItem,
     baseUrl: '/admin/content',
     queryParams: {
-      model: data.modelName,
+      type: data.modelName,
       status: data.status,
       ...(data.search ? { search: data.search } : {})
     },
@@ -242,16 +242,16 @@ export function renderContentListPage(data: ContentListPageData): string {
           <div class="px-6 py-5">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-4 flex-1">
-                <!-- Model Filter -->
+                <!-- Type Filter -->
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Model</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Type</label>
                   <div class="grid grid-cols-1">
                     <select
-                      name="model"
-                      onchange="updateContentFilters('model', this.value)"
+                      name="type"
+                      onchange="updateContentFilters('type', this.value)"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-cyan-500/30 dark:outline-cyan-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cyan-500 dark:focus-visible:outline-cyan-400 min-w-40"
                     >
-                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>All Models</option>
+                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>All Types</option>
                       ${data.models.map(model => `
                         <option value="${model.name}" ${data.modelName === model.name ? 'selected' : ''}>
                           ${model.displayName}
@@ -735,9 +735,9 @@ export function renderContentListPage(data: ContentListPageData): string {
                 <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Filters</h4>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Collection Filter -->
+                  <!-- Type Filter -->
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Collections</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Types</label>
                     <select
                       id="filterCollections"
                       name="collections"
@@ -745,7 +745,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                       class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10"
                       size="4"
                     >
-                      <option value="">All Collections</option>
+                      <option value="">All Types</option>
                       ${data.models.map(
                         (model) => `
                           <option value="${model.name}">${model.displayName}</option>

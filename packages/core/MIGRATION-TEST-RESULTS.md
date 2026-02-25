@@ -12,9 +12,9 @@
 ## Test Environment
 
 - **Test Server**: http://localhost:62344
-- **Package**: `@sonicjs-cms/core` v2.0.0-alpha.3
+- **Package**: `@warpcms-cms/core` v2.0.0-alpha.3
 - **Testing Method**: npm link (local development)
-- **Database**: D1 (sonicjs-test2-db)
+- **Database**: D1 (warpcms-test2-db)
 
 ---
 
@@ -178,8 +178,8 @@ The local development workflow is working perfectly:
 
 2. **Test Project Linked**: ✅
    ```bash
-   cd /Users/lane/Dev/temp/sonicjs-test2
-   npm link @sonicjs-cms/core
+   cd /Users/lane/Dev/temp/warpcms-test2
+   npm link @warpcms-cms/core
    ```
 
 3. **Changes Immediately Available**: ✅

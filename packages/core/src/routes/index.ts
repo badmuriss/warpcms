@@ -1,8 +1,5 @@
 /**
  * Routes Module Exports
- *
- * Routes are being migrated incrementally from the monolith.
- * Each route is refactored to remove monolith-specific dependencies.
  */
 
 // API routes
@@ -21,19 +18,9 @@ export { default as testCleanupRoutes } from './test-cleanup'
 // Admin UI routes
 export { default as adminContentRoutes } from './admin-content'
 export { userRoutes as adminUsersRoutes } from './admin-users'
-export { adminMediaRoutes } from './admin-media'
-export { adminPluginRoutes } from './admin-plugins'
 export { adminLogsRoutes } from './admin-logs'
-export { adminDesignRoutes } from './admin-design'
-export { adminCheckboxRoutes } from './admin-checkboxes'
-export { default as adminTestimonialsRoutes } from './admin-testimonials'
-export { default as adminCodeExamplesRoutes } from './admin-code-examples'
 export { adminDashboardRoutes } from './admin-dashboard'
-export { adminCollectionsRoutes } from './admin-collections'
 export { adminSettingsRoutes } from './admin-settings'
-export { adminFormsRoutes } from './admin-forms'
-export { default as publicFormsRoutes } from './public-forms'
-export { adminApiReferenceRoutes } from './admin-api-reference'
 
 export const ROUTES_INFO = {
   message: 'Core routes available',
@@ -47,20 +34,10 @@ export const ROUTES_INFO = {
     'testCleanupRoutes',
     'adminContentRoutes',
     'adminUsersRoutes',
-    'adminMediaRoutes',
-    'adminPluginRoutes',
     'adminLogsRoutes',
-    'adminDesignRoutes',
-    'adminCheckboxRoutes',
-    'adminTestimonialsRoutes',
-    'adminCodeExamplesRoutes',
     'adminDashboardRoutes',
-    'adminCollectionsRoutes',
     'adminSettingsRoutes',
-    'adminFormsRoutes',
-    'publicFormsRoutes',
-    'adminApiReferenceRoutes'
   ],
   status: 'Core package routes ready',
-  reference: 'https://github.com/sonicjs/sonicjs'
+  reference: 'https://github.com/badmuriss/warpcms'
 } as const

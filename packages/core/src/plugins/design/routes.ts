@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { renderDesignPage, DesignPageData } from '@sonicjs-cms/templates/pages/admin-design.template'
+import { renderDesignPage, DesignPageData } from '@warpcms/templates/pages/admin-design.template'
 
 type Bindings = {
   DB: D1Database
