@@ -12,6 +12,7 @@ export const users = sqliteTable('users', {
   role: text('role').notNull().default('viewer'), // 'admin', 'editor', 'author', 'viewer'
   avatar: text('avatar'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  language: text('language').notNull().default('en'), // 'en', 'pt', 'es'
   lastLoginAt: integer('last_login_at'),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
