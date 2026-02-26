@@ -200,9 +200,10 @@ export function renderContentFormPage(data: ContentFormData): string {
   const contentFields = ct.fields.filter(f => f.name !== 'title' && f.type !== 'tags')
   const tagFields = ct.fields.filter(f => f.type === 'tags')
 
-  const hasRichtext = ct.fields.some(f => f.type === 'richtext')
   const hasFileUpload = ct.fields.some(f => f.type === 'file')
   const descriptionText = ct.description || `Manage ${ct.displayName.toLowerCase()} content`
+
+  const selectClasses = 'col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6'
 
   const pageContent = `
     <div class="space-y-6">
@@ -225,7 +226,7 @@ export function renderContentFormPage(data: ContentFormData): string {
       </div>
 
       <!-- Form Container -->
-      <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 overflow-hidden">
+      <div class="mx-auto max-w-2xl rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 overflow-hidden">
         <!-- Form Header -->
         <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
           <div class="flex items-center gap-x-3">
@@ -246,9 +247,6 @@ export function renderContentFormPage(data: ContentFormData): string {
             ${data.success ? renderAlert({ type: 'success', message: data.success, dismissible: true }) : ''}
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content Form -->
-        <div class="lg:col-span-2">
           <form
             id="content-form"
             ${isEdit ? `hx-put="/admin/content/${data.id}"` : `hx-post="/admin/content"`}
@@ -259,6 +257,20 @@ export function renderContentFormPage(data: ContentFormData): string {
             <input type="hidden" name="content_type" value="${ct.name}">
             ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
             ${data.referrerParams ? `<input type="hidden" name="referrer_params" value="${escapeAttr(data.referrerParams)}">` : ''}
+
+            <!-- Status Select -->
+            <div>
+              <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+              <div class="mt-2 grid grid-cols-1">
+                <select id="status" name="status" class="${selectClasses}">
+                  <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
+                  <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
+                </select>
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
+                  <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
 
             <!-- Title Field -->
             ${titleField ? `
@@ -288,113 +300,39 @@ export function renderContentFormPage(data: ContentFormData): string {
               </div>
             ` : ''}
 
-            <div id="form-messages"></div>
-          </form>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Publishing Options -->
-          <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Publishing</h3>
-            <div class="mb-6">
-              <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
-              <div class="mt-2 grid grid-cols-1">
-                <select
-                  id="status"
-                  name="status"
-                  form="content-form"
-                  class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
+            <!-- Action Buttons -->
+            <div class="pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
+              <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
+                Cancel
+              </a>
+              <div class="flex items-center gap-x-3">
+                ${isEdit ? `
+                  <button
+                    type="button"
+                    onclick="deleteContent('${data.id}')"
+                    class="inline-flex items-center justify-center gap-x-1.5 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                    </svg>
+                    Delete
+                  </button>
+                ` : ''}
+                <button
+                  type="submit"
+                  name="action"
+                  value="save"
+                  class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
                 >
-                  <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                  <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                </select>
-                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
-                  <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                </svg>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  ${isEdit ? 'Update' : 'Save'}
+                </button>
               </div>
             </div>
-          </div>
-
-          <!-- Content Info -->
-          ${isEdit ? `
-            <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-              <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Content Info</h3>
-              <dl class="space-y-3 text-sm">
-                <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Type</dt>
-                  <dd class="mt-1 text-zinc-950 dark:text-white">${ct.displayName}</dd>
-                </div>
-                <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
-                  <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.created_at ? new Date(data.data.created_at).toLocaleDateString() : 'Unknown'}</dd>
-                </div>
-                <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Last Modified</dt>
-                  <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.updated_at ? new Date(data.data.updated_at).toLocaleDateString() : 'Unknown'}</dd>
-                </div>
-              </dl>
-            </div>
-          ` : ''}
-
-          <!-- Quick Actions -->
-          <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Quick Actions</h3>
-            <div class="space-y-2">
-              ${isEdit ? `
-                <button
-                  type="button"
-                  onclick="deleteContent('${data.id}')"
-                  class="w-full inline-flex items-center gap-x-2 px-3 py-2 text-sm font-medium text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-900/20 rounded-lg transition-colors"
-                >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
-                  </svg>
-                  Delete Content
-                </button>
-              ` : ''}
-            </div>
-          </div>
+          </form>
         </div>
-
-        <!-- Action Buttons -->
-        <div class="lg:col-span-3 mt-6 pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
-          <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-            Cancel
-          </a>
-          <div class="flex items-center gap-x-3">
-            <button
-              type="submit"
-              form="content-form"
-              name="action"
-              value="save"
-              class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
-            >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-              </svg>
-              ${isEdit ? 'Update' : 'Save'}
-            </button>
-            ${data.user?.role !== 'viewer' ? `
-              <button
-                type="submit"
-                form="content-form"
-                name="action"
-                value="save_and_publish"
-                class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-500 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm"
-              >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                ${isEdit ? 'Update' : 'Save'} & Publish
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      </div>
       </div>
     </div>
 
@@ -411,8 +349,6 @@ export function renderContentFormPage(data: ContentFormData): string {
     })}
 
     ${getConfirmationDialogScript()}
-
-    ${hasRichtext ? getQuillCDNAndInit(ct.fields.filter(f => f.type === 'richtext')) : ''}
 
     <script>
       ${hasFileUpload ? getFileUploadScript() : ''}
@@ -447,49 +383,6 @@ export function renderContentFormPage(data: ContentFormData): string {
   }
 
   return renderAdminLayoutCatalyst(layoutData)
-}
-
-/** Quill editor CDN + init script for richtext fields */
-function getQuillCDNAndInit(richtextFields: ContentTypeField[]): string {
-  return `
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        ${richtextFields.map(f => `
-          (function() {
-            var quill = new Quill('#quill-editor-${f.name}', {
-              theme: 'snow',
-              modules: {
-                toolbar: [
-                  [{ 'header': [1, 2, 3, false] }],
-                  ['bold', 'italic', 'underline', 'strike'],
-                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                  ['blockquote', 'code-block'],
-                  ['link', 'image'],
-                  ['clean']
-                ]
-              },
-              placeholder: 'Write your content here...'
-            });
-            var hiddenInput = document.getElementById('field-${f.name}');
-            if (hiddenInput && hiddenInput.value) {
-              quill.root.innerHTML = hiddenInput.value;
-            }
-            quill.on('text-change', function() {
-              hiddenInput.value = quill.root.innerHTML;
-            });
-            var form = document.getElementById('content-form');
-            if (form) {
-              form.addEventListener('submit', function() {
-                hiddenInput.value = quill.root.innerHTML;
-              });
-            }
-          })();
-        `).join('')}
-      });
-    </script>
-  `
 }
 
 /** File upload handling script */
