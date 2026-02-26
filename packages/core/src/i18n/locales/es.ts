@@ -1,0 +1,37 @@
+import type { TranslationData } from '../types'
+
+export const es: TranslationData = {
+  common: {
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    confirm: 'Confirmar',
+    edit: 'Editar',
+    create: 'Crear',
+    back: 'Volver',
+    search: 'Buscar',
+    loading: 'Cargando',
+    noResults: 'No se encontraron resultados',
+    actions: 'Acciones',
+    status: 'Estado',
+    active: 'Activo',
+    inactive: 'Inactivo',
+    error: 'Error',
+    success: 'Éxito',
+    warning: 'Advertencia',
+    itemCount: '{{count}} elementos',
+  },
+  nav: {
+    dashboard: 'Panel',
+    content: 'Contenido',
+    users: 'Usuarios',
+    plugins: 'Plugins',
+    cache: 'Caché',
+    design: 'Diseño',
+    logs: 'Registros',
+    settings: 'Configuración',
+    apiReference: 'Referencia de API',
+    myProfile: 'Mi Perfil',
+    signOut: 'Cerrar Sesión',
+  },
+}
