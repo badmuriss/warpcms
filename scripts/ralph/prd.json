@@ -127,7 +127,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "The content form is the largest template. Focus on visible text — don't translate HTML attributes, data attributes, or CSS class names."
     },
     {
@@ -146,7 +146,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

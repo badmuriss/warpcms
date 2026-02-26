@@ -20,6 +20,8 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - Migration banner: Uses `data-template` attribute with `{{count}}` placeholder — JS replaces at runtime via `textEl.getAttribute('data-template').replace('{{count}}', ...)`
 - TypeScript: `tsconfig.json` uses strict mode with `noUncheckedIndexedAccess`, `noImplicitReturns`
 - Tests: Use vitest with `describe/it/expect` pattern, tests in `src/__tests__/` mirroring source structure
+- i18n: Confirmation dialog props (title, message, confirmText, cancelText) accept translated strings directly — no locale param needed on the component itself
+- i18n: Private render helpers (e.g. `renderField`) get locale as a param with default `'en'` so they can use `t()` internally
 - Pre-existing plugin errors in typecheck (email-templates-plugin, ai-search-plugin, design routes) — ignore these
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
@@ -123,4 +125,37 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - The `Refresh` icon conditional uses label comparison (`action.label === 'Refresh'`) — updated to compare against translated label
   - Advanced search modal has its own set of status options separate from the main filter — both need translation
   - Layout data needs `locale` passed explicitly to propagate to the layout template
+---
+
+## 2026-02-26 20:15 - US-007
+- Extracted and translated all Content Form page strings including section headers, sidebar, action buttons, file upload, confirmation dialogs, and client-side JS strings
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `content.form` namespace with 50+ keys (section headers, sidebar labels, publishing, content info, quick actions, file upload, confirmation dialogs, client-side error messages, type picker page)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for content.form namespace
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for content.form namespace
+  - `packages/core/src/templates/pages/admin-content-form.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; added locale param to `renderField()` and `getQuillCDNAndInit()`; injected `window.__i18n` for client-side JS strings; passed locale to layout data
+  - `packages/core/src/routes/admin-content.ts` — imported `t`, translated type picker page inline strings (back link, heading, subheading)
+- **Learnings for future iterations:**
+  - `renderField()` is a private function — added locale as 3rd param with default `'en'` to avoid changing the call signature dramatically
+  - File upload script (`getFileUploadScript()`) returns static JS — client-side strings use `window.__i18n.key.replace('{{placeholder}}', value)` pattern
+  - The Quill editor placeholder is injected server-side into the init script — pass locale to `getQuillCDNAndInit()` and use `t()` there
+  - Content form has both server-rendered strings (section headers, labels) and client-side JS strings (upload status, error alerts, version history errors) — both need i18n
+  - Confirmation dialog props (title, message, confirmText, cancelText) accept translated strings directly — no locale param needed on the component
+  - The type picker page in admin-content route has inline HTML with hardcoded strings — these also need t() calls
+  - `common.cancel` and `common.delete` can be reused from the common namespace for dialog buttons
+---
+
+## 2026-02-26 20:20 - US-008
+- Extracted and translated all User List page strings: page header, stats section, filter bar, table columns, role badges, status badges, action buttons, confirmation dialog, and client-side JS error messages
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `users.list` namespace with 37 keys (page title, stats labels, filter labels, table headers, role names, status badges, confirmation dialog, error messages)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for users.list namespace
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for users.list namespace
+  - `packages/core/src/templates/pages/admin-users-list.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; used `roleLabels` lookup map for translated role badges; injected `window.__i18n` for client-side JS error string; passed locale to layout data
+- **Learnings for future iterations:**
+  - Role badges use a dynamic `value.charAt(0).toUpperCase() + value.slice(1)` pattern — replaced with a `roleLabels` Record lookup using translated role names (roleAdmin, roleEditor, etc.)
+  - Status badges in the name column reuse `common.active` / `common.inactive` from the common namespace — no need for duplicate keys
+  - Filter dropdown options (Active, Inactive, All Users, All Roles) need translation too — easy to miss
+  - Button `title` attributes (tooltip text) also need translation (deactivateUser, activateUser)
+  - Layout data should include `locale` property to propagate to the layout template for sidebar/navbar translations
 ---
