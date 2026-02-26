@@ -1220,13 +1220,13 @@ function renderEmailSettingsContent(plugin: any, settings: PluginSettings): stri
 /**
  * Check if a plugin has a custom settings component
  */
-export function hasCustomSettingsComponent(pluginId: string): boolean {
+function hasCustomSettingsComponent(pluginId: string): boolean {
   return pluginId in pluginSettingsComponents
 }
 
 /**
  * Get the custom settings component for a plugin
  */
-export function getCustomSettingsComponent(pluginId: string): PluginSettingsRenderer | undefined {
+function getCustomSettingsComponent(pluginId: string): PluginSettingsRenderer | undefined {
   return pluginSettingsComponents[pluginId]
 }

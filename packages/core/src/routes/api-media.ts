@@ -781,4 +781,3 @@ function getPNGDimensions(uint8Array: Uint8Array): { width: number; height: numb
   }
 }
 
-export default apiMediaRoutes

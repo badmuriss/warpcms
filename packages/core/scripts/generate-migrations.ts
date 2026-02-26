@@ -96,7 +96,7 @@ ${migrations.map(m => `  {
 ]
 
 // Map for quick lookup by ID
-export const migrationsByIdMap = new Map<string, BundledMigration>(
+const migrationsByIdMap = new Map<string, BundledMigration>(
   bundledMigrations.map(m => [m.id, m])
 )
 
@@ -106,7 +106,7 @@ export function getMigrationSQLById(id: string): string | null {
 }
 
 // Get all migration info (without SQL for lighter payloads)
-export function getMigrationList(): Array<Omit<BundledMigration, 'sql'>> {
+function getMigrationList(): Array<Omit<BundledMigration, 'sql'>> {
   return bundledMigrations.map(({ sql, ...rest }) => rest)
 }
 `

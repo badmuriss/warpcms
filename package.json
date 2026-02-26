@@ -23,27 +23,15 @@
     "version:major": "npm version major --workspace=@warpcms/core --no-git-tag-version && node scripts/sync-versions.js",
     "publish:core": "npm run build:core && npm publish --workspace=@warpcms/core"
   },
-  "dependencies": {
-    "@hono/zod-openapi": "^0.19.8",
-    "@hono/zod-validator": "^0.7.0",
-    "@warpcms/core": "^2.0.1",
-    "drizzle-kit": "^0.31.2",
-    "drizzle-orm": "^0.44.7",
-    "drizzle-zod": "^0.8.3",
-    "highlight.js": "^11.11.1",
-    "hono": "^4.11.7",
-    "marked": "^16.4.1",
-    "semver": "^7.7.3",
-    "zod": "^4.1.12"
-  },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251014.0",
     "@types/node": "^24.9.2",
     "@types/semver": "^7.7.0",
-    "@vitest/coverage-v8": "^4.0.5",
     "tsx": "^4.20.3",
     "typescript": "^5.9.3",
     "vitest": "^4.0.5",
     "wrangler": "^4.59.1"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.27.3"
   }
 }

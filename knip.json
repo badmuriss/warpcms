@@ -1,0 +1,9 @@
+{
+  "workspaces": {
+    "packages/core": {
+      "ignore": [
+        "src/plugins/**"
+      ]
+    }
+  }
+}

@@ -200,7 +200,7 @@ export function createMockDatabase(): { db: any; preparedStatement: any } {
 }
 
 // Collection API response builders
-export const createCollectionResponse = (collection: any) => ({
+const createCollectionResponse = (collection: any) => ({
   id: collection.id,
   name: collection.name,
   displayName: collection.displayName,
@@ -211,14 +211,14 @@ export const createCollectionResponse = (collection: any) => ({
   updatedAt: collection.updatedAt
 })
 
-export const createCollectionsListResponse = (collections: any[]) => ({
+const createCollectionsListResponse = (collections: any[]) => ({
   collections: collections.map(createCollectionResponse),
   total: collections.length,
   page: 1,
   limit: 50
 })
 
-export const createContentResponse = (content: any, author?: any) => ({
+const createContentResponse = (content: any, author?: any) => ({
   id: content.id,
   title: content.title,
   slug: content.slug,
@@ -234,7 +234,7 @@ export const createContentResponse = (content: any, author?: any) => ({
   updatedAt: content.updatedAt
 })
 
-export const createContentListResponse = (collection: string, content: any[]) => ({
+const createContentListResponse = (collection: string, content: any[]) => ({
   collection,
   content: content.map(c => createContentResponse(c)),
   total: content.length,
@@ -272,7 +272,7 @@ export const generateContentData = (collectionId: string, overrides: Partial<any
 })
 
 // Validation test cases
-export const validCollectionNames = [
+const validCollectionNames = [
   'simple',
   'with_underscore',
   'with123numbers',
@@ -281,7 +281,7 @@ export const validCollectionNames = [
   'collection_with_many_underscores_123'
 ]
 
-export const invalidCollectionNames = [
+const invalidCollectionNames = [
   '',
   '123starts_with_number',
   'with spaces',
@@ -296,7 +296,7 @@ export const invalidCollectionNames = [
   'collection name with spaces'
 ]
 
-export const validFieldTypes = [
+const validFieldTypes = [
   'text',
   'rich_text',
   'textarea',
@@ -314,7 +314,7 @@ export const validFieldTypes = [
   'relation'
 ]
 
-export const invalidFieldTypes = [
+const invalidFieldTypes = [
   'invalid_type',
   'TEXT', // uppercase
   'string', // not in enum
@@ -324,7 +324,7 @@ export const invalidFieldTypes = [
 ]
 
 // Error message matchers
-export const errorMessages = {
+const errorMessages = {
   collection: {
     nameRequired: 'Model name is required',
     nameFormat: 'Model name must be alphanumeric with underscores',
@@ -363,15 +363,15 @@ export const errorMessages = {
 }
 
 // Async helpers for testing
-export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-export const createAsyncMock = <T>(value: T, delay: number = 0): any =>
+const createAsyncMock = <T>(value: T, delay: number = 0): any =>
   vi.fn().mockImplementation(() =>
     delay > 0 ? waitFor(delay).then(() => value) : Promise.resolve(value)
   )
 
 // HTTP request mocking utilities
-export const createMockRequest = (method: string, url: string, body?: any): any => ({
+const createMockRequest = (method: string, url: string, body?: any): any => ({
   method,
   url,
   headers: new Headers({
@@ -381,7 +381,7 @@ export const createMockRequest = (method: string, url: string, body?: any): any 
   text: vi.fn().mockResolvedValue(JSON.stringify(body || {}))
 })
 
-export const createMockResponse = (status: number = 200, data?: any): any => ({
+const createMockResponse = (status: number = 200, data?: any): any => ({
   status,
   statusText: status === 200 ? 'OK' : 'Error',
   headers: new Headers({
@@ -393,7 +393,7 @@ export const createMockResponse = (status: number = 200, data?: any): any => ({
 })
 
 // Environment mocking
-export const createMockEnv = (overrides: any = {}) => ({
+const createMockEnv = (overrides: any = {}) => ({
   DB: createMockDatabase().db,
   CLOUDFLARE_API_TOKEN: 'test-token',
   ...overrides
@@ -417,7 +417,7 @@ export const createTestContext = (overrides: any = {}) => ({
 })
 
 // Assertion helpers
-export const expectValidationError = (result: any, fieldName: string, errorType: string) => {
+const expectValidationError = (result: any, fieldName: string, errorType: string) => {
   expect(result.isValid).toBe(false)
   expect(result.errors).toEqual(
     expect.arrayContaining([

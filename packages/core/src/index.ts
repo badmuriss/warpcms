@@ -20,8 +20,8 @@
 // Main Application API (Phase 2 Week 1)
 // ============================================================================
 
-export { createWarpCMSApp, createSonicJSApp, setupCoreMiddleware, setupCoreRoutes } from './app'
-export type { WarpCMSConfig, SonicJSConfig, WarpCMSApp, SonicJSApp, Bindings, Variables } from './app'
+export { createWarpCMSApp } from './app'
+export type { WarpCMSConfig, WarpCMSApp, Bindings, Variables } from './app'
 
 // ============================================================================
 // Placeholders - To be populated in Phase 2
@@ -118,30 +118,24 @@ export {
 
 // Templates - Week 3 (COMPLETED)
 export {
-  // Form templates
-  renderForm,
-  renderFormField,
-  // Table templates
-  renderTable,
-  // Pagination templates
-  renderPagination,
-  // Alert templates
+  renderAdminLayout,
+  renderAdminLayoutCatalyst,
+  renderLogo,
   renderAlert,
-  // Confirmation dialog templates
   renderConfirmationDialog,
   getConfirmationDialogScript,
-  // Filter bar templates
+  renderTable,
+  renderPagination,
   renderFilterBar,
 } from './templates'
-
 export type {
-  FormField,
-  FormData,
+  AdminLayoutData,
+  AdminLayoutCatalystData,
+  AlertData,
+  ConfirmationDialogOptions,
   TableColumn,
   TableData,
   PaginationData,
-  AlertData,
-  ConfirmationDialogOptions,
   FilterBarData,
   Filter,
   FilterOption,

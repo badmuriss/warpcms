@@ -749,4 +749,3 @@ adminApiRoutes.get('/migrations/validate', async (c) => {
   }
 })
 
-export default adminApiRoutes

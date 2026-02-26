@@ -1,4 +1,4 @@
-import { renderAlert } from '../alert.template'
+import { renderAlert } from '../components/alert.template'
 
 export interface LoginPageData {
   error?: string

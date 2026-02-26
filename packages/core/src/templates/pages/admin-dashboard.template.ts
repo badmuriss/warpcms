@@ -22,7 +22,7 @@ export interface ActivityItem {
   user: string;
 }
 
-export interface AnalyticsData {
+interface AnalyticsData {
   pageViews: number;
   uniqueVisitors: number;
   contentPublished: number;
@@ -133,7 +133,7 @@ export function renderDashboardPage(data: DashboardPageData): string {
   return renderAdminLayout(layoutData);
 }
 
-export function renderDashboardPageWithDynamicMenu(
+function renderDashboardPageWithDynamicMenu(
   data: DashboardPageData,
   dynamicMenuItems: Array<{ label: string; path: string; icon: string }>
 ): string {
@@ -460,7 +460,7 @@ function renderAnalyticsChart(): string {
   `;
 }
 
-export function renderRecentActivitySkeleton(): string {
+function renderRecentActivitySkeleton(): string {
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 animate-pulse">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">

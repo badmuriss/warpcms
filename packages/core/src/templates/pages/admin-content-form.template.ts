@@ -1,6 +1,6 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
-import { renderAlert } from '../alert.template'
-import { renderConfirmationDialog, getConfirmationDialogScript } from '../confirmation-dialog.template'
+import { renderAlert } from '../components/alert.template'
+import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 import type { ContentType, ContentTypeField } from '../../content-types'
 
 export interface ContentFormData {

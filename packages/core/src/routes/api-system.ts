@@ -216,4 +216,3 @@ apiSystemRoutes.get('/env', (c) => {
   })
 })
 
-export default apiSystemRoutes

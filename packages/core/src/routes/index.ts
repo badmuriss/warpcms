@@ -5,9 +5,9 @@
 // API routes
 export { default as apiRoutes } from './api'
 export { default as apiContentCrudRoutes } from './api-content-crud'
-export { default as apiMediaRoutes } from './api-media'
-export { default as apiSystemRoutes } from './api-system'
-export { default as adminApiRoutes } from './admin-api'
+export { apiMediaRoutes } from './api-media'
+export { apiSystemRoutes } from './api-system'
+export { adminApiRoutes } from './admin-api'
 
 // Auth routes
 export { default as authRoutes } from './auth'

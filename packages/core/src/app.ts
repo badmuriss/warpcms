@@ -251,32 +251,3 @@ export function createWarpCMSApp(config: WarpCMSConfig = {}): WarpCMSApp {
 
   return app
 }
-
-/** @deprecated Use WarpCMSConfig */
-export type SonicJSConfig = WarpCMSConfig
-/** @deprecated Use WarpCMSApp */
-export type SonicJSApp = WarpCMSApp
-/** @deprecated Use createWarpCMSApp */
-export const createSonicJSApp = createWarpCMSApp
-
-/**
- * Setup core middleware (backward compatibility)
- *
- * @param _app - Hono application
- * @deprecated Use createWarpCMSApp() instead
- */
-export function setupCoreMiddleware(_app: WarpCMSApp): void {
-  console.warn('setupCoreMiddleware is deprecated. Use createWarpCMSApp() instead.')
-  // Backward compatibility implementation
-}
-
-/**
- * Setup core routes (backward compatibility)
- *
- * @param _app - Hono application
- * @deprecated Use createWarpCMSApp() instead
- */
-export function setupCoreRoutes(_app: WarpCMSApp): void {
-  console.warn('setupCoreRoutes is deprecated. Use createWarpCMSApp() instead.')
-  // Backward compatibility implementation
-}

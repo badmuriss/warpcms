@@ -1,5 +1,5 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
-import { renderAlert } from '../alert.template'
+import { renderAlert } from '../components/alert.template'
 
 export interface UserProfile {
   id: string

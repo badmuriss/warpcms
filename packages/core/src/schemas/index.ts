@@ -4,7 +4,7 @@
  * Placeholder for schema definitions - to be populated as needed
  */
 
-export interface SchemaDefinition {
+interface SchemaDefinition {
   name: string
   fields: any[]
 }

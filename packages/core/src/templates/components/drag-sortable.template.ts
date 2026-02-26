@@ -1,4 +1,4 @@
-export interface DragSortableOptions {
+interface DragSortableOptions {
   itemSelector?: string
   handleSelector?: string
   onUpdate?: () => void

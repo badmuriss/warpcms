@@ -1,4 +1,4 @@
-export interface LogoData {
+interface LogoData {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   variant?: 'default' | 'white' | 'dark'
   showText?: boolean

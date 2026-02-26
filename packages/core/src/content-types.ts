@@ -44,21 +44,6 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
       { name: 'tags', label: 'Tags', type: 'tags', placeholder: 'Comma-separated tags' },
     ],
   },
-  pdf: {
-    name: 'pdf',
-    displayName: 'PDF',
-    description: 'Upload and manage PDF documents',
-    icon: `<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-    </svg>`,
-    acceptedMimeTypes: 'application/pdf',
-    fields: [
-      { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Document title' },
-      { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Optional description' },
-      { name: 'file', label: 'PDF File', type: 'file', required: true, accept: 'application/pdf', helpText: 'PDF files only' },
-      { name: 'tags', label: 'Tags', type: 'tags', placeholder: 'Comma-separated tags' },
-    ],
-  },
   text: {
     name: 'text',
     displayName: 'Text',
@@ -69,19 +54,6 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Content title' },
       { name: 'content', label: 'Content', type: 'textarea', required: true, placeholder: 'Write your content here...' },
-      { name: 'tags', label: 'Tags', type: 'tags', placeholder: 'Comma-separated tags' },
-    ],
-  },
-  html: {
-    name: 'html',
-    displayName: 'HTML',
-    description: 'Create rich HTML content with the visual editor',
-    icon: `<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-    </svg>`,
-    fields: [
-      { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Content title' },
-      { name: 'content', label: 'Content', type: 'richtext', required: true },
       { name: 'tags', label: 'Tags', type: 'tags', placeholder: 'Comma-separated tags' },
     ],
   },
@@ -104,11 +76,6 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
 /** Get a content type by name, or undefined if not found */
 export function getContentType(name: string): ContentType | undefined {
   return CONTENT_TYPES[name]
-}
-
-/** Get all content type names */
-export function getContentTypeNames(): string[] {
-  return Object.keys(CONTENT_TYPES)
 }
 
 /** Get all content types as an array */

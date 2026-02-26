@@ -1,6 +1,6 @@
 import type { BlockDefinitions } from '../types/collection-config'
 
-export type BlocksFieldConfig = {
+type BlocksFieldConfig = {
   blocks: BlockDefinitions
   discriminator: string
 }

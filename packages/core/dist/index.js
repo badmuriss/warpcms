@@ -1,16 +1,16 @@
-import { api_default, api_media_default, api_system_default, admin_api_default, router, adminSettingsRoutes, admin_content_default, adminLogsRoutes, userRoutes, auth_default, test_cleanup_default } from './chunk-XUQHOBXO.js';
-export { ROUTES_INFO, admin_api_default as adminApiRoutes, admin_content_default as adminContentRoutes, router as adminDashboardRoutes, adminLogsRoutes, adminSettingsRoutes, userRoutes as adminUsersRoutes, api_content_crud_default as apiContentCrudRoutes, api_media_default as apiMediaRoutes, api_default as apiRoutes, api_system_default as apiSystemRoutes, auth_default as authRoutes } from './chunk-XUQHOBXO.js';
+import { api_default, apiMediaRoutes, apiSystemRoutes, adminApiRoutes, router, adminSettingsRoutes, admin_content_default, adminLogsRoutes, userRoutes, auth_default, test_cleanup_default } from './chunk-33OLIVOQ.js';
+export { ROUTES_INFO, adminApiRoutes, admin_content_default as adminContentRoutes, router as adminDashboardRoutes, adminLogsRoutes, adminSettingsRoutes, userRoutes as adminUsersRoutes, api_content_crud_default as apiContentCrudRoutes, apiMediaRoutes, api_default as apiRoutes, apiSystemRoutes, auth_default as authRoutes } from './chunk-33OLIVOQ.js';
 import { schema_exports } from './chunk-EZEBTQTJ.js';
 export { Logger, PluginBootstrapService, PluginService as PluginServiceClass, apiTokens, cleanupRemovedCollections, collections, content, contentVersions, fullCollectionSync, getAvailableCollectionNames, getLogger, getManagedCollections, initLogger, insertCollectionSchema, insertContentSchema, insertLogConfigSchema, insertMediaSchema, insertPluginActivityLogSchema, insertPluginAssetSchema, insertPluginHookSchema, insertPluginRouteSchema, insertPluginSchema, insertSystemLogSchema, insertUserSchema, insertWorkflowHistorySchema, isCollectionManaged, loadCollectionConfig, loadCollectionConfigs, logConfig, media, pluginActivityLog, pluginAssets, pluginHooks, pluginRoutes, plugins, registerCollections, selectCollectionSchema, selectContentSchema, selectLogConfigSchema, selectMediaSchema, selectPluginActivityLogSchema, selectPluginAssetSchema, selectPluginHookSchema, selectPluginRouteSchema, selectPluginSchema, selectSystemLogSchema, selectUserSchema, selectWorkflowHistorySchema, syncCollection, syncCollections, systemLogs, users, validateCollectionConfig, workflowHistory } from './chunk-EZEBTQTJ.js';
-import { metricsMiddleware, bootstrapMiddleware } from './chunk-VIFCUAC3.js';
-export { AuthManager, PermissionManager, bootstrapMiddleware, cacheHeaders, compressionMiddleware, detailedLoggingMiddleware, getActivePlugins, isPluginActive, logActivity, loggingMiddleware, optionalAuth, performanceLoggingMiddleware, requireActivePlugin, requireActivePlugins, requireAnyPermission, requireAuth, requirePermission, requireRole, securityHeaders, securityLoggingMiddleware } from './chunk-VIFCUAC3.js';
-export { MigrationService } from './chunk-NIS6EK6A.js';
-export { renderFilterBar, renderForm, renderFormField } from './chunk-RIGXGLOM.js';
-export { getConfirmationDialogScript, renderAlert, renderConfirmationDialog, renderPagination, renderTable } from './chunk-6IOBWW57.js';
-import './chunk-ADCUFE2L.js';
+import { metricsMiddleware, bootstrapMiddleware } from './chunk-Q5RVVPSW.js';
+export { AuthManager, PermissionManager, bootstrapMiddleware, cacheHeaders, compressionMiddleware, detailedLoggingMiddleware, getActivePlugins, isPluginActive, logActivity, loggingMiddleware, optionalAuth, performanceLoggingMiddleware, requireActivePlugin, requireActivePlugins, requireAnyPermission, requireAuth, requirePermission, requireRole, securityHeaders, securityLoggingMiddleware } from './chunk-Q5RVVPSW.js';
+export { MigrationService } from './chunk-TUFDYIZM.js';
+export { renderFilterBar } from './chunk-TIM4N7T5.js';
+export { getConfirmationDialogScript, renderAdminLayout, renderAlert, renderConfirmationDialog, renderPagination, renderTable } from './chunk-TKHZHL3V.js';
+export { renderAdminLayoutCatalyst, renderLogo } from './chunk-VL2E5VAW.js';
 export { HookSystemImpl, HookUtils, PluginManager as PluginManagerClass, PluginRegistryImpl, PluginValidator as PluginValidatorClass, ScopedHookSystem as ScopedHookSystemClass } from './chunk-2NY32F5L.js';
-import { package_default, getCoreVersion } from './chunk-X7JFPWRQ.js';
-export { QueryFilterBuilder, SONICJS_VERSION, TemplateRenderer, WARPJS_VERSION, buildQuery, escapeHtml, getCoreVersion, getWarpCMSVersion, renderTemplate, sanitizeInput, sanitizeObject, templateRenderer } from './chunk-X7JFPWRQ.js';
+import { package_default, getCoreVersion } from './chunk-JILKHKPS.js';
+export { QueryFilterBuilder, SONICJS_VERSION, TemplateRenderer, WARPJS_VERSION, buildQuery, escapeHtml, getCoreVersion, getWarpCMSVersion, renderTemplate, sanitizeInput, sanitizeObject, templateRenderer } from './chunk-JILKHKPS.js';
 import './chunk-SEM3GID4.js';
 export { metricsTracker } from './chunk-FICTAGD4.js';
 export { HOOKS } from './chunk-KY7VAKQ6.js';
@@ -75,9 +75,9 @@ function createWarpCMSApp(config = {}) {
     }
   }
   app.route("/api", api_default);
-  app.route("/api/media", api_media_default);
-  app.route("/api/system", api_system_default);
-  app.route("/admin/api", admin_api_default);
+  app.route("/api/media", apiMediaRoutes);
+  app.route("/api/system", apiSystemRoutes);
+  app.route("/admin/api", adminApiRoutes);
   app.route("/admin/dashboard", router);
   app.route("/admin/settings", adminSettingsRoutes);
   app.route("/admin/content", admin_content_default);
@@ -145,13 +145,6 @@ function createWarpCMSApp(config = {}) {
   });
   return app;
 }
-var createSonicJSApp = createWarpCMSApp;
-function setupCoreMiddleware(_app) {
-  console.warn("setupCoreMiddleware is deprecated. Use createWarpCMSApp() instead.");
-}
-function setupCoreRoutes(_app) {
-  console.warn("setupCoreRoutes is deprecated. Use createWarpCMSApp() instead.");
-}
 function createDb(d1) {
   return drizzle(d1, { schema: schema_exports });
 }
@@ -159,6 +152,6 @@ function createDb(d1) {
 // src/index.ts
 var VERSION = package_default.version;
 
-export { VERSION, createDb, createSonicJSApp, createWarpCMSApp, setupCoreMiddleware, setupCoreRoutes };
+export { VERSION, createDb, createWarpCMSApp };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 // They should be passed as parameters to the service in the consuming application
 // import { PLUGIN_REGISTRY, CORE_PLUGIN_IDS } from '../plugins/plugin-registry'
 
-export interface PluginData {
+interface PluginData {
   id: string
   name: string
   display_name: string
@@ -25,7 +25,7 @@ export interface PluginData {
   error_message?: string
 }
 
-export interface PluginStats {
+interface PluginStats {
   total: number
   active: number
   inactive: number

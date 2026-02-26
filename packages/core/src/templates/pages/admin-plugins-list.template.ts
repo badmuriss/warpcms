@@ -687,7 +687,7 @@ function getDefaultPluginIcon(category: string): string {
 }
 
 // Mock data generator
-export function generateMockPlugins(): Plugin[] {
+function generateMockPlugins(): Plugin[] {
   return [
     {
       id: '1',

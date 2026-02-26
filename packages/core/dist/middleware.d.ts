@@ -1,6 +1,6 @@
 import * as hono from 'hono';
 import { Context, Next, MiddlewareHandler } from 'hono';
-import { b as WarpCMSConfig } from './app-CrLkcj7q.js';
+import { a as WarpCMSConfig } from './app-DIYd-vU0.js';
 import '@cloudflare/workers-types';
 
 type Bindings = {

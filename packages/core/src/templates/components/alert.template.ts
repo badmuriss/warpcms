@@ -1,4 +1,4 @@
-export type AlertType = 'success' | 'error' | 'warning' | 'info'
+type AlertType = 'success' | 'error' | 'warning' | 'info'
 
 export interface AlertData {
   type: AlertType
@@ -86,18 +86,18 @@ export function renderAlert(data: AlertData): string {
   `
 }
 
-export function renderSuccessAlert(message: string, title?: string): string {
+function renderSuccessAlert(message: string, title?: string): string {
   return renderAlert({ type: 'success', message, title })
 }
 
-export function renderErrorAlert(message: string, title?: string): string {
+function renderErrorAlert(message: string, title?: string): string {
   return renderAlert({ type: 'error', message, title })
 }
 
-export function renderWarningAlert(message: string, title?: string): string {
+function renderWarningAlert(message: string, title?: string): string {
   return renderAlert({ type: 'warning', message, title })
 }
 
-export function renderInfoAlert(message: string, title?: string): string {
+function renderInfoAlert(message: string, title?: string): string {
   return renderAlert({ type: 'info', message, title })
 }

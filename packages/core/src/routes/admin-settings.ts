@@ -36,49 +36,9 @@ export const adminSettingsRoutes = new Hono<{ Bindings: Bindings; Variables: Var
 // Apply authentication middleware
 adminSettingsRoutes.use('*', requireAuth())
 
-// Helper function to get mock settings data
-function getMockSettings(user: any) {
+// Default placeholder data for migrations and database tools (overridden by real data when fetched)
+function getDefaultSettings() {
   return {
-    general: {
-      siteName: 'WarpCMS AI',
-      siteDescription: 'A modern headless CMS powered by AI',
-      adminEmail: user?.email || 'admin@example.com',
-      timezone: 'UTC',
-      language: 'en',
-      maintenanceMode: false
-    },
-    appearance: {
-      theme: 'dark' as const,
-      primaryColor: '#465FFF',
-      logoUrl: '',
-      favicon: '',
-      customCSS: ''
-    },
-    security: {
-      twoFactorEnabled: false,
-      sessionTimeout: 30,
-      passwordRequirements: {
-        minLength: 8,
-        requireUppercase: true,
-        requireNumbers: true,
-        requireSymbols: false
-      },
-      ipWhitelist: []
-    },
-    notifications: {
-      emailNotifications: true,
-      contentUpdates: true,
-      systemAlerts: true,
-      userRegistrations: false,
-      emailFrequency: 'immediate' as const
-    },
-    storage: {
-      maxFileSize: 10,
-      allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'docx'],
-      storageProvider: 'cloudflare' as const,
-      backupFrequency: 'daily' as const,
-      retentionPeriod: 30
-    },
     migrations: {
       totalMigrations: 0,
       appliedMigrations: 0,
@@ -110,81 +70,14 @@ adminSettingsRoutes.get('/general', async (c) => {
   // Get real general settings from database
   const generalSettings = await settingsService.getGeneralSettings(user?.email)
 
-  const mockSettings = getMockSettings(user)
-  mockSettings.general = generalSettings
-
   const pageData: SettingsPageData = {
     user: user ? {
       name: user.email,
       email: user.email,
       role: user.role
     } : undefined,
-    settings: mockSettings,
+    settings: { ...getDefaultSettings(), general: generalSettings },
     activeTab: 'general',
-    version: c.get('appVersion')
-  }
-  return c.html(renderSettingsPage(pageData))
-})
-
-// Appearance settings
-adminSettingsRoutes.get('/appearance', (c) => {
-  const user = c.get('user')
-  const pageData: SettingsPageData = {
-    user: user ? {
-      name: user.email,
-      email: user.email,
-      role: user.role
-    } : undefined,
-    settings: getMockSettings(user),
-    activeTab: 'appearance',
-    version: c.get('appVersion')
-  }
-  return c.html(renderSettingsPage(pageData))
-})
-
-// Security settings
-adminSettingsRoutes.get('/security', (c) => {
-  const user = c.get('user')
-  const pageData: SettingsPageData = {
-    user: user ? {
-      name: user.email,
-      email: user.email,
-      role: user.role
-    } : undefined,
-    settings: getMockSettings(user),
-    activeTab: 'security',
-    version: c.get('appVersion')
-  }
-  return c.html(renderSettingsPage(pageData))
-})
-
-// Notifications settings
-adminSettingsRoutes.get('/notifications', (c) => {
-  const user = c.get('user')
-  const pageData: SettingsPageData = {
-    user: user ? {
-      name: user.email,
-      email: user.email,
-      role: user.role
-    } : undefined,
-    settings: getMockSettings(user),
-    activeTab: 'notifications',
-    version: c.get('appVersion')
-  }
-  return c.html(renderSettingsPage(pageData))
-})
-
-// Storage settings
-adminSettingsRoutes.get('/storage', (c) => {
-  const user = c.get('user')
-  const pageData: SettingsPageData = {
-    user: user ? {
-      name: user.email,
-      email: user.email,
-      role: user.role
-    } : undefined,
-    settings: getMockSettings(user),
-    activeTab: 'storage',
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))
@@ -199,7 +92,7 @@ adminSettingsRoutes.get('/migrations', (c) => {
       email: user.email,
       role: user.role
     } : undefined,
-    settings: getMockSettings(user),
+    settings: getDefaultSettings(),
     activeTab: 'migrations',
     version: c.get('appVersion')
   }
@@ -215,7 +108,7 @@ adminSettingsRoutes.get('/database-tools', (c) => {
       email: user.email,
       role: user.role
     } : undefined,
-    settings: getMockSettings(user),
+    settings: getDefaultSettings(),
     activeTab: 'database-tools',
     version: c.get('appVersion')
   }
