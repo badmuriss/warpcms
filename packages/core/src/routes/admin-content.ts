@@ -72,10 +72,6 @@ adminContentRoutes.get('/', async (c) => {
     const conditions: string[] = []
     const params: any[] = []
 
-    if (status !== 'deleted') {
-      conditions.push("c.status != 'deleted'")
-    }
-
     if (search) {
       conditions.push('(c.title LIKE ? OR c.slug LIKE ? OR c.data LIKE ?)')
       params.push(`%${search}%`, `%${search}%`, `%${search}%`)
@@ -86,11 +82,9 @@ adminContentRoutes.get('/', async (c) => {
       params.push(typeName)
     }
 
-    if (status !== 'all' && status !== 'deleted') {
+    if (status !== 'all') {
       conditions.push('c.status = ?')
       params.push(status)
-    } else if (status === 'deleted') {
-      conditions.push("c.status = 'deleted'")
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -114,11 +108,7 @@ adminContentRoutes.get('/', async (c) => {
 
     const statusConfig: Record<string, { class: string; text: string }> = {
       draft: { class: 'bg-zinc-50 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 ring-1 ring-inset ring-zinc-600/20 dark:ring-zinc-500/20', text: 'Draft' },
-      review: { class: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20 dark:ring-amber-500/20', text: 'Under Review' },
-      scheduled: { class: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-500/20', text: 'Scheduled' },
       published: { class: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20', text: 'Published' },
-      archived: { class: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 ring-1 ring-inset ring-purple-600/20 dark:ring-purple-500/20', text: 'Archived' },
-      deleted: { class: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/20 dark:ring-red-500/20', text: 'Deleted' },
     }
 
     const contentItems = (results || []).map((row: any) => {
@@ -360,12 +350,6 @@ adminContentRoutes.post('/', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.invalidate('content:list:*')
 
-    // Log workflow
-    await db.prepare(`
-      INSERT INTO workflow_history (id, content_id, action, from_status, to_status, user_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(crypto.randomUUID(), contentId, 'created', 'none', status, user?.userId || 'unknown', now).run()
-
     const referrerParams = formData.get('referrer_params') as string
     const redirectUrl = action === 'save_and_continue'
       ? `/admin/content/${contentId}/edit?success=Content saved successfully!${referrerParams ? `&ref=${encodeURIComponent(referrerParams)}` : ''}`
@@ -438,14 +422,6 @@ adminContentRoutes.put('/:id', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate('content:list:*')
-
-    // Log workflow if status changed
-    if (status !== existingContent.status) {
-      await db.prepare(`
-        INSERT INTO workflow_history (id, content_id, action, from_status, to_status, user_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).bind(crypto.randomUUID(), id, 'status_changed', existingContent.status, status, user?.userId || 'unknown', now).run()
-    }
 
     const referrerParams = formData.get('referrer_params') as string
     const redirectUrl = action === 'save_and_continue'
