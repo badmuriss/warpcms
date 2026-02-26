@@ -1,5 +1,6 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../components/alert.template'
+import { t } from '../../i18n'
 
 export interface UserNewPageData {
   roles: Array<{ value: string; label: string }>
@@ -14,6 +15,7 @@ export interface UserNewPageData {
 }
 
 export function renderUserNewPage(data: UserNewPageData): string {
+  const locale = data.locale || 'en'
   const pageContent = `
     <div>
       <!-- Header -->
@@ -25,9 +27,9 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
             </a>
-            <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Create New User</h1>
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('users.form.createNewUser', locale)}</h1>
           </div>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Add a new user account to the system</p>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('users.form.addNewUserSubtitle', locale)}</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
           <button
@@ -38,13 +40,13 @@ export function renderUserNewPage(data: UserNewPageData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            Create User
+            ${t('users.form.createUser', locale)}
           </button>
           <a
             href="/admin/users"
             class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
           >
-            Cancel
+            ${t('common.cancel', locale)}
           </a>
         </div>
       </div>
@@ -64,50 +66,50 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
               <!-- Basic Information -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Basic Information</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('users.form.basicInformation', locale)}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      First Name <span class="text-red-500">*</span>
+                      ${t('users.form.firstName', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="first_name"
                       required
-                      placeholder="Enter first name"
+                      placeholder="${t('users.form.enterFirstName', locale)}"
                       class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                     />
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Last Name <span class="text-red-500">*</span>
+                      ${t('users.form.lastName', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="last_name"
                       required
-                      placeholder="Enter last name"
+                      placeholder="${t('users.form.enterLastName', locale)}"
                       class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                     />
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Username <span class="text-red-500">*</span>
+                      ${t('users.form.username', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="username"
                       required
-                      placeholder="Enter username"
+                      placeholder="${t('users.form.enterUsername', locale)}"
                       class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                     />
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Email <span class="text-red-500">*</span>
+                      ${t('users.form.email', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -119,7 +121,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Phone</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('users.form.phone', locale)}</label>
                     <input
                       type="tel"
                       name="phone"
@@ -130,7 +132,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label for="role" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">
-                      Role <span class="text-red-500">*</span>
+                      ${t('users.form.role', locale)} <span class="text-red-500">*</span>
                     </label>
                     <div class="mt-2 grid grid-cols-1">
                       <select
@@ -151,11 +153,11 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 </div>
 
                 <div class="mt-6">
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Bio</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('users.form.bio', locale)}</label>
                   <textarea
                     name="bio"
                     rows="3"
-                    placeholder="Enter a short bio (optional)"
+                    placeholder="${t('users.form.enterBioOptional', locale)}"
                     class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                   ></textarea>
                 </div>
@@ -163,17 +165,17 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
               <!-- Password -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Password</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('users.form.password', locale)}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Password <span class="text-red-500">*</span>
+                      ${t('users.form.password', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="password"
                       name="password"
                       required
-                      placeholder="Enter password (min 8 characters)"
+                      placeholder="${t('users.form.enterPassword', locale)}"
                       minlength="8"
                       class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                     />
@@ -181,13 +183,13 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Confirm Password <span class="text-red-500">*</span>
+                      ${t('users.form.confirmPassword', locale)} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="password"
                       name="confirm_password"
                       required
-                      placeholder="Confirm password"
+                      placeholder="${t('users.form.confirmPasswordPlaceholder', locale)}"
                       minlength="8"
                       class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                     />
@@ -197,7 +199,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
               <!-- Account Status -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Account Status</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('users.form.accountStatus', locale)}</h3>
                 <div class="space-y-5">
                   <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
@@ -217,8 +219,8 @@ export function renderUserNewPage(data: UserNewPageData): string {
                       </div>
                     </div>
                     <div class="text-sm/6">
-                      <label for="is_active" class="font-medium text-zinc-950 dark:text-white">Account Active</label>
-                      <p class="text-zinc-500 dark:text-zinc-400">User can sign in and access the system</p>
+                      <label for="is_active" class="font-medium text-zinc-950 dark:text-white">${t('users.form.accountActive', locale)}</label>
+                      <p class="text-zinc-500 dark:text-zinc-400">${t('users.form.accountActiveDescription', locale)}</p>
                     </div>
                   </div>
 
@@ -239,8 +241,8 @@ export function renderUserNewPage(data: UserNewPageData): string {
                       </div>
                     </div>
                     <div class="text-sm/6">
-                      <label for="email_verified" class="font-medium text-zinc-950 dark:text-white">Email Verified</label>
-                      <p class="text-zinc-500 dark:text-zinc-400">Mark email as verified</p>
+                      <label for="email_verified" class="font-medium text-zinc-950 dark:text-white">${t('users.form.emailVerified', locale)}</label>
+                      <p class="text-zinc-500 dark:text-zinc-400">${t('users.form.markEmailVerified', locale)}</p>
                     </div>
                   </div>
                 </div>
@@ -254,34 +256,34 @@ export function renderUserNewPage(data: UserNewPageData): string {
         <div class="lg:col-span-1">
           <!-- Help Text -->
           <div class="rounded-xl bg-blue-50 dark:bg-blue-500/10 shadow-sm ring-1 ring-blue-600/20 dark:ring-blue-500/20 p-6">
-            <h3 class="text-base font-semibold text-blue-900 dark:text-blue-300 mb-2">Creating a User</h3>
+            <h3 class="text-base font-semibold text-blue-900 dark:text-blue-300 mb-2">${t('users.form.creatingUser', locale)}</h3>
             <div class="text-sm text-blue-700 dark:text-blue-400 space-y-3">
-              <p>Fill in the required fields marked with <span class="text-red-500">*</span> to create a new user account.</p>
-              <p>The password must be at least 8 characters long.</p>
-              <p>By default, new users are created as active and can sign in immediately.</p>
-              <p>You can edit user details and permissions after creation.</p>
+              <p>${t('users.form.helpRequiredFields', locale)}</p>
+              <p>${t('users.form.helpPasswordLength', locale)}</p>
+              <p>${t('users.form.helpActiveByDefault', locale)}</p>
+              <p>${t('users.form.helpEditAfterCreation', locale)}</p>
             </div>
           </div>
 
           <!-- Role Descriptions -->
           <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 mt-6">
-            <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Role Descriptions</h3>
+            <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('users.form.roleDescriptions', locale)}</h3>
             <dl class="space-y-3 text-sm">
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Administrator</dt>
-                <dd class="text-zinc-500 dark:text-zinc-400">Full system access and permissions</dd>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('users.form.roleAdministrator', locale)}</dt>
+                <dd class="text-zinc-500 dark:text-zinc-400">${t('users.form.roleAdministratorDesc', locale)}</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Editor</dt>
-                <dd class="text-zinc-500 dark:text-zinc-400">Can create and edit content</dd>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('users.form.roleEditorLabel', locale)}</dt>
+                <dd class="text-zinc-500 dark:text-zinc-400">${t('users.form.roleEditorDesc', locale)}</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Author</dt>
-                <dd class="text-zinc-500 dark:text-zinc-400">Can create own content</dd>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('users.form.roleAuthorLabel', locale)}</dt>
+                <dd class="text-zinc-500 dark:text-zinc-400">${t('users.form.roleAuthorDesc', locale)}</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Viewer</dt>
-                <dd class="text-zinc-500 dark:text-zinc-400">Read-only access</dd>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('users.form.roleViewerLabel', locale)}</dt>
+                <dd class="text-zinc-500 dark:text-zinc-400">${t('users.form.roleViewerDesc', locale)}</dd>
               </div>
             </dl>
           </div>
@@ -291,10 +293,11 @@ export function renderUserNewPage(data: UserNewPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Create User',
-    pageTitle: 'Create New User',
+    title: t('users.form.createUser', locale),
+    pageTitle: t('users.form.createNewUser', locale),
     currentPath: '/admin/users',
     user: data.user,
+    locale,
     content: pageContent
   }
 
