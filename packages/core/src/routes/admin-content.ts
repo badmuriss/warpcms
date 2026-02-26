@@ -4,7 +4,6 @@ import type { D1Database } from '@cloudflare/workers-types'
 import { requireAuth } from '../middleware'
 import { renderContentFormPage, ContentFormData } from '../templates/pages/admin-content-form.template'
 import { renderContentListPage, ContentListPageData } from '../templates/pages/admin-content-list.template'
-import { renderVersionHistory, VersionHistoryData, ContentVersion } from '../templates/components/version-history.template'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
 import { getContentType, getAllContentTypes, CONTENT_TYPES } from '../content-types'
@@ -361,12 +360,6 @@ adminContentRoutes.post('/', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.invalidate('content:list:*')
 
-    // Create initial version
-    await db.prepare(`
-      INSERT INTO content_versions (id, content_id, version, data, author_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(crypto.randomUUID(), contentId, 1, JSON.stringify(data), user?.userId || 'unknown', now).run()
-
     // Log workflow
     await db.prepare(`
       INSERT INTO workflow_history (id, content_id, action, from_status, to_status, user_id, created_at)
@@ -445,17 +438,6 @@ adminContentRoutes.put('/:id', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate('content:list:*')
-
-    // Create version if content changed
-    const existingData = JSON.parse(existingContent.data || '{}')
-    if (JSON.stringify(existingData) !== JSON.stringify(data)) {
-      const versionResult = await db.prepare('SELECT MAX(version) as max_version FROM content_versions WHERE content_id = ?').bind(id).first() as any
-      const nextVersion = (versionResult?.max_version || 0) + 1
-      await db.prepare(`
-        INSERT INTO content_versions (id, content_id, version, data, author_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(crypto.randomUUID(), id, nextVersion, JSON.stringify(data), user?.userId || 'unknown', now).run()
-    }
 
     // Log workflow if status changed
     if (status !== existingContent.status) {
@@ -581,141 +563,6 @@ adminContentRoutes.delete('/:id', async (c) => {
   } catch (error) {
     console.error('Delete content error:', error)
     return c.json({ success: false, error: 'Failed to delete content' }, 500)
-  }
-})
-
-// ---------------------------------------------------------------------------
-// Version history
-// ---------------------------------------------------------------------------
-adminContentRoutes.get('/:id/versions', async (c) => {
-  try {
-    const id = c.req.param('id')
-    const db = c.env.DB
-
-    const content = await db.prepare('SELECT * FROM content WHERE id = ?').bind(id).first() as any
-    if (!content) return c.html('<p>Content not found</p>')
-
-    const { results } = await db.prepare(`
-      SELECT cv.*, u.first_name, u.last_name, u.email
-      FROM content_versions cv
-      LEFT JOIN users u ON cv.author_id = u.id
-      WHERE cv.content_id = ?
-      ORDER BY cv.version DESC
-    `).bind(id).all()
-
-    const versions: ContentVersion[] = (results || []).map((row: any) => ({
-      id: row.id,
-      version: row.version,
-      data: JSON.parse(row.data || '{}'),
-      author_id: row.author_id,
-      author_name: row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : row.email,
-      created_at: row.created_at,
-      is_current: false,
-    }))
-
-    if (versions.length > 0) versions[0]!.is_current = true
-
-    return c.html(renderVersionHistory({
-      contentId: id,
-      versions,
-      currentVersion: versions.length > 0 ? versions[0]!.version : 1,
-    }))
-  } catch (error) {
-    console.error('Error loading version history:', error)
-    return c.html('<p>Error loading version history</p>')
-  }
-})
-
-// ---------------------------------------------------------------------------
-// Restore version
-// ---------------------------------------------------------------------------
-adminContentRoutes.post('/:id/restore/:version', async (c) => {
-  try {
-    const id = c.req.param('id')
-    const version = parseInt(c.req.param('version'))
-    const user = c.get('user')
-    const db = c.env.DB
-
-    const versionData = await db.prepare('SELECT * FROM content_versions WHERE content_id = ? AND version = ?').bind(id, version).first() as any
-    if (!versionData) return c.json({ success: false, error: 'Version not found' })
-
-    const currentContent = await db.prepare('SELECT * FROM content WHERE id = ?').bind(id).first() as any
-    if (!currentContent) return c.json({ success: false, error: 'Content not found' })
-
-    const restoredData = JSON.parse(versionData.data)
-    const now = Date.now()
-
-    await db.prepare('UPDATE content SET title = ?, data = ?, updated_at = ? WHERE id = ?')
-      .bind(restoredData.title || 'Untitled', versionData.data, now, id).run()
-
-    const nextVersionResult = await db.prepare('SELECT MAX(version) as max_version FROM content_versions WHERE content_id = ?').bind(id).first() as any
-    const nextVersion = (nextVersionResult?.max_version || 0) + 1
-
-    await db.prepare('INSERT INTO content_versions (id, content_id, version, data, author_id, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), id, nextVersion, versionData.data, user?.userId || 'unknown', now).run()
-
-    await db.prepare('INSERT INTO workflow_history (id, content_id, action, from_status, to_status, user_id, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), id, 'version_restored', currentContent.status, currentContent.status, user?.userId || 'unknown', `Restored to version ${version}`, now).run()
-
-    return c.json({ success: true })
-  } catch (error) {
-    console.error('Error restoring version:', error)
-    return c.json({ success: false, error: 'Failed to restore version' })
-  }
-})
-
-// ---------------------------------------------------------------------------
-// Preview specific version
-// ---------------------------------------------------------------------------
-adminContentRoutes.get('/:id/version/:version/preview', async (c) => {
-  try {
-    const id = c.req.param('id')
-    const version = parseInt(c.req.param('version'))
-    const db = c.env.DB
-
-    const versionData = await db.prepare(`
-      SELECT cv.*, c.collection_id
-      FROM content_versions cv
-      JOIN content c ON cv.content_id = c.id
-      WHERE cv.content_id = ? AND cv.version = ?
-    `).bind(id, version).first() as any
-
-    if (!versionData) return c.html('<p>Version not found</p>')
-
-    const ct = getContentType(versionData.collection_id)
-    const data = JSON.parse(versionData.data || '{}')
-
-    return c.html(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Version ${version} Preview: ${data.title || 'Untitled'}</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { color: #333; }
-          .meta { color: #666; font-size: 14px; margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
-          .version-badge { background: #007cba; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <div class="meta">
-          <span class="version-badge">Version ${version}</span>
-          <strong>Type:</strong> ${ct?.displayName || versionData.collection_id}<br>
-          <strong>Created:</strong> ${new Date(versionData.created_at).toLocaleString()}<br>
-          <em>Historical version preview</em>
-        </div>
-        <h1>${data.title || 'Untitled'}</h1>
-        <div>${data.content || ''}</div>
-        <h3>All Field Data:</h3>
-        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
-      </body>
-      </html>
-    `)
-  } catch (error) {
-    console.error('Error generating version preview:', error)
-    return c.html('<p>Error generating preview</p>')
   }
 })
 

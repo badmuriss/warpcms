@@ -334,18 +334,6 @@ export function renderContentFormPage(data: ContentFormData): string {
                   <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.updated_at ? new Date(data.data.updated_at).toLocaleDateString() : 'Unknown'}</dd>
                 </div>
               </dl>
-              <div class="mt-4 pt-4 border-t border-zinc-950/5 dark:border-white/10">
-                <button
-                  type="button"
-                  onclick="showVersionHistory('${data.id}')"
-                  class="inline-flex items-center gap-x-1.5 text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  View Version History
-                </button>
-              </div>
             </div>
           ` : ''}
 
@@ -488,23 +476,6 @@ export function renderContentFormPage(data: ContentFormData): string {
           } else {
             alert('Error deleting content');
           }
-        });
-      }
-
-      function showVersionHistory(contentId) {
-        var modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
-        modal.innerHTML = '<div id="version-history-content"><div class="flex items-center justify-center h-32"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div></div></div>';
-        document.body.appendChild(modal);
-
-        fetch('/admin/content/' + contentId + '/versions')
-        .then(function(response) { return response.text(); })
-        .then(function(html) {
-          document.getElementById('version-history-content').innerHTML = html;
-        })
-        .catch(function(error) {
-          console.error('Error loading version history:', error);
-          document.getElementById('version-history-content').innerHTML = '<p class="text-zinc-950 dark:text-white">Error loading version history</p>';
         });
       }
 
