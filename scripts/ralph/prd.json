@@ -143,7 +143,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "This is the largest story. The form is in packages/core/src/templates/pages/admin-content-form.template.ts. After this change, the form should be: header -> status select -> field sections -> save/cancel buttons, all inside one <form> tag. The HTMX attributes (hx-post, hx-put, hx-target, hx-encoding) stay on the form."
     },
     {
@@ -160,7 +160,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "This story is for end-to-end verification. If create doesn't work, debug and fix the POST / handler in admin-content.ts or the form template. The route handler should insert into the content table and respond with HX-Redirect."
     },
     {
@@ -178,7 +178,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "This story is for end-to-end verification. If update doesn't work, debug and fix the PUT /:id handler in admin-content.ts or the form template. The route handler should update the content table and respond with HX-Redirect."
     }
   ]

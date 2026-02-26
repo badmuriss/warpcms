@@ -13,6 +13,10 @@ Started: Wed Feb 25 02:44:26 PM -03 2026
 - Plugin routes (PluginBuilder.addRoute) are NOT mounted — real API handlers are in routes/*.ts, mounted in app.ts
 - Form upload JS reads `result.url` from the response — upload endpoints must return top-level `url` field
 - Public file serving routes must be mounted in app.ts BEFORE apiMediaRoutes to avoid auth middleware
+- Form elements (select, buttons) must be INSIDE the `<form>` tag for HTMX to include them in submissions — avoid `form="content-form"` attribute pattern
+- HTMX form validation errors must return only an alert HTML fragment (not a full page) when `hx-target` points to a specific div like `#form-messages`
+- Success messages after redirect use `?success=...` query param — the content list route reads it and passes to template for display
+- Template literal `\${var}` in TypeScript produces literal `${var}` string — do NOT escape `$` when you want interpolation
 
 ---
 
@@ -100,4 +104,49 @@ Started: Wed Feb 25 02:44:26 PM -03 2026
   - `apiMediaRoutes` has `use('*', requireAuth())` — file serving routes must be mounted OUTSIDE this router (directly in app.ts) to avoid requiring auth for public file access
   - The app already has a `/files/*` route in app.ts that serves from R2 — the new `/api/media/file/*` route follows the same pattern
   - The `media` database table exists in schema.ts and the upload handler writes to it — keep both the DB write and the R2 upload
+---
+
+## 2026-02-26 - US-008
+- What was implemented: Rewrote content form to single-column layout — removed 3-column grid, sidebar, duplicate form-messages div, Save & Publish button, and Quill richtext CDN/init code. Moved status select and submit buttons inside the form tag. Added max-w-2xl container for clean single-column layout. Delete button moved to action bar for edit mode.
+- Files changed:
+  - Modified: `src/templates/pages/admin-content-form.template.ts` (removed 151 lines, added 44 — net -107 lines)
+- **Learnings for future iterations:**
+  - The form previously had `form="content-form"` attributes on sidebar elements (status select, submit buttons) to associate them with the form tag — moving them inside the form tag eliminates this pattern and fixes HTMX submission issues
+  - The `richtext` case in `renderField` switch still exists (for the ContentTypeField type) but the Quill CDN/init script that made it functional was removed — if richtext support is needed again, a new editor init will be required
+  - The confirmation dialog for delete is rendered outside the form tag at the page level — this is correct since it's a modal overlay
+  - No content types currently use `richtext` field type — only text, textarea, file, and tags are in use
+---
+
+## 2026-02-26 - US-009
+- What was implemented: Fixed content create flow end-to-end — HTMX validation errors, success messages on content list, and delete dialog template literal bug
+- Files changed:
+  - Modified: `src/routes/admin-content.ts` (added renderAlert import, HTMX validation error responses return alert fragment instead of full page, added success query param reading in GET handler, URL-encoded success message params)
+  - Modified: `src/templates/pages/admin-content-list.template.ts` (added renderAlert import, added successMessage to ContentListPageData interface, render success alert banner when successMessage present)
+  - Modified: `src/templates/pages/admin-content-form.template.ts` (fixed escaped template literal `\${data.id}` → `${data.id}` in delete confirmation dialog onConfirm)
+- **Learnings for future iterations:**
+  - HTMX swaps response HTML into `hx-target` element — returning a full page when `hx-target="#form-messages"` would inject the entire HTML document into a small div, breaking layout
+  - For HTMX validation errors, return just the alert/error HTML fragment that fits the target element
+  - The content list page had no mechanism to display success messages from query params — the redirect URL `?success=...` was set but never read or displayed
+  - Template literal escaping: `\${x}` produces literal `${x}` text, not interpolation — this caused the delete dialog to pass `${data.id}` as a string rather than the actual content ID
+  - Success/error query params should be URL-encoded (use `+` instead of spaces) to avoid issues with URL parsing
+---
+
+## 2026-02-26 - US-010
+- What was implemented: Verified content update flow works for all 3 types (text, image, file) — no code changes needed
+- Files changed:
+  - Modified: `scripts/ralph/prd.json` (marked US-010 as passes: true)
+- **Verification trace (no bugs found):**
+  - GET /:id/edit correctly loads content, parses data JSON, resolves content type, and renders form with existing values
+  - File fields: hidden input holds existing URL, `renderFilePreview()` shows image preview for images and file info for other files
+  - `getFieldValue()` correctly retrieves title from top-level data.title, other fields from data.data JSON
+  - Tags correctly round-trip: stored as array in JSON, displayed as comma-separated string via `Array.isArray(value) ? value.join(', ')`
+  - PUT /:id handler validates, updates DB (title, slug, data JSON, status), invalidates cache, returns HX-Redirect
+  - Success redirect: content list displays success message via `?success=` query param (added in US-009)
+  - Typecheck: passes (17 pre-existing plugin errors only)
+  - Tests: 1132 passed / 4 failed (pre-existing) / 328 skipped — no regressions
+- **Learnings for future iterations:**
+  - The full update cycle was already working correctly after US-008 (form layout) and US-009 (HTMX responses and redirect) — no additional fixes needed
+  - File field values persist through edit cycles via hidden input → extractFormData → JSON.stringify → DB → JSON.parse → template
+  - The `content_type` hidden input in edit forms is unused by the PUT handler — it resolves the type from `existingContent.collection_id` instead
+  - No browser testing tools available — manual browser verification recommended
 ---
