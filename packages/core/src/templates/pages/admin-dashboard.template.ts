@@ -2,6 +2,7 @@ import {
   AdminLayoutData,
   renderAdminLayout,
 } from "../layouts/admin-layout-v2.template";
+import { t } from "../../i18n";
 
 export interface DashboardStats {
   contentItems: number;
@@ -48,24 +49,25 @@ export interface DashboardPageData {
 }
 
 export function renderDashboardPage(data: DashboardPageData): string {
+  const locale = data.locale || 'en'
   const pageContent = `
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your WarpCMS AI admin dashboard</p>
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('dashboard.title', locale)}</h1>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('dashboard.welcome', locale)}</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
         <a href="/admin/content/new" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-700 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
-          New Content
+          ${t('dashboard.newContent', locale)}
         </a>
         <a href="/api" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
           </svg>
-          OpenAPI
+          ${t('dashboard.openApi', locale)}
         </a>
       </div>
     </div>
@@ -85,7 +87,7 @@ export function renderDashboardPage(data: DashboardPageData): string {
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 mb-8">
       <!-- Analytics Chart -->
       <div class="xl:col-span-2">
-        ${renderAnalyticsChart()}
+        ${renderAnalyticsChart(locale)}
       </div>
 
       <!-- Recent Activity -->
@@ -103,32 +105,33 @@ export function renderDashboardPage(data: DashboardPageData): string {
     <!-- Secondary Grid -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- Quick Actions -->
-      ${renderQuickActions()}
+      ${renderQuickActions(locale)}
 
       <!-- System Status -->
-      ${renderSystemStatus()}
+      ${renderSystemStatus(locale)}
 
       <!-- Storage Usage -->
       <div id="storage-usage-container" hx-get="/admin/dashboard/storage" hx-trigger="load" hx-swap="innerHTML">
-        ${renderStorageUsage()}
+        ${renderStorageUsage(undefined, undefined, locale)}
       </div>
     </div>
 
     <script>
       function refreshDashboard() {
         htmx.trigger('#stats-container', 'htmx:load');
-        showNotification('Dashboard refreshed', 'success');
+        showNotification('${t('dashboard.dashboardRefreshed', locale)}', 'success');
       }
     </script>
   `;
 
   const layoutData: AdminLayoutData = {
-    title: "Dashboard",
-    pageTitle: "Dashboard",
+    title: t('dashboard.title', locale),
+    pageTitle: t('dashboard.title', locale),
     currentPath: "/admin",
     user: data.user,
     version: data.version,
     content: pageContent,
+    locale,
   };
 
   return renderAdminLayout(layoutData);
@@ -138,24 +141,25 @@ function renderDashboardPageWithDynamicMenu(
   data: DashboardPageData,
   dynamicMenuItems: Array<{ label: string; path: string; icon: string }>
 ): string {
+  const locale = data.locale || 'en'
   const pageContent = `
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your WarpCMS AI admin dashboard</p>
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('dashboard.title', locale)}</h1>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('dashboard.welcome', locale)}</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
         <a href="/admin/content/new" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-lime-600 dark:bg-lime-700 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-lime-700 dark:hover:bg-lime-600 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
-          New Content
+          ${t('dashboard.newContent', locale)}
         </a>
         <a href="/api" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
           </svg>
-          OpenAPI
+          ${t('dashboard.openApi', locale)}
         </a>
       </div>
     </div>
@@ -165,13 +169,13 @@ function renderDashboardPageWithDynamicMenu(
         contentItems: 0,
         mediaFiles: 0,
         users: 0,
-      })}
+      }, locale)}
     </div>
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 mb-8">
       <!-- Analytics Chart -->
       <div class="xl:col-span-2">
-        ${renderAnalyticsChart()}
+        ${renderAnalyticsChart(locale)}
       </div>
 
       <!-- Recent Activity -->
@@ -188,55 +192,56 @@ function renderDashboardPageWithDynamicMenu(
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- Quick Actions -->
-      ${renderQuickActions()}
+      ${renderQuickActions(locale)}
 
       <!-- System Status -->
-      ${renderSystemStatus()}
+      ${renderSystemStatus(locale)}
 
       <!-- Storage Usage -->
       <div id="storage-usage-container" hx-get="/admin/dashboard/storage" hx-trigger="load" hx-swap="innerHTML">
-        ${renderStorageUsage()}
+        ${renderStorageUsage(undefined, undefined, locale)}
       </div>
     </div>
 
     <script>
       function refreshDashboard() {
         htmx.trigger('#stats-container', 'htmx:load');
-        showNotification('Dashboard refreshed', 'success');
+        showNotification('${t('dashboard.dashboardRefreshed', locale)}', 'success');
       }
     </script>
   `;
 
   const layoutData: AdminLayoutData = {
-    title: "Dashboard",
-    pageTitle: "Dashboard",
+    title: t('dashboard.title', locale),
+    pageTitle: t('dashboard.title', locale),
     currentPath: "/admin",
     user: data.user,
     version: data.version,
     enableExperimentalFeatures: data.enableExperimentalFeatures,
     content: pageContent,
     dynamicMenuItems,
+    locale,
   };
 
   return renderAdminLayout(layoutData);
 }
 
-export function renderStatsCards(stats: DashboardStats): string {
+export function renderStatsCards(stats: DashboardStats, locale = 'en'): string {
   const cards = [
     {
-      title: "Content Items",
+      title: t('dashboard.contentItems', locale),
       value: stats.contentItems.toString(),
       change: "8.2",
       isPositive: true,
     },
     {
-      title: "Media Files",
+      title: t('dashboard.mediaFiles', locale),
       value: stats.mediaFiles.toString(),
       change: "15.3",
       isPositive: true,
     },
     {
-      title: "Active Users",
+      title: t('dashboard.activeUsers', locale),
       value: stats.users.toString(),
       change: "2.4",
       isPositive: false,
@@ -247,7 +252,7 @@ export function renderStatsCards(stats: DashboardStats): string {
 
   return `
     <div>
-      <h3 class="text-base font-semibold text-zinc-950 dark:text-white">Last 30 days</h3>
+      <h3 class="text-base font-semibold text-zinc-950 dark:text-white">${t('dashboard.last30Days', locale)}</h3>
       <dl class="mt-5 grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-zinc-800/75 dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
         ${cards.map((card, index) => `
           <div class="px-4 py-5 sm:p-6">
@@ -263,7 +268,7 @@ export function renderStatsCards(stats: DashboardStats): string {
                     : '<path d="M10 3a.75.75 0 0 1 .75.75v10.638l3.96-4.158a.75.75 0 1 1 1.08 1.04l-5.25 5.5a.75.75 0 0 1-1.08 0l-5.25-5.5a.75.75 0 1 1 1.08-1.04l3.96 4.158V3.75A.75.75 0 0 1 10 3Z" clip-rule="evenodd" fill-rule="evenodd" />'
                   }
                 </svg>
-                <span class="sr-only">${card.isPositive ? 'Increased' : 'Decreased'} by</span>
+                <span class="sr-only">${card.isPositive ? t('dashboard.increased', locale) : t('dashboard.decreased', locale)} by</span>
                 ${card.change}%
               </div>
             </dd>
@@ -295,23 +300,23 @@ function renderStatsCardsSkeleton(): string {
   `;
 }
 
-function renderAnalyticsChart(): string {
+function renderAnalyticsChart(locale = 'en'): string {
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
           <div>
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Real-Time Analytics</h3>
-            <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Requests per second (live)</p>
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('dashboard.realTimeAnalytics', locale)}</h3>
+            <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('dashboard.requestsPerSecondLive', locale)}</p>
           </div>
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full bg-lime-500 animate-pulse"></div>
-            <span class="text-xs text-zinc-500 dark:text-zinc-400">Live</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.live', locale)}</span>
           </div>
         </div>
         <div class="mt-4 flex items-baseline gap-2">
           <span id="current-rps" class="text-4xl font-bold text-cyan-500 dark:text-cyan-400">0</span>
-          <span class="text-sm text-zinc-500 dark:text-zinc-400">req/s</span>
+          <span class="text-sm text-zinc-500 dark:text-zinc-400">${t('dashboard.reqPerSec', locale)}</span>
         </div>
       </div>
 
@@ -334,6 +339,8 @@ function renderAnalyticsChart(): string {
         const ctx = document.getElementById('requestsChart');
         if (!ctx) return;
 
+        const reqSecLabel = '${t('dashboard.requestsPerSec', locale)}';
+
         // Initialize with last 60 seconds of data (1 data point per second)
         const maxDataPoints = 60;
         const labels = [];
@@ -351,7 +358,7 @@ function renderAnalyticsChart(): string {
           data: {
             labels: labels,
             datasets: [{
-              label: 'Requests/sec',
+              label: reqSecLabel,
               data: data,
               borderColor: isDark ? 'rgb(34, 211, 238)' : 'rgb(6, 182, 212)',
               backgroundColor: isDark ? 'rgba(34, 211, 238, 0.1)' : 'rgba(6, 182, 212, 0.1)',
@@ -382,7 +389,7 @@ function renderAnalyticsChart(): string {
                 displayColors: false,
                 callbacks: {
                   label: function(context) {
-                    return 'Requests/sec: ' + context.parsed.y.toFixed(2);
+                    return reqSecLabel + ': ' + context.parsed.y.toFixed(2);
                   }
                 }
               }
@@ -484,7 +491,7 @@ function renderRecentActivitySkeleton(): string {
   `
 }
 
-export function renderRecentActivity(activities?: ActivityItem[]): string {
+export function renderRecentActivity(activities?: ActivityItem[], locale = 'en'): string {
   // Helper to get user initials
   const getInitials = (user: string): string => {
     const parts = user.split(' ').filter(p => p.length > 0)
@@ -505,10 +512,20 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
     const diffHours = Math.floor(diffMins / 60)
     const diffDays = Math.floor(diffHours / 24)
 
-    if (diffMins < 1) return 'just now'
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+    if (diffMins < 1) return t('dashboard.justNow', locale)
+    if (diffMins < 60) {
+      return diffMins === 1
+        ? t('dashboard.minuteAgo', locale, { count: String(diffMins) })
+        : t('dashboard.minutesAgo', locale, { count: String(diffMins) })
+    }
+    if (diffHours < 24) {
+      return diffHours === 1
+        ? t('dashboard.hourAgo', locale, { count: String(diffHours) })
+        : t('dashboard.hoursAgo', locale, { count: String(diffHours) })
+    }
+    return diffDays === 1
+      ? t('dashboard.dayAgo', locale, { count: String(diffDays) })
+      : t('dashboard.daysAgo', locale, { count: String(diffDays) })
   }
 
   // Helper to get color classes based on activity type
@@ -552,7 +569,7 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
   if (formattedActivities.length === 0) {
     formattedActivities.push({
       type: 'content' as const,
-      description: 'No recent activity',
+      description: t('dashboard.noRecentActivity', locale),
       user: 'System',
       time: '',
       initials: 'SY',
@@ -568,9 +585,9 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Recent Activity</h3>
+          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('dashboard.recentActivity', locale)}</h3>
           <button class="text-xs/5 font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors">
-            View all
+            ${t('dashboard.viewAll', locale)}
           </button>
         </div>
       </div>
@@ -602,35 +619,35 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
   `;
 }
 
-function renderQuickActions(): string {
+function renderQuickActions(locale = 'en'): string {
   const actions = [
     {
-      title: "New Image",
-      description: "Upload and manage images",
+      title: t('dashboard.newImage', locale),
+      description: t('dashboard.newImageDesc', locale),
       href: "/admin/content/new?type=image",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>`,
     },
     {
-      title: "New Text",
-      description: "Create plain text content",
+      title: t('dashboard.newText', locale),
+      description: t('dashboard.newTextDesc', locale),
       href: "/admin/content/new?type=text",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
       </svg>`,
     },
     {
-      title: "New HTML",
-      description: "Create rich HTML content",
+      title: t('dashboard.newHtml', locale),
+      description: t('dashboard.newHtmlDesc', locale),
       href: "/admin/content/new?type=html",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
       </svg>`,
     },
     {
-      title: "Manage Users",
-      description: "Add or edit user accounts",
+      title: t('dashboard.manageUsers', locale),
+      description: t('dashboard.manageUsersDesc', locale),
       href: "/admin/users",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -641,7 +658,7 @@ function renderQuickActions(): string {
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
-        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Quick Actions</h3>
+        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('dashboard.quickActions', locale)}</h3>
       </div>
 
       <div class="p-6">
@@ -670,15 +687,15 @@ function renderQuickActions(): string {
   `;
 }
 
-function renderSystemStatus(): string {
+function renderSystemStatus(locale = 'en'): string {
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 overflow-hidden">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">System Status</h3>
+          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('dashboard.systemStatus', locale)}</h3>
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full bg-lime-500 animate-pulse"></div>
-            <span class="text-xs text-zinc-500 dark:text-zinc-400">Live</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.live', locale)}</span>
           </div>
         </div>
       </div>
@@ -725,7 +742,7 @@ function renderSystemStatus(): string {
   `;
 }
 
-export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: number): string {
+export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: number, locale = 'en'): string {
   // Helper to format bytes to human readable
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
@@ -746,34 +763,34 @@ export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: 
 
   const storageItems = [
     {
-      label: "Database",
+      label: t('dashboard.database', locale),
       used: dbUsedFormatted,
       total: "10 GB",
       percentage: dbPercentage,
       color: dbPercentage > 80 ? "bg-red-500 dark:bg-red-400" : dbPercentage > 60 ? "bg-amber-500 dark:bg-amber-400" : "bg-cyan-500 dark:bg-cyan-400",
     },
     {
-      label: "Media Files",
+      label: t('dashboard.mediaFiles', locale),
       used: mediaUsedFormatted,
-      total: "∞",
+      total: "\u221E",
       percentage: 0,
       color: "bg-lime-500 dark:bg-lime-400",
-      note: "Stored in R2"
+      note: t('dashboard.storedInR2', locale)
     },
     {
-      label: "Cache (KV)",
+      label: t('dashboard.cacheKv', locale),
       used: "N/A",
-      total: "∞",
+      total: "\u221E",
       percentage: 0,
       color: "bg-purple-500 dark:bg-purple-400",
-      note: "Unlimited"
+      note: t('dashboard.unlimited', locale)
     },
   ];
 
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
-        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Storage Usage</h3>
+        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('dashboard.storageUsage', locale)}</h3>
       </div>
 
       <div class="px-6 py-6">
@@ -797,6 +814,64 @@ export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: 
             )
             .join("")}
         </dl>
+      </div>
+    </div>
+  `;
+}
+
+export function renderSystemStatusFragment(locale = 'en'): string {
+  return `
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/10 dark:to-cyan-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">${t('dashboard.apiStatus', locale)}</span>
+            <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.operational', locale)}</p>
+        </div>
+      </div>
+
+      <div class="relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 dark:from-purple-500/10 dark:to-pink-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">${t('dashboard.database', locale)}</span>
+            <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.connected', locale)}</p>
+        </div>
+      </div>
+
+      <div class="relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">${t('dashboard.r2Storage', locale)}</span>
+            <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.available', locale)}</p>
+        </div>
+      </div>
+
+      <div class="relative group">
+        <div class="absolute inset-0 bg-gradient-to-br from-lime-500/20 to-emerald-500/20 dark:from-lime-500/10 dark:to-emerald-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">${t('dashboard.kvCache', locale)}</span>
+            <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">${t('dashboard.ready', locale)}</p>
+        </div>
       </div>
     </div>
   `;

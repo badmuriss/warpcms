@@ -7,11 +7,13 @@ import {
   renderStatsCards,
   renderStorageUsage,
   renderRecentActivity,
+  renderSystemStatusFragment,
   type ActivityItem
 } from '../templates/pages/admin-dashboard.template'
 import { getCoreVersion } from '../utils/version'
 import { metricsTracker } from '../utils/metrics'
 import { getLocale } from '../i18n'
+import { t } from '../i18n'
 
 const VERSION = getCoreVersion()
 
@@ -75,6 +77,8 @@ router.get('/', async (c) => {
  * GET /admin/dashboard/stats - Dashboard stats HTML fragment (HTMX endpoint)
  */
 router.get('/stats', async (c) => {
+  const locale = await getLocale(c)
+
   try {
     const db = c.env.DB
 
@@ -115,12 +119,12 @@ router.get('/stats', async (c) => {
       mediaFiles: mediaCount,
       users: usersCount,
       mediaSize: mediaSize
-    })
+    }, locale)
 
     return c.html(html)
   } catch (error) {
     console.error('Error fetching stats:', error)
-    return c.html('<div class="text-red-500">Failed to load statistics</div>')
+    return c.html(`<div class="text-red-500">${t('dashboard.failedToLoadStats', locale)}</div>`)
   }
 })
 
@@ -128,6 +132,8 @@ router.get('/stats', async (c) => {
  * GET /admin/dashboard/storage - Storage usage HTML fragment (HTMX endpoint)
  */
 router.get('/storage', async (c) => {
+  const locale = await getLocale(c)
+
   try {
     const db = c.env.DB
 
@@ -150,11 +156,11 @@ router.get('/storage', async (c) => {
       console.error('Error fetching media size:', error)
     }
 
-    const html = renderStorageUsage(databaseSize, mediaSize)
+    const html = renderStorageUsage(databaseSize, mediaSize, locale)
     return c.html(html)
   } catch (error) {
     console.error('Error fetching storage usage:', error)
-    return c.html('<div class="text-red-500">Failed to load storage information</div>')
+    return c.html(`<div class="text-red-500">${t('dashboard.failedToLoadStorage', locale)}</div>`)
   }
 })
 
@@ -162,6 +168,8 @@ router.get('/storage', async (c) => {
  * GET /admin/dashboard/recent-activity - Recent activity HTML fragment (HTMX endpoint)
  */
 router.get('/recent-activity', async (c) => {
+  const locale = await getLocale(c)
+
   try {
     const db = c.env.DB
     const limit = parseInt(c.req.query('limit') || '5')
@@ -214,11 +222,11 @@ router.get('/recent-activity', async (c) => {
       }
     })
 
-    const html = renderRecentActivity(activities)
+    const html = renderRecentActivity(activities, locale)
     return c.html(html)
   } catch (error) {
     console.error('Error fetching recent activity:', error)
-    const html = renderRecentActivity([])
+    const html = renderRecentActivity([], locale)
     return c.html(html)
   }
 })
@@ -240,66 +248,14 @@ router.get('/api/metrics', async (c) => {
  * GET /admin/dashboard/system-status - System status HTML fragment (HTMX endpoint)
  */
 router.get('/system-status', async (c) => {
+  const locale = await getLocale(c)
+
   try {
-    const html = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="relative group">
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 dark:from-blue-500/10 dark:to-cyan-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">API Status</span>
-              <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400">Operational</p>
-          </div>
-        </div>
-
-        <div class="relative group">
-          <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 dark:from-purple-500/10 dark:to-pink-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Database</span>
-              <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400">Connected</p>
-          </div>
-        </div>
-
-        <div class="relative group">
-          <div class="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">R2 Storage</span>
-              <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400">Available</p>
-          </div>
-        </div>
-
-        <div class="relative group">
-          <div class="absolute inset-0 bg-gradient-to-br from-lime-500/20 to-emerald-500/20 dark:from-lime-500/10 dark:to-emerald-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">KV Cache</span>
-              <svg class="w-6 h-6 text-lime-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-              </svg>
-            </div>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400">Ready</p>
-          </div>
-        </div>
-      </div>
-    `
+    const html = renderSystemStatusFragment(locale)
     return c.html(html)
   } catch (error) {
     console.error('Error fetching system status:', error)
-    return c.html('<div class="text-red-500">Failed to load system status</div>')
+    return c.html(`<div class="text-red-500">${t('dashboard.failedToLoadStatus', locale)}</div>`)
   }
 })
 
