@@ -437,7 +437,7 @@ adminContentRoutes.put('/:id', async (c) => {
 })
 
 // ---------------------------------------------------------------------------
-// Delete content (soft)
+// Delete content (hard delete)
 // ---------------------------------------------------------------------------
 adminContentRoutes.delete('/:id', async (c) => {
   try {
@@ -447,8 +447,7 @@ adminContentRoutes.delete('/:id', async (c) => {
     const content = await db.prepare('SELECT id FROM content WHERE id = ?').bind(id).first() as any
     if (!content) return c.json({ success: false, error: 'Content not found' }, 404)
 
-    const now = Date.now()
-    await db.prepare(`UPDATE content SET status = 'deleted', updated_at = ? WHERE id = ?`).bind(now, id).run()
+    await db.prepare('DELETE FROM content WHERE id = ?').bind(id).run()
 
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
