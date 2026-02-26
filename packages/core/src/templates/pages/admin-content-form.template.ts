@@ -20,6 +20,7 @@ export interface ContentFormData {
     role: string
   }
   version?: string
+  locale?: string;
 }
 
 /** Render a single field based on its ContentTypeField definition */

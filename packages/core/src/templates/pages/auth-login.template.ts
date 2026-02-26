@@ -4,6 +4,7 @@ export interface LoginPageData {
   error?: string
   message?: string
   version?: string
+  locale?: string
 }
 
 export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = false): string {

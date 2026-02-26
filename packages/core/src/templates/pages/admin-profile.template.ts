@@ -32,6 +32,7 @@ export interface ProfilePageData {
     role: string
   }
   version?: string
+  locale?: string;
 }
 
 export function renderAvatarImage(avatarUrl: string | undefined, firstName: string, lastName: string): string {

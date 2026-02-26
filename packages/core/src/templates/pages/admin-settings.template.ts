@@ -14,6 +14,7 @@ export interface SettingsPageData {
   }
   activeTab?: string
   version?: string
+  locale?: string;
 }
 
 export interface GeneralSettings {

@@ -34,6 +34,7 @@ export interface ContentListPageData {
     role: string
   }
   version?: string
+  locale?: string;
 }
 
 export function renderContentListPage(data: ContentListPageData): string {

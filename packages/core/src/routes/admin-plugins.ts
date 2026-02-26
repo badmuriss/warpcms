@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware'
 import { renderPluginsListPage, PluginsListPageData, Plugin } from '../templates/pages/admin-plugins-list.template'
 import { renderPluginSettingsPage, PluginSettingsPageData } from '../templates/pages/admin-plugin-settings.template'
 import { PluginService } from '../services'
+import { getLocale } from '../i18n'
 // TODO: authValidationService not yet migrated - commented out temporarily
 // import { authValidationService } from '../services/auth-validation'
 import type { Bindings, Variables } from '../app'
@@ -137,6 +138,7 @@ const AVAILABLE_PLUGINS = [
 adminPluginRoutes.get('/', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const db = c.env.DB
     
     // Temporarily skip permission check for admin users
@@ -218,6 +220,7 @@ adminPluginRoutes.get('/', async (c) => {
         email: user?.email || '',
         role: user?.role || 'user'
       },
+      locale,
       version: c.get('appVersion')
     }
 
@@ -232,6 +235,7 @@ adminPluginRoutes.get('/', async (c) => {
 adminPluginRoutes.get('/:id', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const db = c.env.DB
     const pluginId = c.req.param('id')
 
@@ -331,7 +335,8 @@ adminPluginRoutes.get('/:id', async (c) => {
         name: user?.email || 'User',
         email: user?.email || '',
         role: user?.role || 'user'
-      }
+      },
+      locale,
     }
     
     return c.html(renderPluginSettingsPage(pageData))

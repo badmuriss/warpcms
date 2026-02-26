@@ -44,6 +44,7 @@ export interface DashboardPageData {
   stats?: DashboardStats;
   version?: string;
   enableExperimentalFeatures?: boolean;
+  locale?: string;
 }
 
 export function renderDashboardPage(data: DashboardPageData): string {

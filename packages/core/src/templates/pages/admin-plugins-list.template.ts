@@ -34,6 +34,7 @@ export interface PluginsListPageData {
     role: string
   }
   version?: string
+  locale?: string;
 }
 
 export function renderPluginsListPage(data: PluginsListPageData): string {

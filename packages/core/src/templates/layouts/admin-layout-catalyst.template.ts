@@ -161,6 +161,7 @@ export interface AdminLayoutCatalystData {
     path: string;
     icon: string;
   }>;
+  locale?: string;
 }
 
 export function renderAdminLayoutCatalyst(

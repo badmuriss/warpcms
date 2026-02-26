@@ -37,6 +37,7 @@ export interface CacheDashboardData {
     role: string
   }
   version?: string
+  locale?: string
 }
 
 export function renderCacheDashboard(data: CacheDashboardData): string {

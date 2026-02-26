@@ -40,6 +40,7 @@ export interface UserEditPageData {
     email: string
     role: string
   }
+  locale?: string;
 }
 
 export function renderUserEditPage(data: UserEditPageData): string {

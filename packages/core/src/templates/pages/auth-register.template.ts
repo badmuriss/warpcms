@@ -2,6 +2,7 @@ import { renderAlert } from '../components/alert.template'
 
 export interface RegisterPageData {
   error?: string
+  locale?: string
 }
 
 export function renderRegisterPage(data: RegisterPageData): string {

@@ -14,6 +14,7 @@ export interface DatabaseTablePageData {
   pageSize: number
   sortColumn?: string
   sortDirection?: 'asc' | 'desc'
+  locale?: string
 }
 
 export function renderDatabaseTablePage(data: DatabaseTablePageData): string {

@@ -37,6 +37,7 @@ export interface UsersListPageData {
     role: string
   }
   version?: string
+  locale?: string;
 }
 
 export function renderUsersListPage(data: UsersListPageData): string {

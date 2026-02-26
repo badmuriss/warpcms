@@ -34,6 +34,7 @@ export interface ActivityLogsPageData {
     email: string
     role: string
   }
+  locale?: string
 }
 
 export function renderActivityLogsPage(data: ActivityLogsPageData): string {

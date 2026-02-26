@@ -7,6 +7,7 @@ import { renderLogsListPage, type LogsListPageData } from '../templates/pages/ad
 import { renderLogDetailsPage, type LogDetailsPageData } from '../templates/pages/admin-log-details.template'
 import { renderLogConfigPage, type LogConfigPageData } from '../templates/pages/admin-log-config.template'
 import type { Bindings, Variables } from '../app'
+import { getLocale } from '../i18n'
 
 const adminLogsRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -17,8 +18,9 @@ adminLogsRoutes.use('*', requireAuth())
 adminLogsRoutes.get('/', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const logger = getLogger(c.env.DB)
-    
+
     // Use Hono's built-in query method instead of parsing URL
     const query = c.req.query()
     
@@ -81,6 +83,7 @@ adminLogsRoutes.get('/', async (c) => {
     const totalPages = Math.ceil(total / limit)
     
     const pageData: LogsListPageData = {
+      locale,
       logs: formattedLogs,
       pagination: {
         currentPage: page,
@@ -118,6 +121,7 @@ adminLogsRoutes.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const user = c.get('user')
+    const locale = await getLocale(c)
     const logger = getLogger(c.env.DB)
     
     // Get single log by ID
@@ -144,6 +148,7 @@ adminLogsRoutes.get('/:id', async (c) => {
     }
     
     const pageData: LogDetailsPageData = {
+      locale,
       log: formattedLog,
       user: user ? {
         name: user.email,
@@ -163,12 +168,14 @@ adminLogsRoutes.get('/:id', async (c) => {
 adminLogsRoutes.get('/config', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const logger = getLogger(c.env.DB)
-    
+
     // Get all log configurations
     const configs = await logger.getAllConfigs()
     
     const pageData: LogConfigPageData = {
+      locale,
       configs,
       user: user ? {
         name: user.email,

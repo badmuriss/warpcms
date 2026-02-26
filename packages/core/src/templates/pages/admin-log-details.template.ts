@@ -11,6 +11,7 @@ interface BaseUser {
 export interface LogDetailsPageData {
   log: LogEntry
   user?: BaseUser
+  locale?: string
 }
 
 export function renderLogDetailsPage(data: LogDetailsPageData) {

@@ -8,6 +8,7 @@ import { renderUserEditPage, type UserEditPageData, type UserEditData, type User
 import { renderUserNewPage, type UserNewPageData } from '../templates/pages/admin-user-new.template'
 import { renderUsersListPage, type UsersListPageData, type User } from '../templates/pages/admin-users-list.template'
 import type { Bindings, Variables } from '../app'
+import { getLocale } from '../i18n'
 
 const userRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -61,6 +62,7 @@ const ROLES = [
 userRoutes.get('/profile', async (c) => {
   const user = c.get('user')
   const db = c.env.DB
+  const locale = await getLocale(c)
 
   try {
     // Get user profile data
@@ -99,6 +101,7 @@ userRoutes.get('/profile', async (c) => {
     }
 
     const pageData: ProfilePageData = {
+      locale,
       profile,
       timezones: TIMEZONES,
       languages: LANGUAGES,
@@ -114,6 +117,7 @@ userRoutes.get('/profile', async (c) => {
     console.error('Profile page error:', error)
     
     const pageData: ProfilePageData = {
+      locale,
       profile: {} as UserProfile,
       timezones: TIMEZONES,
       languages: LANGUAGES,
@@ -435,6 +439,7 @@ userRoutes.post('/profile/password', async (c) => {
 userRoutes.get('/users', async (c) => {
   const db = c.env.DB
   const user = c.get('user')
+  const locale = await getLocale(c)
 
   try {
     // Get pagination parameters
@@ -533,6 +538,7 @@ userRoutes.get('/users', async (c) => {
     }))
 
     const pageData: UsersListPageData = {
+      locale,
       users,
       currentPage: page,
       totalPages: Math.ceil(totalUsers / limit),
@@ -581,9 +587,11 @@ userRoutes.get('/users', async (c) => {
  */
 userRoutes.get('/users/new', async (c) => {
   const user = c.get('user')
+  const locale = await getLocale(c)
 
   try {
     const pageData: UserNewPageData = {
+      locale,
       roles: ROLES,
       user: {
         name: user!.email.split('@')[0] || user!.email,
@@ -786,6 +794,7 @@ userRoutes.get('/users/:id/edit', async (c) => {
   const db = c.env.DB
   const user = c.get('user')
   const userId = c.req.param('id')
+  const locale = await getLocale(c)
 
   try {
     // Get user data (removed bio - now in profile)
@@ -844,6 +853,7 @@ userRoutes.get('/users/:id/edit', async (c) => {
     }
 
     const pageData: UserEditPageData = {
+      locale,
       userToEdit: editData,
       roles: ROLES,
       user: {
@@ -1345,6 +1355,7 @@ userRoutes.delete('/cancel-invitation/:id', async (c) => {
 userRoutes.get('/activity-logs', async (c) => {
   const db = c.env.DB
   const user = c.get('user')
+  const locale = await getLocale(c)
 
   try {
     // Get pagination and filter parameters
@@ -1434,6 +1445,7 @@ userRoutes.get('/activity-logs', async (c) => {
     )
 
     const pageData: ActivityLogsPageData = {
+      locale,
       logs: formattedLogs,
       pagination: {
         page,
@@ -1455,6 +1467,7 @@ userRoutes.get('/activity-logs', async (c) => {
     console.error('Activity logs error:', error)
     
     const pageData: ActivityLogsPageData = {
+      locale,
       logs: [],
       pagination: { page: 1, limit: 50, total: 0, pages: 0 },
       filters: {},

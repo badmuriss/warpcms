@@ -8,6 +8,7 @@ import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
 import { getContentType, getAllContentTypes } from '../content-types'
 import type { ContentTypeField } from '../content-types'
+import { getLocale } from '../i18n'
 
 const adminContentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -58,6 +59,7 @@ function extractFormData(
 adminContentRoutes.get('/', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const url = new URL(c.req.url)
     const db = c.env.DB
 
@@ -152,6 +154,7 @@ adminContentRoutes.get('/', async (c) => {
       successMessage,
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       version: c.get('appVersion'),
+      locale,
     }
 
     return c.html(renderContentListPage(pageData))
@@ -167,6 +170,7 @@ adminContentRoutes.get('/', async (c) => {
 adminContentRoutes.get('/new', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const url = new URL(c.req.url)
     const typeName = url.searchParams.get('type')
 
@@ -212,6 +216,7 @@ adminContentRoutes.get('/new', async (c) => {
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
         version: c.get('appVersion'),
         content: pageContent,
+        locale,
       }))
     }
 
@@ -221,6 +226,7 @@ adminContentRoutes.get('/new', async (c) => {
         contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
         error: 'Content type not found.',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+        locale,
       }))
     }
 
@@ -229,13 +235,16 @@ adminContentRoutes.get('/new', async (c) => {
       isEdit: false,
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       version: c.get('appVersion'),
+      locale,
     }))
   } catch (error) {
     console.error('Error loading new content form:', error)
+    const fallbackLocale = await getLocale(c)
     return c.html(renderContentFormPage({
       contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
       error: 'Failed to load content form.',
       user: c.get('user') ? { name: c.get('user')!.email, email: c.get('user')!.email, role: c.get('user')!.role } : undefined,
+      locale: fallbackLocale,
     }))
   }
 })
@@ -247,6 +256,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
   try {
     const id = c.req.param('id')
     const user = c.get('user')
+    const locale = await getLocale(c)
     const db = c.env.DB
     const url = new URL(c.req.url)
     const referrerParams = url.searchParams.get('ref') || ''
@@ -265,6 +275,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
         contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
         error: 'Content not found.',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+        locale,
       }))
     }
 
@@ -290,13 +301,16 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       referrerParams,
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       version: c.get('appVersion'),
+      locale,
     }))
   } catch (error) {
     console.error('Error loading edit content form:', error)
+    const fallbackLocale = await getLocale(c)
     return c.html(renderContentFormPage({
       contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
       error: 'Failed to load content for editing.',
       user: c.get('user') ? { name: c.get('user')!.email, email: c.get('user')!.email, role: c.get('user')!.role } : undefined,
+      locale: fallbackLocale,
     }))
   }
 })
@@ -307,6 +321,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
 adminContentRoutes.post('/', async (c) => {
   try {
     const user = c.get('user')
+    const locale = await getLocale(c)
     const formData = await c.req.formData()
     const typeName = formData.get('content_type') as string
 
@@ -330,6 +345,7 @@ adminContentRoutes.post('/', async (c) => {
         validationErrors: errors,
         error: 'Please fix the validation errors below.',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+        locale,
       }))
     }
 
@@ -392,6 +408,7 @@ adminContentRoutes.put('/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const user = c.get('user')
+    const locale = await getLocale(c)
     const formData = await c.req.formData()
 
     const db = c.env.DB
@@ -422,6 +439,7 @@ adminContentRoutes.put('/:id', async (c) => {
         error: 'Please fix the validation errors below.',
         isEdit: true,
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+        locale,
       }))
     }
 

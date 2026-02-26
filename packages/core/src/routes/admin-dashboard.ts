@@ -11,6 +11,7 @@ import {
 } from '../templates/pages/admin-dashboard.template'
 import { getCoreVersion } from '../utils/version'
 import { metricsTracker } from '../utils/metrics'
+import { getLocale } from '../i18n'
 
 const VERSION = getCoreVersion()
 
@@ -38,6 +39,7 @@ router.use('*', requireAuth())
  */
 router.get('/', async (c) => {
   const user = c.get('user')
+  const locale = await getLocale(c)
 
   try {
     const pageData: DashboardPageData = {
@@ -46,6 +48,7 @@ router.get('/', async (c) => {
         email: user!.email,
         role: user!.role
       },
+      locale,
       version: VERSION
     }
 
@@ -60,6 +63,7 @@ router.get('/', async (c) => {
         email: user!.email,
         role: user!.role
       },
+      locale,
       version: VERSION
     }
 

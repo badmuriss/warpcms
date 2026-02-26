@@ -10,6 +10,7 @@ export interface UserNewPageData {
     email: string
     role: string
   }
+  locale?: string;
 }
 
 export function renderUserNewPage(data: UserNewPageData): string {

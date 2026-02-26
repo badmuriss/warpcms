@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware'
 import { renderSettingsPage, SettingsPageData } from '../templates/pages/admin-settings.template'
 import { MigrationService } from '../services/migrations'
 import { SettingsService } from '../services/settings'
+import { getLocale } from '../i18n'
 
 type Bindings = {
   DB: D1Database
@@ -64,6 +65,7 @@ adminSettingsRoutes.get('/', (c) => {
 // General settings
 adminSettingsRoutes.get('/general', async (c) => {
   const user = c.get('user')
+  const locale = await getLocale(c)
   const db = c.env.DB
   const settingsService = new SettingsService(db)
 
@@ -78,14 +80,16 @@ adminSettingsRoutes.get('/general', async (c) => {
     } : undefined,
     settings: { ...getDefaultSettings(), general: generalSettings },
     activeTab: 'general',
+    locale,
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))
 })
 
 // Migrations settings
-adminSettingsRoutes.get('/migrations', (c) => {
+adminSettingsRoutes.get('/migrations', async (c) => {
   const user = c.get('user')
+  const locale = await getLocale(c)
   const pageData: SettingsPageData = {
     user: user ? {
       name: user.email,
@@ -94,14 +98,16 @@ adminSettingsRoutes.get('/migrations', (c) => {
     } : undefined,
     settings: getDefaultSettings(),
     activeTab: 'migrations',
+    locale,
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))
 })
 
 // Database tools settings
-adminSettingsRoutes.get('/database-tools', (c) => {
+adminSettingsRoutes.get('/database-tools', async (c) => {
   const user = c.get('user')
+  const locale = await getLocale(c)
   const pageData: SettingsPageData = {
     user: user ? {
       name: user.email,
@@ -110,6 +116,7 @@ adminSettingsRoutes.get('/database-tools', (c) => {
     } : undefined,
     settings: getDefaultSettings(),
     activeTab: 'database-tools',
+    locale,
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))

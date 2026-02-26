@@ -51,6 +51,7 @@ export interface LogsListPageData {
     source: string
   }
   user?: BaseUser
+  locale?: string
 }
 
 export function renderLogsListPage(data: LogsListPageData) {

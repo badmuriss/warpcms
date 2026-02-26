@@ -51,6 +51,7 @@ export interface PluginSettingsPageData {
     email: string
     role: string
   }
+  locale?: string
 }
 
 export function renderPluginSettingsPage(data: PluginSettingsPageData): string {

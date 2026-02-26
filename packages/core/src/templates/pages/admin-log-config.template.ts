@@ -11,6 +11,7 @@ interface BaseUser {
 export interface LogConfigPageData {
   configs: LogConfig[]
   user?: BaseUser
+  locale?: string
 }
 
 export function renderLogConfigPage(data: LogConfigPageData) {

@@ -20,6 +20,7 @@ export interface AdminLayoutData {
     path: string;
     icon: string;
   }>;
+  locale?: string;
 }
 
 export function renderAdminLayout(data: AdminLayoutData): string {
