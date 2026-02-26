@@ -455,10 +455,11 @@ describe('renderAdminLayoutCatalyst', () => {
       expect(html).toContain('class="hidden fixed');
     });
 
-    it('should include migration count placeholder', () => {
+    it('should include migration text placeholder', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('id="migration-count"');
+      expect(html).toContain('id="migration-text"');
+      expect(html).toContain('data-template=');
     });
 
     it('should include migration check function', () => {

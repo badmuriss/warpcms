@@ -1,5 +1,6 @@
 import { HtmlEscapedString } from "hono/utils/html";
 import { renderLogo } from "../components/logo.template";
+import { t } from "../../i18n";
 
 // Catalyst Checkbox Component (HTML implementation)
 export interface CatalystCheckboxProps {
@@ -167,8 +168,9 @@ export interface AdminLayoutCatalystData {
 export function renderAdminLayoutCatalyst(
   data: AdminLayoutCatalystData
 ): string {
+  const locale = data.locale || 'en';
   return `<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="${locale}" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -275,7 +277,8 @@ export function renderAdminLayoutCatalyst(
         data.dynamicMenuItems,
         false,
         data.version,
-        data.enableExperimentalFeatures
+        data.enableExperimentalFeatures,
+        locale
       )}
     </div>
 
@@ -288,7 +291,8 @@ export function renderAdminLayoutCatalyst(
         data.dynamicMenuItems,
         true,
         data.version,
-        data.enableExperimentalFeatures
+        data.enableExperimentalFeatures,
+        locale
       )}
     </div>
 
@@ -327,8 +331,7 @@ export function renderAdminLayoutCatalyst(
             </svg>
           </span>
           <div class="ml-3">
-            <p class="text-sm font-medium text-white">
-              <span id="migration-count"></span> pending database migration(s) detected
+            <p class="text-sm font-medium text-white" id="migration-text" data-template="${t('layout.pendingMigrations', locale)}">
             </p>
             <p class="text-xs text-amber-100 dark:text-amber-200 mt-1">
               Run: <code class="bg-amber-700 dark:bg-amber-800 px-2 py-0.5 rounded font-mono text-white">wrangler d1 migrations apply DB --local</code>
@@ -337,7 +340,7 @@ export function renderAdminLayoutCatalyst(
         </div>
         <div class="flex items-center gap-2">
           <a href="/admin/settings/migrations" class="text-xs font-semibold text-white hover:text-amber-100 underline">
-            View Details
+            ${t('layout.viewDetails', locale)}
           </a>
           <button onclick="closeMigrationBanner()" class="p-1 rounded-md text-white hover:bg-amber-600 dark:hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-white">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -443,9 +446,10 @@ export function renderAdminLayoutCatalyst(
           const data = await response.json();
           if (data.success && data.data && data.data.pendingMigrations > 0) {
             const banner = document.getElementById('migration-banner');
-            const countElement = document.getElementById('migration-count');
-            if (banner && countElement) {
-              countElement.textContent = data.data.pendingMigrations;
+            const textEl = document.getElementById('migration-text');
+            if (banner && textEl) {
+              const template = textEl.getAttribute('data-template') || '';
+              textEl.textContent = template.replace('{{count}}', data.data.pendingMigrations);
               banner.classList.remove('hidden');
             }
           }
@@ -468,32 +472,33 @@ function renderCatalystSidebar(
   dynamicMenuItems?: Array<{ label: string; path: string; icon: string }>,
   isMobile: boolean = false,
   version?: string,
-  enableExperimentalFeatures?: boolean
+  enableExperimentalFeatures?: boolean,
+  locale: string = 'en'
 ): string {
   let baseMenuItems = [
     {
-      label: "Content",
+      label: t('nav.content', locale),
       path: "/admin/content",
       icon: `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
       </svg>`,
     },
     {
-      label: "Dashboard",
+      label: t('nav.dashboard', locale),
       path: "/admin",
       icon: `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
       </svg>`,
     },
     {
-      label: "Users",
+      label: t('nav.users', locale),
       path: "/admin/users",
       icon: `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
       </svg>`,
     },
     {
-      label: "Logs",
+      label: t('nav.logs', locale),
       path: "/admin/logs",
       icon: `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 011-1h1a1 1 0 010 2H7a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/>
@@ -502,7 +507,7 @@ function renderCatalystSidebar(
   ];
 
   const settingsMenuItem = {
-    label: "Settings",
+    label: t('nav.settings', locale),
     path: "/admin/settings",
     icon: `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
       <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
@@ -531,7 +536,7 @@ function renderCatalystSidebar(
         <svg class="h-5 w-5 shrink-0 fill-zinc-500 dark:fill-zinc-400" viewBox="0 0 20 20">
           <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
         </svg>
-        <span>Close menu</span>
+        <span>${t('layout.closeMenu', locale)}</span>
       </button>
     </div>
   `
@@ -671,13 +676,13 @@ function renderCatalystSidebar(
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
-                  My Profile
+                  ${t('nav.myProfile', locale)}
                 </a>
                 <a href="/auth/logout" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                   </svg>
-                  Sign Out
+                  ${t('nav.signOut', locale)}
                 </a>
               </div>
             </div>
