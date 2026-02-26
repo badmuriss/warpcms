@@ -159,3 +159,22 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - Button `title` attributes (tooltip text) also need translation (deactivateUser, activateUser)
   - Layout data should include `locale` property to propagate to the layout template for sidebar/navbar translations
 ---
+
+## 2026-02-26 20:25 - US-009
+- Extracted and translated all User Form page strings: admin-user-new, admin-user-edit, and admin-profile templates
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `users.form` namespace with 90+ keys (page titles, field labels, placeholders, section headers, sidebar labels, role descriptions, danger zone, password modal, profile preferences, notifications, security)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for users.form namespace
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for users.form namespace
+  - `packages/core/src/templates/pages/admin-user-new.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; passed locale to layout data
+  - `packages/core/src/templates/pages/admin-user-edit.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; injected `window.__i18n` for client-side JS error messages; translated confirmation dialog props; passed locale to layout data
+  - `packages/core/src/templates/pages/admin-profile.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; injected `window.__i18n` for 2FA coming soon alert; translated password modal strings; passed locale to layout data
+- **Learnings for future iterations:**
+  - Template file names don't always match PRD names — `admin-user-new` (not `admin-users-new`), `admin-user-edit` (not `admin-users-edit`), `admin-profile` (not `admin-users-profile`)
+  - The three user form templates share many field labels (firstName, lastName, etc.) but have different contexts — new user has placeholders like "Enter first name", profile has "Enter your first name"
+  - Confirmation dialog component accepts translated strings as props (title, message, confirmText, cancelText) — no locale param needed on the component itself
+  - Client-side JS alert() calls need `window.__i18n` pattern — e.g. delete error messages and 2FA coming soon message
+  - Profile page has a password change modal with its own set of labels — separate from the main form
+  - Profile page 2FA toggle is a TODO — just shows an alert, but it still needs i18n
+  - The `renderAvatarImage` export function doesn't need locale since it only uses initials and image alt text
+---
