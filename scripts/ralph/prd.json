@@ -1,90 +1,92 @@
 {
   "project": "WarpCMS",
-  "branchName": "ralph/content-remodel",
-  "description": "Content Feature Remodel - Strip dead code, fix broken saving, simplify to working CRUD for 3 content types (image, text, file)",
+  "branchName": "ralph/i18n",
+  "description": "Admin UI Internationalization - Full i18n for the admin panel in English, Portuguese, and Spanish",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Remove dead collections system",
-      "description": "As a developer, I want to remove the unused dynamic collections infrastructure so the codebase only contains code that is actually used.",
+      "title": "Create i18n translation infrastructure",
+      "description": "As a developer, I need a lightweight translation system so that templates can render strings in any supported language.",
       "acceptanceCriteria": [
-        "Delete packages/core/src/services/collection-loader.ts (if it exists) or remove collection-loader exports from services/index.ts",
-        "Delete packages/core/src/services/collection-loader.test.ts",
-        "Delete packages/core/src/services/collection-sync.ts",
-        "Delete packages/core/src/services/collection-sync.test.ts",
-        "Remove the GET /api/collections endpoint from packages/core/src/routes/api.ts",
-        "Remove any imports or references to collection-loader or collection-sync in route files",
-        "Content continues to use collection_id column with type name strings (image, text, file) — do NOT touch the content table or its queries",
-        "Do NOT drop the collections DB table — just remove code that references it",
-        "Typecheck passes"
+        "Create src/i18n/t.ts with a t(key, locale, params?) function that looks up a translation key for a given locale",
+        "Create src/i18n/types.ts that exports a TranslationKeys type derived from the English locale file — typos in keys are caught at build time",
+        "Create src/i18n/index.ts that re-exports t and types",
+        "Create src/i18n/locales/en.ts with the English translations object, organized by namespace (e.g., common.save, common.cancel, common.delete, common.confirm, nav.dashboard, nav.content, nav.users, nav.settings)",
+        "Create src/i18n/locales/pt.ts with Portuguese translations for the same keys",
+        "Create src/i18n/locales/es.ts with Spanish translations for the same keys",
+        "The common namespace must include: save, cancel, delete, confirm, edit, create, back, search, loading, noResults, actions, status, active, inactive, error, success, warning",
+        "The nav namespace must include: dashboard, content, users, plugins, cache, design, logs, settings, apiReference, myProfile, signOut",
+        "t() supports string interpolation: t('content.editTitle', 'en', { name: 'About' }) returns 'Edit: About' — use {{variable}} placeholders in translation strings",
+        "t() falls back to English if a key is missing in the requested locale",
+        "t() returns the key itself if it is missing from all locales (with a console.warn in development)",
+        "Typecheck passes",
+        "Unit tests cover: key lookup, fallback behavior, interpolation, missing key handling"
       ],
       "priority": 1,
       "passes": true,
-      "notes": ""
+      "notes": "This is the foundation — all subsequent stories depend on it. Keep the initial locale files small (just common + nav namespaces). Other namespaces will be added as each page is translated."
     },
     {
       "id": "US-002",
-      "title": "Remove version history system",
-      "description": "As a developer, I want to remove the unused version history system to reduce code complexity.",
+      "title": "Add language preference to user schema",
+      "description": "As a developer, I need to store each user's language preference so it persists across sessions.",
       "acceptanceCriteria": [
-        "Remove 3 routes from packages/core/src/routes/admin-content.ts: GET /:id/versions, POST /:id/restore/:version, GET /:id/version/:version/preview",
-        "Remove the import of version-history.template from admin-content.ts",
-        "Remove INSERT INTO content_versions statements from the POST / (create) and PUT /:id (update) handlers in admin-content.ts",
-        "Remove the SELECT MAX(version) query from the PUT handler in admin-content.ts",
-        "Delete packages/core/src/templates/components/version-history.template.ts",
-        "Remove showVersionHistory() JS function from admin-content-form.template.ts",
-        "Remove the 'View Version History' button from the sidebar in admin-content-form.template.ts",
-        "Do NOT drop the content_versions DB table — just stop writing to it",
-        "Typecheck passes"
+        "Add language column to users table in src/db/schema.ts: text type, default 'en', not null",
+        "Create a Drizzle migration for the new column",
+        "Existing users default to 'en' on migration (use DEFAULT value)",
+        "Accepted values: 'en', 'pt', 'es'",
+        "Typecheck passes",
+        "Existing tests still pass"
       ],
       "priority": 2,
       "passes": true,
-      "notes": ""
+      "notes": "The users table is defined in packages/core/src/db/schema.ts. Run migrations from packages/core/."
     },
     {
       "id": "US-003",
-      "title": "Remove workflow history and simplify statuses",
-      "description": "As a developer, I want to simplify statuses to draft/published and remove workflow tracking writes.",
+      "title": "Pass locale to all admin route handlers and template signatures",
+      "description": "As a developer, I need every admin route handler to resolve the current user's locale and pass it to render functions.",
       "acceptanceCriteria": [
-        "Remove INSERT INTO workflow_history statements from the POST / (create) and PUT /:id (update) handlers in admin-content.ts",
-        "In the content list route (GET /), remove statusConfig entries for review, scheduled, archived — keep only draft and published",
-        "In the content list template, remove review/scheduled/archived from the status filter dropdown options",
-        "In the content form template sidebar, the status select should only have draft and published options (it already does — verify this is still the case)",
-        "Remove the deleted status handling — delete means hard delete (handled in a later story)",
-        "Do NOT drop the workflow_history DB table — just stop writing to it",
-        "Typecheck passes"
+        "Create a helper function (e.g., getLocale(c) or similar) that extracts the authenticated user's language field from the request context",
+        "Each admin route handler in src/routes/admin-*.ts calls this helper and passes the resulting locale string to template render functions",
+        "All template render functions in src/templates/pages/admin-*.template.ts accept a locale parameter (add to their interfaces/signatures)",
+        "Layout render functions (admin-layout-catalyst.template.ts, admin-layout-v2.template.ts) accept locale parameter",
+        "Unauthenticated pages (login, register) default to 'en'",
+        "No strings are translated yet — just the plumbing to pass locale through. Templates receive it but don't use it yet",
+        "Typecheck passes",
+        "Existing tests still pass"
       ],
       "priority": 3,
       "passes": true,
-      "notes": ""
+      "notes": "This is mechanical plumbing — add locale param to every render function signature and every route handler call. Don't translate any strings yet."
     },
     {
       "id": "US-004",
-      "title": "Remove bulk actions and duplicate",
-      "description": "As a developer, I want to remove bulk actions and duplicate to simplify the content list and form.",
+      "title": "Extract and translate navigation and layout strings",
+      "description": "As a user, I want the sidebar, top bar, and layout elements in my preferred language.",
       "acceptanceCriteria": [
-        "Remove the POST /duplicate route handler from admin-content.ts",
-        "Remove the POST /bulk-action route handler from admin-content.ts",
-        "Remove bulk action UI from admin-content-list.template.ts (checkboxes, bulk action bar/dropdown if present)",
-        "Remove the duplicate button and its confirmation dialog from admin-content-form.template.ts",
-        "Remove the duplicateContent(), performDuplicateContent() JS functions from admin-content-form.template.ts",
-        "Remove the duplicate-content-confirm dialog rendering from admin-content-form.template.ts",
-        "Typecheck passes"
+        "Add layout namespace to all 3 locale files (en.ts, pt.ts, es.ts) with keys for: sidebar menu labels, user dropdown items, page branding text",
+        "In admin-layout-catalyst.template.ts: replace all hardcoded sidebar menu labels with t() calls (Content, Dashboard, Users, Plugins, Cache, Design, Logs, Settings, API Reference, etc.)",
+        "In admin-layout-catalyst.template.ts: replace user dropdown items ('My Profile', 'Sign Out') with t() calls",
+        "In admin-layout-v2.template.ts: apply same changes if it has hardcoded strings",
+        "All 3 locales (en, pt, es) have complete translations for the layout namespace",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
       "passes": true,
-      "notes": ""
+      "notes": "The layout templates are in src/templates/layouts/. Import t from ../../i18n."
     },
     {
       "id": "US-005",
-      "title": "Remove auto-save from form",
-      "description": "As a developer, I want to remove the broken auto-save feature from the content form.",
+      "title": "Extract and translate Dashboard page strings",
+      "description": "As a user, I want the dashboard in my preferred language so I can understand stats and activity at a glance.",
       "acceptanceCriteria": [
-        "Remove the scheduleAutoSave() function from admin-content-form.template.ts",
-        "Remove the DOMContentLoaded event listener that attaches input/change handlers for auto-save",
-        "Remove save_and_continue action handling from the POST / (create) handler in admin-content.ts — only save and save_and_publish actions remain",
-        "Remove save_and_continue action handling from the PUT /:id (update) handler in admin-content.ts",
-        "Typecheck passes"
+        "Add dashboard namespace to all 3 locale files with keys for stat labels, section headers, and any other text",
+        "In admin-dashboard.template.ts: replace hardcoded strings with t() calls — stat labels ('Total Users', 'Active Users', 'Administrators', 'Active This Week'), section headers ('Recent Activity', 'Analytics'), and any other visible text",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
       "passes": true,
@@ -92,15 +94,17 @@
     },
     {
       "id": "US-006",
-      "title": "Convert delete to hard delete",
-      "description": "As a content editor, I want delete to permanently remove content instead of soft-deleting it.",
+      "title": "Extract and translate Content List page strings",
+      "description": "As a user, I want the content list page in my preferred language.",
       "acceptanceCriteria": [
-        "In the DELETE /:id handler in admin-content.ts, change UPDATE content SET status='deleted' to DELETE FROM content WHERE id = ?",
-        "The handler should return an HTMX response that refreshes the content list after deletion",
-        "Remove the deleted status filter option from the content list page if still present",
-        "Remove any references to status='deleted' in the content list WHERE clause logic",
-        "Keep the delete confirmation dialog in the form template (deleteContent/performDeleteContent functions)",
-        "Typecheck passes"
+        "Add content.list namespace to all 3 locale files with keys for: page title, filter labels, table headers, empty state message, action button labels, status badges",
+        "In admin-content-list.template.ts: replace all hardcoded strings with t() calls",
+        "Filter labels, table column headers, and empty state ('No content found') all translated",
+        "Status badge labels ('Draft', 'Published') translated",
+        "Action buttons ('New Content', 'Edit', 'Delete') translated",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
       "passes": true,
@@ -108,78 +112,167 @@
     },
     {
       "id": "US-007",
-      "title": "Implement real media upload with R2",
-      "description": "As a content editor, I want file uploads to actually store files so that image and file content types work.",
+      "title": "Extract and translate Content Form page strings",
+      "description": "As a user, I want the content create/edit form in my preferred language.",
       "acceptanceCriteria": [
-        "Replace the stub POST /upload handler in packages/core/src/plugins/core-plugins/media/index.ts with real upload logic",
-        "The handler must parse multipart form data and extract the uploaded file",
-        "Store the file in R2 using c.env.R2 (or env.R2 from the plugin context) with a unique key (e.g., media/{uuid}/{original-filename})",
-        "Return JSON: { url: '/api/media/file/{key}', filename: string, size: number, type: string }",
-        "Add a GET /file/:key+ route to the media API that serves files from R2 with correct Content-Type headers",
-        "If R2 binding is not available, return a 503 error with a clear message",
-        "Typecheck passes"
+        "Add content.form namespace to all 3 locale files with keys for: section headers, field labels, help text, placeholders, validation messages, upload strings, button labels",
+        "In admin-content-form.template.ts: replace hardcoded strings with t() calls",
+        "Section headers ('Basic Information', 'Content Details', 'Organization') translated",
+        "Field labels ('Title', 'Slug', 'URL Slug') and help text ('Leave blank to auto-generate...') translated",
+        "Slug validation messages ('Slug is available', 'Slug is already in use') translated",
+        "File upload strings ('Click to upload', 'Drag and drop', 'Upload complete!', 'Upload failed') translated",
+        "Button labels ('Save', 'Cancel', 'Delete') translated (can reuse common namespace)",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "passes": true,
-      "notes": "The form template already has working upload JS (handleFileDrop, handleFileSelect, uploadFile functions) that POSTs to /api/media/upload and reads { url } from the response. The existing client-side code should work once the backend returns real data."
+      "passes": false,
+      "notes": "The content form is the largest template. Focus on visible text — don't translate HTML attributes, data attributes, or CSS class names."
     },
     {
       "id": "US-008",
-      "title": "Rewrite content form to single-column layout and fix HTMX bugs",
-      "description": "As a content editor, I want a clean single-column form where saving actually works.",
+      "title": "Extract and translate User List page strings",
+      "description": "As a user, I want the user management list page in my preferred language.",
       "acceptanceCriteria": [
-        "Remove the duplicate <div id='form-messages'> — keep only one, above the form",
-        "Remove the 3-column grid layout (lg:grid-cols-3) — form should be single-column, max-width ~2xl",
-        "Move the status <select> inside the <form> tag (remove the form='content-form' attribute pattern)",
-        "Move the submit buttons inside the <form> tag",
-        "Remove the sidebar entirely (Publishing panel, Content Info panel, Quick Actions panel)",
-        "Status select should be a simple draft/published dropdown at the top of the form, below the header",
-        "Keep Save and Cancel buttons at the bottom of the form",
-        "Remove the Save & Publish button — the status select handles this",
-        "Remove the Quill richtext CDN/init code (getQuillCDNAndInit function) — no content types use richtext currently",
-        "Keep the file upload JS (handleFileDrop, handleFileSelect, uploadFile, clearFileField) and the renderField function",
-        "Keep the delete button and confirmation dialog for edit mode",
+        "Add users.list namespace to all 3 locale files with keys for: page title, table headers, role badges, status badges, action buttons, search placeholder, empty state",
+        "In admin-users-list.template.ts: replace hardcoded strings with t() calls",
+        "Role badges ('Admin', 'Editor', 'Author', 'Viewer') translated",
+        "Status badges ('Active', 'Inactive') translated (can reuse common namespace)",
+        "Table headers and 'Add User' button translated",
+        "Confirmation dialog text ('Toggle User Status?', 'Are you sure?') translated",
+        "All 3 locales complete",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": true,
-      "notes": "This is the largest story. The form is in packages/core/src/templates/pages/admin-content-form.template.ts. After this change, the form should be: header -> status select -> field sections -> save/cancel buttons, all inside one <form> tag. The HTMX attributes (hx-post, hx-put, hx-target, hx-encoding) stay on the form."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Verify content create works for all 3 types",
-      "description": "As a content editor, I want to create image, text, and file content and have it save to the database.",
+      "title": "Extract and translate User Form pages strings",
+      "description": "As a user, I want the new user, edit user, and profile pages in my preferred language.",
       "acceptanceCriteria": [
-        "Navigate to /admin/content/new, select Text type, fill in title and content, click Save — content appears in the list",
-        "Navigate to /admin/content/new, select Image type, fill in title, upload an image, click Save — content appears in the list",
-        "Navigate to /admin/content/new, select File type, fill in title, upload a file, click Save — content appears in the list",
-        "Leaving a required field empty shows a validation error on the form",
-        "After successful save, user is redirected to content list with a success message",
+        "Add users.form namespace to all 3 locale files with keys for: field labels, placeholders, button labels, page titles",
+        "In admin-users-new.template.ts: replace hardcoded strings with t() calls — page title ('Add New User'), field labels ('First Name', 'Last Name', 'Email', 'Username', 'Password', 'Role'), submit button",
+        "In admin-users-edit.template.ts: replace hardcoded strings with t() calls — page title ('Edit User'), same field labels as new, update button",
+        "In admin-users-profile.template.ts: replace hardcoded strings with t() calls — page title ('My Profile'), field labels, save button",
+        "All 3 locales complete",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 9,
-      "passes": true,
-      "notes": "This story is for end-to-end verification. If create doesn't work, debug and fix the POST / handler in admin-content.ts or the form template. The route handler should insert into the content table and respond with HX-Redirect."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Verify content update works for all 3 types",
-      "description": "As a content editor, I want to edit existing content and have changes persist.",
+      "title": "Extract and translate Settings page strings",
+      "description": "As a user, I want the settings tabs (General, Migrations, Database Tools) in my preferred language.",
       "acceptanceCriteria": [
-        "Click edit on a Text content item — form loads with existing title and content values",
-        "Change the title and save — the updated title appears in the content list",
-        "Click edit on an Image content item — form loads with existing values and image preview",
-        "Change the image and save — the new image URL is stored",
-        "Click edit on a File content item — form loads with existing values and file preview",
-        "After successful update, user is redirected with a success message",
+        "Add settings namespace to all 3 locale files with keys for: tab labels, field labels, help text, button labels, status labels, warning messages",
+        "In admin-settings.template.ts: replace hardcoded strings with t() calls",
+        "Tab labels ('General', 'Migrations', 'Database Tools') translated",
+        "General tab: field labels ('Site Name', 'Site Description', 'Admin Email', 'Timezone', 'Language', 'Maintenance Mode') and help text translated",
+        "Migrations tab: status labels ('Applied', 'Pending'), 'Run Pending' button translated",
+        "Database Tools tab: all labels and warning messages translated",
+        "All 3 locales complete",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
-      "passes": true,
-      "notes": "This story is for end-to-end verification. If update doesn't work, debug and fix the PUT /:id handler in admin-content.ts or the form template. The route handler should update the content table and respond with HX-Redirect."
+      "passes": false,
+      "notes": "The language dropdown already lists pt/en/es — it just needs functional wiring (done in US-015)."
+    },
+    {
+      "id": "US-011",
+      "title": "Extract and translate Authentication page strings",
+      "description": "As a user, I want the login and register pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add auth namespace to all 3 locale files with keys for: page titles, field labels, button text, error messages, links",
+        "In admin-login.template.ts: replace hardcoded strings with t() calls — title ('Sign In'), field labels ('Email', 'Password'), button ('Sign In'), register link text",
+        "In admin-register.template.ts: replace hardcoded strings with t() calls — title ('Create Account'), field labels, button ('Register'), login link text",
+        "Since user is not authenticated, use 'en' as default locale (already set in US-003)",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Auth pages use 'en' as the default since there is no authenticated user to read preference from."
+    },
+    {
+      "id": "US-012",
+      "title": "Extract and translate shared component strings",
+      "description": "As a developer, I need all reusable components to support translated strings.",
+      "acceptanceCriteria": [
+        "Add components namespace to all 3 locale files with keys for: alert defaults, dialog defaults, pagination, table, filter bar",
+        "In alert.template.ts: default message text uses t() calls if any exist",
+        "In confirmation-dialog.template.ts: default confirm/cancel button text translated ('Confirm', 'Cancel')",
+        "In pagination.template.ts: 'Previous'/'Next' labels translated",
+        "In table.template.ts: empty state messages, sort labels translated",
+        "In filter-bar.template.ts: 'Search...', 'Clear Filters' translated (if these components render hardcoded strings)",
+        "All component render functions accept locale parameter",
+        "All 3 locales complete",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Some components may already receive their text as parameters from parent templates. Only translate text that is hardcoded within the component itself."
+    },
+    {
+      "id": "US-013",
+      "title": "Extract and translate Plugins and Cache page strings",
+      "description": "As a user, I want the plugins list and cache management pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add plugins namespace and cache namespace to all 3 locale files",
+        "In admin-plugins-list.template.ts: replace hardcoded strings with t() calls — page title, plugin status badges, action buttons, empty state",
+        "In admin-cache.template.ts: replace hardcoded strings with t() calls — page title, labels, action buttons",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Extract and translate Design and Logs page strings",
+      "description": "As a user, I want the design page and all log pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add design namespace and logs namespace to all 3 locale files",
+        "In admin-design.template.ts: replace hardcoded strings with t() calls",
+        "In admin-logs.template.ts (list): replace hardcoded strings — page title, table headers, filter labels, empty state",
+        "In admin-log-details.template.ts: replace hardcoded strings — labels, back button",
+        "In admin-log-config.template.ts: replace hardcoded strings — labels, form fields",
+        "In admin-activity-log.template.ts: replace hardcoded strings — labels, table headers",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Wire language preference in user profile and settings",
+      "description": "As a user, I want to change my language preference from my profile or general settings so the UI updates immediately.",
+      "acceptanceCriteria": [
+        "Language dropdown on user profile page shows the current user's language preference (read from DB)",
+        "Selecting a new language on the profile page saves it to the user record in the database",
+        "The existing language dropdown in general settings becomes functional — changing it updates the current user's language preference",
+        "After saving a language change, the page reloads and renders in the newly selected language",
+        "The language field is included in the user profile update route handler",
+        "All 3 locales complete for any new UI text",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "The language dropdown in general settings (admin-settings.template.ts lines 530-540) already shows pt/en/es options but is non-functional. Wire it to actually save."
     }
   ]
 }
