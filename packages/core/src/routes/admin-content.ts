@@ -351,11 +351,9 @@ adminContentRoutes.post('/', async (c) => {
     await cache.invalidate('content:list:*')
 
     const referrerParams = formData.get('referrer_params') as string
-    const redirectUrl = action === 'save_and_continue'
-      ? `/admin/content/${contentId}/edit?success=Content saved successfully!${referrerParams ? `&ref=${encodeURIComponent(referrerParams)}` : ''}`
-      : referrerParams
-        ? `/admin/content?${referrerParams}&success=Content created successfully!`
-        : `/admin/content?type=${typeName}&success=Content created successfully!`
+    const redirectUrl = referrerParams
+      ? `/admin/content?${referrerParams}&success=Content created successfully!`
+      : `/admin/content?type=${typeName}&success=Content created successfully!`
 
     const isHTMX = c.req.header('HX-Request') === 'true'
     return isHTMX
@@ -424,11 +422,9 @@ adminContentRoutes.put('/:id', async (c) => {
     await cache.invalidate('content:list:*')
 
     const referrerParams = formData.get('referrer_params') as string
-    const redirectUrl = action === 'save_and_continue'
-      ? `/admin/content/${id}/edit?success=Content updated successfully!${referrerParams ? `&ref=${encodeURIComponent(referrerParams)}` : ''}`
-      : referrerParams
-        ? `/admin/content?${referrerParams}&success=Content updated successfully!`
-        : `/admin/content?type=${existingContent.collection_id}&success=Content updated successfully!`
+    const redirectUrl = referrerParams
+      ? `/admin/content?${referrerParams}&success=Content updated successfully!`
+      : `/admin/content?type=${existingContent.collection_id}&success=Content updated successfully!`
 
     const isHTMX = c.req.header('HX-Request') === 'true'
     return isHTMX

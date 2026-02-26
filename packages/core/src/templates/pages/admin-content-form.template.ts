@@ -434,27 +434,6 @@ export function renderContentFormPage(data: ContentFormData): string {
         });
       }
 
-      // Auto-save
-      let autoSaveTimeout;
-      function scheduleAutoSave() {
-        clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-          const form = document.getElementById('content-form');
-          const formData = new FormData(form);
-          formData.append('action', 'autosave');
-          fetch(form.action, { method: 'POST', body: formData })
-            .then(r => { if (r.ok) console.log('Auto-saved'); })
-            .catch(e => console.error('Auto-save failed:', e));
-        }, 30000);
-      }
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('content-form');
-        if (form) {
-          form.addEventListener('input', scheduleAutoSave);
-          form.addEventListener('change', scheduleAutoSave);
-        }
-      });
     </script>
   `
 
