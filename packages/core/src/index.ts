@@ -29,18 +29,6 @@ export type { WarpCMSConfig, WarpCMSApp, Bindings, Variables } from './app'
 
 // Services - Week 2 (COMPLETED)
 export {
-  // Collection Management
-  loadCollectionConfigs,
-  loadCollectionConfig,
-  getAvailableCollectionNames,
-  validateCollectionConfig,
-  registerCollections,
-  syncCollections,
-  syncCollection,
-  isCollectionManaged,
-  getManagedCollections,
-  cleanupRemovedCollections,
-  fullCollectionSync,
   // Database Migrations
   MigrationService,
   // Logging

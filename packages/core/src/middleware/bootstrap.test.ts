@@ -7,10 +7,6 @@ import { Hono } from 'hono'
 import { bootstrapMiddleware, resetBootstrap } from './bootstrap'
 
 // Mock the services that bootstrap depends on
-vi.mock('../services/collection-sync', () => ({
-  syncCollections: vi.fn().mockResolvedValue([])
-}))
-
 vi.mock('../services/migrations', () => {
   const mockRunPendingMigrations = vi.fn().mockResolvedValue(undefined)
   return {
@@ -34,7 +30,6 @@ vi.mock('../services/plugin-bootstrap', () => {
 })
 
 // Import the mocked modules after mocking
-import { syncCollections } from '../services/collection-sync'
 import { MigrationService } from '../services/migrations'
 import { PluginBootstrapService } from '../services/plugin-bootstrap'
 
@@ -90,7 +85,6 @@ describe('bootstrapMiddleware', () => {
     expect(consoleSpy).toHaveBeenCalledWith('[Bootstrap] Starting system initialization...')
     expect(consoleSpy).toHaveBeenCalledWith('[Bootstrap] System initialization completed')
     expect(MigrationService).toHaveBeenCalled()
-    expect(syncCollections).toHaveBeenCalled()
     expect(PluginBootstrapService).toHaveBeenCalled()
   })
 
@@ -194,25 +188,6 @@ describe('bootstrapMiddleware', () => {
 
     await app.request('/favicon.ico')
     expect(MigrationService).not.toHaveBeenCalled()
-  })
-
-  it('should continue even if collection sync fails', async () => {
-    const app = new Hono()
-    const env = createMockEnv()
-    vi.mocked(syncCollections).mockRejectedValueOnce(new Error('Sync failed'))
-
-    app.use('*', async (c, next) => {
-      c.env = env as any
-      await next()
-    })
-    app.use('*', bootstrapMiddleware())
-    app.get('/test', (c) => c.json({ ok: true }))
-
-    const res = await app.request('/test')
-
-    expect(res.status).toBe(200)
-    expect(errorSpy).toHaveBeenCalledWith('[Bootstrap] Error syncing collections:', expect.any(Error))
-    expect(consoleSpy).toHaveBeenCalledWith('[Bootstrap] System initialization completed')
   })
 
   it('should skip plugin bootstrap when disableAll is true', async () => {
