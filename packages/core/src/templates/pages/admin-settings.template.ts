@@ -1,5 +1,6 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { t } from '../../i18n'
 
 export interface SettingsPageData {
   user?: {
@@ -55,14 +56,15 @@ export interface DatabaseToolsSettings {
 
 export function renderSettingsPage(data: SettingsPageData): string {
   const activeTab = data.activeTab || 'general'
-  
+  const locale = data.locale || 'en'
+
   const pageContent = `
     <div>
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Settings</h1>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage your application settings and preferences</p>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('settings.title', locale)}</h1>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('settings.subtitle', locale)}</p>
         </div>
       </div>
 
@@ -70,9 +72,9 @@ export function renderSettingsPage(data: SettingsPageData): string {
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 mb-6 overflow-hidden">
         <div class="border-b border-zinc-950/5 dark:border-white/10">
           <nav class="flex overflow-x-auto" role="tablist">
-            ${renderTabButton('general', 'General', 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', activeTab)}
-            ${renderTabButton('migrations', 'Migrations', 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4', activeTab)}
-            ${renderTabButton('database-tools', 'Database Tools', 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01', activeTab)}
+            ${renderTabButton('general', t('settings.tabGeneral', locale), 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', activeTab)}
+            ${renderTabButton('migrations', t('settings.tabMigrations', locale), 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4', activeTab)}
+            ${renderTabButton('database-tools', t('settings.tabDatabaseTools', locale), 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01', activeTab)}
           </nav>
         </div>
       </div>
@@ -80,12 +82,46 @@ export function renderSettingsPage(data: SettingsPageData): string {
       <!-- Settings Content -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
         <div id="settings-content" class="p-8">
-          ${renderTabContent(activeTab, data.settings)}
+          ${renderTabContent(activeTab, data.settings, locale)}
         </div>
       </div>
     </div>
 
     <script>
+      // i18n strings for client-side JS
+      window.__i18n = {
+        saving: '${t('settings.saving', locale)}',
+        savedSuccess: '${t('settings.savedSuccess', locale)}',
+        saveFailed: '${t('settings.saveFailed', locale)}',
+        saveFailedRetry: '${t('settings.saveFailedRetry', locale)}',
+        running: '${t('settings.running', locale)}',
+        runPending: '${t('settings.runPending', locale)}',
+        failedToRunMigrations: '${t('settings.failedToRunMigrations', locale)}',
+        errorRunningMigrations: '${t('settings.errorRunningMigrations', locale)}',
+        schemaValid: '${t('settings.schemaValid', locale)}',
+        schemaValidationFailed: '${t('settings.schemaValidationFailed', locale)}',
+        failedToValidateSchema: '${t('settings.failedToValidateSchema', locale)}',
+        errorValidatingSchema: '${t('settings.errorValidatingSchema', locale)}',
+        applied: '${t('settings.applied', locale)}',
+        pending: '${t('settings.pending', locale)}',
+        creatingBackup: '${t('settings.creatingBackup', locale)}',
+        createBackup: '${t('settings.createBackup', locale)}',
+        failedToCreateBackup: '${t('settings.failedToCreateBackup', locale)}',
+        errorCreatingBackup: '${t('settings.errorCreatingBackup', locale)}',
+        truncatePrompt: '${t('settings.truncatePrompt', locale)}',
+        truncateCancelled: '${t('settings.truncateCancelled', locale)}',
+        truncating: '${t('settings.truncating', locale)}',
+        truncateAllData: '${t('settings.truncateAllData', locale)}',
+        tablesCleared: '${t('settings.tablesCleared', locale)}',
+        failedToTruncate: '${t('settings.failedToTruncate', locale)}',
+        errorTruncating: '${t('settings.errorTruncating', locale)}',
+        dbValidationPassed: '${t('settings.dbValidationPassed', locale)}',
+        dbValidationFailed: '${t('settings.dbValidationFailed', locale)}',
+        failedToValidateDb: '${t('settings.failedToValidateDb', locale)}',
+        errorValidatingDb: '${t('settings.errorValidatingDb', locale)}',
+        rows: '${t('settings.rows', locale)}',
+      };
+
       // Initialize tab-specific features on page load
       const currentTab = '${activeTab}';
 
@@ -105,7 +141,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
         // Show loading state
         const saveBtn = document.querySelector('button[onclick="saveGeneralSettings()"]');
         const originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<svg class="animate-spin -ml-0.5 mr-1.5 h-5 w-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Saving...';
+        saveBtn.innerHTML = '<svg class="animate-spin -ml-0.5 mr-1.5 h-5 w-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>' + window.__i18n.saving;
         saveBtn.disabled = true;
 
         try {
@@ -117,13 +153,13 @@ export function renderSettingsPage(data: SettingsPageData): string {
           const result = await response.json();
 
           if (result.success) {
-            showNotification(result.message || 'Settings saved successfully!', 'success');
+            showNotification(result.message || window.__i18n.savedSuccess, 'success');
           } else {
-            showNotification(result.error || 'Failed to save settings', 'error');
+            showNotification(result.error || window.__i18n.saveFailed, 'error');
           }
         } catch (error) {
           console.error('Error saving settings:', error);
-          showNotification('Failed to save settings. Please try again.', 'error');
+          showNotification(window.__i18n.saveFailedRetry, 'error');
         } finally {
           saveBtn.innerHTML = originalText;
           saveBtn.disabled = false;
@@ -158,7 +194,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
         if (!btn) return;
 
         btn.disabled = true;
-        btn.innerHTML = 'Running...';
+        btn.innerHTML = window.__i18n.running;
 
         try {
           const response = await fetch('/admin/settings/api/migrations/run', {
@@ -170,13 +206,13 @@ export function renderSettingsPage(data: SettingsPageData): string {
             alert(result.message);
             setTimeout(() => window.refreshMigrationStatus(), 1000);
           } else {
-            alert(result.error || 'Failed to run migrations');
+            alert(result.error || window.__i18n.failedToRunMigrations);
           }
         } catch (error) {
-          alert('Error running migrations');
+          alert(window.__i18n.errorRunningMigrations);
         } finally {
           btn.disabled = false;
-          btn.innerHTML = 'Run Pending';
+          btn.innerHTML = window.__i18n.runPending;
         }
       };
 
@@ -184,18 +220,18 @@ export function renderSettingsPage(data: SettingsPageData): string {
         try {
           const response = await fetch('/admin/settings/api/migrations/validate');
           const result = await response.json();
-          
+
           if (result.success) {
             if (result.data.valid) {
-              alert('Database schema is valid');
+              alert(window.__i18n.schemaValid);
             } else {
-              alert(\`Schema validation failed: \${result.data.issues.join(', ')}\`);
+              alert(window.__i18n.schemaValidationFailed.replace('{{issues}}', result.data.issues.join(', ')));
             }
           } else {
-            alert('Failed to validate schema');
+            alert(window.__i18n.failedToValidateSchema);
           }
         } catch (error) {
-          alert('Error validating schema');
+          alert(window.__i18n.errorValidatingSchema);
         }
       };
 
@@ -203,16 +239,16 @@ export function renderSettingsPage(data: SettingsPageData): string {
         const totalEl = document.getElementById('total-migrations');
         const appliedEl = document.getElementById('applied-migrations');
         const pendingEl = document.getElementById('pending-migrations');
-        
+
         if (totalEl) totalEl.textContent = data.totalMigrations;
         if (appliedEl) appliedEl.textContent = data.appliedMigrations;
         if (pendingEl) pendingEl.textContent = data.pendingMigrations;
-        
+
         const runBtn = document.getElementById('run-migrations-btn');
         if (runBtn) {
           runBtn.disabled = data.pendingMigrations === 0;
         }
-        
+
         // Update migrations list
         const listContainer = document.getElementById('migrations-list');
         if (listContainer && data.migrations && data.migrations.length > 0) {
@@ -221,7 +257,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
               <div class="flex-1">
                 <div class="flex items-center space-x-3">
                   <div class="flex-shrink-0">
-                    \${migration.applied 
+                    \${migration.applied
                       ? '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                       : '<svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                     }
@@ -233,15 +269,15 @@ export function renderSettingsPage(data: SettingsPageData): string {
                   </div>
                 </div>
               </div>
-              
+
               <div class="flex items-center space-x-4 text-sm">
                 \${migration.size ? \`<span class="text-gray-400">\${(migration.size / 1024).toFixed(1)} KB</span>\` : ''}
                 <span class="px-2 py-1 rounded-full text-xs font-medium \${
-                  migration.applied 
-                    ? 'bg-green-100 text-green-800' 
+                  migration.applied
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-orange-100 text-orange-800'
                 }">
-                  \${migration.applied ? 'Applied' : 'Pending'}
+                  \${migration.applied ? window.__i18n.applied : window.__i18n.pending}
                 </span>
                 \${migration.appliedAt ? \`<span class="text-gray-400">\${new Date(migration.appliedAt).toLocaleDateString()}</span>\` : ''}
               </div>
@@ -276,49 +312,45 @@ export function renderSettingsPage(data: SettingsPageData): string {
       window.createDatabaseBackup = async function() {
         const btn = document.getElementById('create-backup-btn');
         if (!btn) return;
-        
+
         btn.disabled = true;
-        btn.innerHTML = 'Creating Backup...';
-        
+        btn.innerHTML = window.__i18n.creatingBackup;
+
         try {
           const response = await fetch('/admin/settings/api/database-tools/backup', {
             method: 'POST'
           });
           const result = await response.json();
-          
+
           if (result.success) {
             alert(result.message);
             setTimeout(() => window.refreshDatabaseStats(), 1000);
           } else {
-            alert(result.error || 'Failed to create backup');
+            alert(result.error || window.__i18n.failedToCreateBackup);
           }
         } catch (error) {
-          alert('Error creating backup');
+          alert(window.__i18n.errorCreatingBackup);
         } finally {
           btn.disabled = false;
-          btn.innerHTML = 'Create Backup';
+          btn.innerHTML = window.__i18n.createBackup;
         }
       };
 
       window.truncateDatabase = async function() {
         // Show dangerous operation warning
-        const confirmText = prompt(
-          'WARNING: This will delete ALL data except your admin account!\\n\\n' +
-          'This action CANNOT be undone!\\n\\n' +
-          'Type "TRUNCATE ALL DATA" to confirm:'
-        );
-        
+        const confirmText = prompt(window.__i18n.truncatePrompt);
+
         if (confirmText !== 'TRUNCATE ALL DATA') {
-          alert('Operation cancelled. Confirmation text did not match.');
+          alert(window.__i18n.truncateCancelled);
           return;
         }
-        
+
         const btn = document.getElementById('truncate-db-btn');
         if (!btn) return;
-        
+
         btn.disabled = true;
-        btn.innerHTML = 'Truncating...';
-        
+        btn.innerHTML = window.__i18n.truncating;
+
         try {
           const response = await fetch('/admin/settings/api/database-tools/truncate', {
             method: 'POST',
@@ -330,22 +362,22 @@ export function renderSettingsPage(data: SettingsPageData): string {
             })
           });
           const result = await response.json();
-          
+
           if (result.success) {
-            alert(result.message + '\\n\\nTables cleared: ' + result.data.tablesCleared.join(', '));
+            alert(result.message + '\\n\\n' + window.__i18n.tablesCleared + result.data.tablesCleared.join(', '));
             setTimeout(() => {
               window.refreshDatabaseStats();
               // Optionally reload page to refresh all data
               window.location.reload();
             }, 2000);
           } else {
-            alert(result.error || 'Failed to truncate database');
+            alert(result.error || window.__i18n.failedToTruncate);
           }
         } catch (error) {
-          alert('Error truncating database');
+          alert(window.__i18n.errorTruncating);
         } finally {
           btn.disabled = false;
-          btn.innerHTML = 'Truncate All Data';
+          btn.innerHTML = window.__i18n.truncateAllData;
         }
       };
 
@@ -353,18 +385,18 @@ export function renderSettingsPage(data: SettingsPageData): string {
         try {
           const response = await fetch('/admin/settings/api/database-tools/validate');
           const result = await response.json();
-          
+
           if (result.success) {
             if (result.data.valid) {
-              alert('Database validation passed. No issues found.');
+              alert(window.__i18n.dbValidationPassed);
             } else {
-              alert('Database validation failed:\\n\\n' + result.data.issues.join('\\n'));
+              alert(window.__i18n.dbValidationFailed.replace('{{issues}}', result.data.issues.join('\\n')));
             }
           } else {
-            alert('Failed to validate database');
+            alert(window.__i18n.failedToValidateDb);
           }
         } catch (error) {
-          alert('Error validating database');
+          alert(window.__i18n.errorValidatingDb);
         }
       };
 
@@ -389,7 +421,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
                 <span class="text-zinc-950 dark:text-white font-medium">\${table.name}</span>
               </div>
               <div class="flex items-center space-x-3">
-                <span class="text-zinc-500 dark:text-zinc-400 text-sm">\${table.rowCount.toLocaleString()} rows</span>
+                <span class="text-zinc-500 dark:text-zinc-400 text-sm">\${table.rowCount.toLocaleString()} \${window.__i18n.rows}</span>
                 <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
@@ -412,10 +444,10 @@ export function renderSettingsPage(data: SettingsPageData): string {
     <!-- Confirmation Dialogs -->
     ${renderConfirmationDialog({
       id: 'run-migrations-confirm',
-      title: 'Run Migrations',
-      message: 'Are you sure you want to run pending migrations? This action cannot be undone.',
-      confirmText: 'Run Migrations',
-      cancelText: 'Cancel',
+      title: t('settings.runMigrationsTitle', locale),
+      message: t('settings.runMigrationsMessage', locale),
+      confirmText: t('settings.runMigrationsTitle', locale),
+      cancelText: t('common.cancel', locale),
       iconColor: 'blue',
       confirmClass: 'bg-blue-500 hover:bg-blue-400',
       onConfirm: 'performRunMigrations()'
@@ -425,12 +457,13 @@ export function renderSettingsPage(data: SettingsPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Settings',
-    pageTitle: 'Settings',
+    title: t('settings.title', locale),
+    pageTitle: t('settings.title', locale),
     currentPath: '/admin/settings',
     user: data.user,
     version: data.version,
-    content: pageContent
+    content: pageContent,
+    locale,
   }
 
   return renderAdminLayoutCatalyst(layoutData)
@@ -457,42 +490,42 @@ function renderTabButton(tabId: string, label: string, iconPath: string, activeT
   `
 }
 
-function renderTabContent(activeTab: string, settings?: SettingsPageData['settings']): string {
+function renderTabContent(activeTab: string, settings?: SettingsPageData['settings'], locale = 'en'): string {
   switch (activeTab) {
     case 'general':
-      return renderGeneralSettings(settings?.general)
+      return renderGeneralSettings(settings?.general, locale)
     case 'migrations':
-      return renderMigrationSettings(settings?.migrations)
+      return renderMigrationSettings(settings?.migrations, locale)
     case 'database-tools':
-      return renderDatabaseToolsSettings(settings?.databaseTools)
+      return renderDatabaseToolsSettings(settings?.databaseTools, locale)
     default:
-      return renderGeneralSettings(settings?.general)
+      return renderGeneralSettings(settings?.general, locale)
   }
 }
 
-function renderGeneralSettings(settings?: GeneralSettings): string {
+function renderGeneralSettings(settings?: GeneralSettings, locale = 'en'): string {
   return `
     <div class="space-y-6">
       <div>
-        <h3 class="text-lg/7 font-semibold text-zinc-950 dark:text-white">General Settings</h3>
-        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Configure basic application settings and preferences.</p>
+        <h3 class="text-lg/7 font-semibold text-zinc-950 dark:text-white">${t('settings.generalTitle', locale)}</h3>
+        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('settings.generalSubtitle', locale)}</p>
       </div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-4">
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Site Name</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.siteName', locale)}</label>
             <input
               type="text"
               name="siteName"
               value="${settings?.siteName || 'WarpCMS AI'}"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
-              placeholder="Enter site name"
+              placeholder="${t('settings.siteNamePlaceholder', locale)}"
             />
           </div>
 
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Admin Email</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.adminEmail', locale)}</label>
             <input
               type="email"
               name="adminEmail"
@@ -503,7 +536,7 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
           </div>
 
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Timezone</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.timezone', locale)}</label>
             <select
               name="timezone"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
@@ -519,17 +552,17 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
 
         <div class="space-y-4">
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Site Description</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.siteDescription', locale)}</label>
             <textarea
               name="siteDescription"
               rows="3"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
-              placeholder="Describe your site..."
+              placeholder="${t('settings.siteDescriptionPlaceholder', locale)}"
             >${settings?.siteDescription || ''}</textarea>
           </div>
 
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Language</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.language', locale)}</label>
             <select
               name="language"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
@@ -558,7 +591,7 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
             </div>
             <div class="text-sm/6">
               <label for="maintenanceMode" class="font-medium text-zinc-950 dark:text-white">
-                Enable maintenance mode
+                ${t('settings.maintenanceMode', locale)}
               </label>
             </div>
           </div>
@@ -574,27 +607,27 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('settings.saveChanges', locale)}
         </button>
       </div>
     </div>
   `
 }
 
-function renderMigrationSettings(settings?: MigrationSettings): string {
+function renderMigrationSettings(settings?: MigrationSettings, locale = 'en'): string {
   return `
     <div class="space-y-6">
       <div>
-        <h3 class="text-lg font-semibold text-white mb-4">Database Migrations</h3>
-        <p class="text-gray-300 mb-6">View and manage database migrations to keep your schema up to date.</p>
+        <h3 class="text-lg font-semibold text-white mb-4">${t('settings.migrationsTitle', locale)}</h3>
+        <p class="text-gray-300 mb-6">${t('settings.migrationsSubtitle', locale)}</p>
       </div>
-      
+
       <!-- Migration Status Overview -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="backdrop-blur-md bg-blue-500/20 rounded-lg border border-blue-500/30 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-blue-300">Total Migrations</p>
+              <p class="text-sm text-blue-300">${t('settings.totalMigrations', locale)}</p>
               <p id="total-migrations" class="text-2xl font-bold text-white">${settings?.totalMigrations || '0'}</p>
             </div>
             <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -606,7 +639,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
         <div class="backdrop-blur-md bg-green-500/20 rounded-lg border border-green-500/30 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-green-300">Applied</p>
+              <p class="text-sm text-green-300">${t('settings.applied', locale)}</p>
               <p id="applied-migrations" class="text-2xl font-bold text-white">${settings?.appliedMigrations || '0'}</p>
             </div>
             <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -618,7 +651,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
         <div class="backdrop-blur-md bg-orange-500/20 rounded-lg border border-orange-500/30 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-orange-300">Pending</p>
+              <p class="text-sm text-orange-300">${t('settings.pending', locale)}</p>
               <p id="pending-migrations" class="text-2xl font-bold text-white">${settings?.pendingMigrations || '0'}</p>
             </div>
             <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -637,10 +670,10 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          Refresh Status
+          ${t('settings.refreshStatus', locale)}
         </button>
-        
-        <button 
+
+        <button
           onclick="window.runPendingMigrations()"
           id="run-migrations-btn"
           class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -649,25 +682,25 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10v4.586a1 1 0 00.293.707l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1"/>
           </svg>
-          Run Pending
+          ${t('settings.runPending', locale)}
         </button>
 
-        <button 
-          onclick="window.validateSchema()" 
+        <button
+          onclick="window.validateSchema()"
           class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          Validate Schema
+          ${t('settings.validateSchema', locale)}
         </button>
       </div>
 
       <!-- Migrations List -->
       <div class="backdrop-blur-md bg-white/10 rounded-lg border border-white/20 overflow-hidden">
         <div class="px-6 py-4 border-b border-white/10">
-          <h4 class="text-lg font-medium text-white">Migration History</h4>
-          <p class="text-sm text-gray-300 mt-1">List of all available database migrations</p>
+          <h4 class="text-lg font-medium text-white">${t('settings.migrationHistory', locale)}</h4>
+          <p class="text-sm text-gray-300 mt-1">${t('settings.migrationHistorySubtitle', locale)}</p>
         </div>
         
         <div id="migrations-list" class="divide-y divide-white/10">
@@ -675,7 +708,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
             </svg>
-            <p class="text-gray-300">Loading migration status...</p>
+            <p class="text-gray-300">${t('settings.loadingMigrationStatus', locale)}</p>
           </div>
         </div>
       </div>
@@ -711,7 +744,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
           if (!btn) return;
 
           btn.disabled = true;
-          btn.innerHTML = 'Running...';
+          btn.innerHTML = window.__i18n.running;
 
           try {
             const response = await fetch('/admin/settings/api/migrations/run', {
@@ -723,13 +756,13 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
               alert(result.message);
               setTimeout(() => window.refreshMigrationStatus(), 1000);
             } else {
-              alert(result.error || 'Failed to run migrations');
+              alert(result.error || window.__i18n.failedToRunMigrations);
             }
           } catch (error) {
-            alert('Error running migrations');
+            alert(window.__i18n.errorRunningMigrations);
           } finally {
             btn.disabled = false;
-            btn.innerHTML = 'Run Pending';
+            btn.innerHTML = window.__i18n.runPending;
           }
         };
 
@@ -737,18 +770,18 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
           try {
             const response = await fetch('/admin/settings/api/migrations/validate');
             const result = await response.json();
-            
+
             if (result.success) {
               if (result.data.valid) {
-                alert('Database schema is valid');
+                alert(window.__i18n.schemaValid);
               } else {
-                alert(\`Schema validation failed: \${result.data.issues.join(', ')}\`);
+                alert(window.__i18n.schemaValidationFailed.replace('{{issues}}', result.data.issues.join(', ')));
               }
             } else {
-              alert('Failed to validate schema');
+              alert(window.__i18n.failedToValidateSchema);
             }
           } catch (error) {
-            alert('Error validating schema');
+            alert(window.__i18n.errorValidatingSchema);
           }
         };
 
@@ -756,16 +789,16 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
           const totalEl = document.getElementById('total-migrations');
           const appliedEl = document.getElementById('applied-migrations');
           const pendingEl = document.getElementById('pending-migrations');
-          
+
           if (totalEl) totalEl.textContent = data.totalMigrations;
           if (appliedEl) appliedEl.textContent = data.appliedMigrations;
           if (pendingEl) pendingEl.textContent = data.pendingMigrations;
-          
+
           const runBtn = document.getElementById('run-migrations-btn');
           if (runBtn) {
             runBtn.disabled = data.pendingMigrations === 0;
           }
-          
+
           // Update migrations list
           const listContainer = document.getElementById('migrations-list');
           if (listContainer && data.migrations && data.migrations.length > 0) {
@@ -774,7 +807,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
                 <div class="flex-1">
                   <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0">
-                      \${migration.applied 
+                      \${migration.applied
                         ? '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                         : '<svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                       }
@@ -786,15 +819,15 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="flex items-center space-x-4 text-sm">
                   \${migration.size ? \`<span class="text-gray-400">\${(migration.size / 1024).toFixed(1)} KB</span>\` : ''}
                   <span class="px-2 py-1 rounded-full text-xs font-medium \${
-                    migration.applied 
-                      ? 'bg-green-100 text-green-800' 
+                    migration.applied
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-orange-100 text-orange-800'
                   }">
-                    \${migration.applied ? 'Applied' : 'Pending'}
+                    \${migration.applied ? window.__i18n.applied : window.__i18n.pending}
                   </span>
                   \${migration.appliedAt ? \`<span class="text-gray-400">\${new Date(migration.appliedAt).toLocaleDateString()}</span>\` : ''}
                 </div>
@@ -812,12 +845,12 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
   `
 }
 
-function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
+function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings, locale = 'en'): string {
   return `
     <div class="space-y-6">
       <div>
-        <h3 class="text-lg/7 font-semibold text-zinc-950 dark:text-white">Database Tools</h3>
-        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage database operations including backup, restore, and maintenance.</p>
+        <h3 class="text-lg/7 font-semibold text-zinc-950 dark:text-white">${t('settings.dbToolsTitle', locale)}</h3>
+        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('settings.dbToolsSubtitle', locale)}</p>
       </div>
 
       <!-- Database Statistics -->
@@ -825,7 +858,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
         <div class="rounded-lg bg-white dark:bg-white/5 p-6 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">Total Tables</p>
+              <p class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">${t('settings.totalTables', locale)}</p>
               <p id="total-tables" class="mt-2 text-3xl/8 font-semibold text-zinc-950 dark:text-white">${settings?.totalTables || '0'}</p>
             </div>
             <div class="rounded-lg bg-indigo-500/10 p-3">
@@ -839,7 +872,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
         <div class="rounded-lg bg-white dark:bg-white/5 p-6 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">Total Rows</p>
+              <p class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">${t('settings.totalRows', locale)}</p>
               <p id="total-rows" class="mt-2 text-3xl/8 font-semibold text-zinc-950 dark:text-white">${settings?.totalRows?.toLocaleString() || '0'}</p>
             </div>
             <div class="rounded-lg bg-green-500/10 p-3">
@@ -855,7 +888,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
       <div class="space-y-4">
         <!-- Safe Operations -->
         <div class="rounded-lg bg-white dark:bg-white/5 p-6 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10">
-          <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Safe Operations</h4>
+          <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">${t('settings.safeOperations', locale)}</h4>
           <div class="flex flex-wrap gap-3">
             <button
               onclick="window.refreshDatabaseStats()"
@@ -864,7 +897,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
               <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              Refresh Stats
+              ${t('settings.refreshStats', locale)}
             </button>
 
             <button
@@ -875,7 +908,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
               <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
-              Create Backup
+              ${t('settings.createBackup', locale)}
             </button>
 
             <button
@@ -885,7 +918,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
               <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Validate Database
+              ${t('settings.validateDatabase', locale)}
             </button>
           </div>
         </div>
@@ -894,8 +927,8 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
       <!-- Tables List -->
       <div class="rounded-lg bg-white dark:bg-white/5 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 overflow-hidden">
         <div class="px-6 py-4 border-b border-zinc-950/10 dark:border-white/10">
-          <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Database Tables</h4>
-          <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Click on a table to view its data</p>
+          <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('settings.databaseTables', locale)}</h4>
+          <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('settings.databaseTablesSubtitle', locale)}</p>
         </div>
 
         <div id="tables-list" class="p-6 space-y-2">
@@ -903,7 +936,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
             <svg class="w-12 h-12 text-zinc-400 dark:text-zinc-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
             </svg>
-            <p class="text-zinc-500 dark:text-zinc-400">Loading database statistics...</p>
+            <p class="text-zinc-500 dark:text-zinc-400">${t('settings.loadingDatabaseStats', locale)}</p>
           </div>
         </div>
       </div>
@@ -915,10 +948,10 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
           </svg>
           <div class="flex-1">
-            <h4 class="text-base/7 font-semibold text-red-900 dark:text-red-400">Danger Zone</h4>
+            <h4 class="text-base/7 font-semibold text-red-900 dark:text-red-400">${t('settings.dangerZone', locale)}</h4>
             <p class="mt-1 text-sm/6 text-red-700 dark:text-red-300">
-              These operations are destructive and cannot be undone.
-              <strong>Your admin account will be preserved</strong>, but all other data will be permanently deleted.
+              ${t('settings.dangerZoneWarning', locale)}
+              <strong>${t('settings.dangerZonePreserve', locale)}</strong>${t('settings.dangerZoneDelete', locale)}
             </p>
             <div class="mt-4">
               <button
@@ -929,7 +962,7 @@ function renderDatabaseToolsSettings(settings?: DatabaseToolsSettings): string {
                 <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
-                Truncate All Data
+                ${t('settings.truncateAllData', locale)}
               </button>
             </div>
           </div>

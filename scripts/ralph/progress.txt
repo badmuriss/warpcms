@@ -21,7 +21,7 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - TypeScript: `tsconfig.json` uses strict mode with `noUncheckedIndexedAccess`, `noImplicitReturns`
 - Tests: Use vitest with `describe/it/expect` pattern, tests in `src/__tests__/` mirroring source structure
 - i18n: Confirmation dialog props (title, message, confirmText, cancelText) accept translated strings directly — no locale param needed on the component itself
-- i18n: Private render helpers (e.g. `renderField`) get locale as a param with default `'en'` so they can use `t()` internally
+- i18n: Private render helpers (e.g. `renderField`, `renderTabContent`, `renderGeneralSettings`) get locale as a param with default `'en'` so they can use `t()` internally
 - Pre-existing plugin errors in typecheck (email-templates-plugin, ai-search-plugin, design routes) — ignore these
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
@@ -177,4 +177,19 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - Profile page has a password change modal with its own set of labels — separate from the main form
   - Profile page 2FA toggle is a TODO — just shows an alert, but it still needs i18n
   - The `renderAvatarImage` export function doesn't need locale since it only uses initials and image alt text
+---
+
+## 2026-02-26 20:35 - US-010
+- Extracted and translated all Settings page strings across all 3 tabs (General, Migrations, Database Tools)
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `settings` namespace with 60+ keys (page header, tab labels, general settings fields, migration status/actions/history, database tools stats/operations/danger zone, all client-side JS strings)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for settings namespace
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for settings namespace
+  - `packages/core/src/templates/pages/admin-settings.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; added locale param to `renderTabContent()`, `renderGeneralSettings()`, `renderMigrationSettings()`, `renderDatabaseToolsSettings()`; injected `window.__i18n` for 30+ client-side JS strings; passed locale to layout data and confirmation dialog
+- **Learnings for future iterations:**
+  - Settings template has duplicate script blocks — one in `renderSettingsPage()` and one in `renderMigrationSettings()` — both need i18n updates for the same functions
+  - The `window.__i18n` object for settings is large (30+ keys) because all 3 tabs have client-side JS with alert/prompt/button text
+  - Truncate prompt uses `prompt()` with TRUNCATE ALL DATA confirmation — the prompt text is translated but the confirmation keyword stays in English
+  - Language dropdown in General settings has static options (en/es/fr/de) — this is separate from the i18n system and will be wired in US-015
+  - Confirmation dialog for "Run Migrations" reuses `t('common.cancel', locale)` for the cancel button — good pattern for reusing common namespace
 ---
