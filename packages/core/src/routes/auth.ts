@@ -447,7 +447,7 @@ authRoutes.post('/register/form', async (c) => {
     })
 
     // Redirect based on role
-    const redirectUrl = role === 'admin' ? '/admin/dashboard' : '/admin/dashboard'
+    const redirectUrl = '/admin'
 
     return c.html(html`
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
@@ -544,7 +544,7 @@ authRoutes.post('/login/form', async (c) => {
           </div>
           <script>
             setTimeout(() => {
-              window.location.href = '/admin/dashboard';
+              window.location.href = '/admin';
             }, 2000);
           </script>
         </div>
@@ -898,7 +898,7 @@ authRoutes.post('/accept-invitation', async (c) => {
     // Activity logging is deferred until utils/log-activity is implemented
 
     // Redirect to admin dashboard
-    return c.redirect('/admin/dashboard?welcome=true')
+    return c.redirect('/admin')
 
   } catch (error) {
     console.error('Accept invitation error:', error)

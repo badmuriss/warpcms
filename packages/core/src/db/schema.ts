@@ -33,12 +33,10 @@ export const collections = sqliteTable('collections', {
 // Content items - actual content data
 export const content = sqliteTable('content', {
   id: text('id').primaryKey(),
-  collectionId: text('collection_id').notNull().references(() => collections.id),
+  collectionId: text('collection_id').notNull(), // content type name (image, text, file)
   slug: text('slug').notNull(),
   title: text('title').notNull(),
   data: text('data', { mode: 'json' }).notNull(), // JSON content data
-  status: text('status').notNull().default('draft'), // 'draft', 'published', 'archived'
-  publishedAt: integer('published_at', { mode: 'timestamp' }),
   authorId: text('author_id').notNull().references(() => users.id),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -91,18 +89,6 @@ export const apiTokens = sqliteTable('api_tokens', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-
-// Workflow history for content workflow tracking
-export const workflowHistory = sqliteTable('workflow_history', {
-  id: text('id').primaryKey(),
-  contentId: text('content_id').notNull().references(() => content.id),
-  action: text('action').notNull(),
-  fromStatus: text('from_status').notNull(),
-  toStatus: text('to_status').notNull(),
-  userId: text('user_id').notNull().references(() => users.id),
-  comment: text('comment'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-});
 
 // Plugin system tables
 export const plugins = sqliteTable('plugins', {
@@ -190,7 +176,6 @@ export const selectCollectionSchema = createSelectSchema(collections);
 export const insertContentSchema = createInsertSchema(content, {
   slug: (schema: any) => schema.min(1).regex(/^[a-zA-Z0-9_-]+$/, 'Slug must contain only letters, numbers, underscores, and hyphens'),
   title: (schema: any) => schema.min(1),
-  status: (schema: any) => schema,
 });
 
 export const selectContentSchema = createSelectSchema(content);
@@ -207,14 +192,6 @@ export const insertMediaSchema = createInsertSchema(media, {
 
 export const selectMediaSchema = createSelectSchema(media);
 
-
-export const insertWorkflowHistorySchema = createInsertSchema(workflowHistory, {
-  action: (schema: any) => schema.min(1),
-  fromStatus: (schema: any) => schema.min(1),
-  toStatus: (schema: any) => schema.min(1),
-});
-
-export const selectWorkflowHistorySchema = createSelectSchema(workflowHistory);
 
 export const insertPluginSchema = createInsertSchema(plugins, {
   name: (schema: any) => schema.min(1),
@@ -313,8 +290,6 @@ export type Content = typeof content.$inferSelect;
 export type NewContent = typeof content.$inferInsert;
 export type Media = typeof media.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;
-export type WorkflowHistory = typeof workflowHistory.$inferSelect;
-export type NewWorkflowHistory = typeof workflowHistory.$inferInsert;
 export type Plugin = typeof plugins.$inferSelect;
 export type NewPlugin = typeof plugins.$inferInsert;
 export type PluginHook = typeof pluginHooks.$inferSelect;

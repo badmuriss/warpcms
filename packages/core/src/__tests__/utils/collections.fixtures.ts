@@ -104,10 +104,8 @@ export const mockContent = {
       title: 'Welcome to WarpCMS AI',
       content: '<h1>Welcome to WarpCMS AI</h1><p>This is your first blog post.</p>',
       excerpt: 'Welcome to WarpCMS AI, a modern headless CMS.',
-      tags: ['welcome', 'cms', 'warpcms'],
-      status: 'published'
+      tags: ['welcome', 'cms', 'warpcms']
     },
-    status: 'published',
     publishedAt: new Date('2023-01-01T12:00:00Z'),
     authorId: 'admin-user-id',
     createdAt: new Date('2023-01-01T10:00:00Z'),
@@ -121,10 +119,8 @@ export const mockContent = {
     title: 'Second Blog Post',
     data: {
       title: 'Second Blog Post',
-      content: '<p>This is the second blog post.</p>',
-      status: 'draft'
+      content: '<p>This is the second blog post.</p>'
     },
-    status: 'draft',
     publishedAt: null,
     authorId: 'admin-user-id',
     createdAt: new Date('2023-01-02T10:00:00Z'),
@@ -142,7 +138,6 @@ export const mockContent = {
       slug: 'about-us',
       meta_description: 'Learn more about our company and mission.'
     },
-    status: 'published',
     publishedAt: new Date('2023-01-01T12:00:00Z'),
     authorId: 'admin-user-id',
     createdAt: new Date('2023-01-01T11:00:00Z'),
@@ -222,7 +217,6 @@ const createContentResponse = (content: any, author?: any) => ({
   id: content.id,
   title: content.title,
   slug: content.slug,
-  status: content.status,
   publishedAt: content.publishedAt,
   author: author ? {
     id: author.id,
@@ -266,7 +260,6 @@ export const generateContentData = (collectionId: string, overrides: Partial<any
     title: 'Test Content',
     content: 'This is test content'
   },
-  status: 'draft',
   authorId: 'admin-user-id',
   ...overrides
 })

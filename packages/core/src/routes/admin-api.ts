@@ -397,35 +397,31 @@ adminApiRoutes.get('/references', async (c) => {
     let results
 
     const listPlaceholders = collectionIds.map(() => '?').join(', ')
-    const statusFilterValues = ['published']
-    const statusClause = ` AND status IN (${statusFilterValues.map(() => '?').join(', ')})`
 
     if (search) {
       const searchParam = `%${search}%`
       stmt = db.prepare(`
-        SELECT id, title, slug, status, updated_at, collection_id
+        SELECT id, title, slug, updated_at, collection_id
         FROM content
         WHERE collection_id IN (${listPlaceholders})
         AND (title LIKE ? OR slug LIKE ?)
-        ${statusClause}
         ORDER BY updated_at DESC
         LIMIT ?
       `)
       const queryResults = await stmt
-        .bind(...collectionIds, searchParam, searchParam, ...statusFilterValues, limit)
+        .bind(...collectionIds, searchParam, searchParam, limit)
         .all()
       results = queryResults.results
     } else {
       stmt = db.prepare(`
-        SELECT id, title, slug, status, updated_at, collection_id
+        SELECT id, title, slug, updated_at, collection_id
         FROM content
         WHERE collection_id IN (${listPlaceholders})
-        ${statusClause}
         ORDER BY updated_at DESC
         LIMIT ?
       `)
       const queryResults = await stmt
-        .bind(...collectionIds, ...statusFilterValues, limit)
+        .bind(...collectionIds, limit)
         .all()
       results = queryResults.results
     }
@@ -434,7 +430,6 @@ adminApiRoutes.get('/references', async (c) => {
       id: row.id,
       title: row.title,
       slug: row.slug,
-      status: row.status,
       updated_at: row.updated_at ? Number(row.updated_at) : null,
       collection: collectionById[row.collection_id]
     }))

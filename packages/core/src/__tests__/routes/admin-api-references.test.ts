@@ -31,7 +31,7 @@ const referencesAPI = {
 
   async getReferenceById(db: any, id: string) {
     const result = await db.prepare(`
-      SELECT c.id, c.title, c.status, col.name as collection_name, col.display_name
+      SELECT c.id, c.title, col.name as collection_name, col.display_name
       FROM content c
       JOIN collections col ON c.collection_id = col.id
       WHERE c.id = ?
@@ -43,8 +43,7 @@ const referencesAPI = {
           id: result.id,
           title: result.title || 'Untitled',
           collection: result.collection_name,
-          collectionDisplay: result.display_name,
-          status: result.status
+          collectionDisplay: result.display_name
         }
       }
     }
@@ -70,7 +69,7 @@ const referencesAPI = {
 
     // Build query
     let sql = `
-      SELECT c.id, c.title, c.status, col.name as collection_name, col.display_name
+      SELECT c.id, c.title, col.name as collection_name, col.display_name
       FROM content c
       JOIN collections col ON c.collection_id = col.id
       WHERE 1=1 ${collectionFilter}
@@ -91,8 +90,7 @@ const referencesAPI = {
         id: String(row.id),
         title: String(row.title || 'Untitled'),
         collection: String(row.collection_name),
-        collectionDisplay: String(row.display_name || row.collection_name),
-        status: String(row.status || 'draft')
+        collectionDisplay: String(row.display_name || row.collection_name)
       }))
     }
   },
@@ -169,7 +167,6 @@ describe('References API', () => {
           first: vi.fn().mockResolvedValue({
             id: 'ref-123',
             title: 'Test Page',
-            status: 'published',
             collection_name: 'pages',
             display_name: 'Pages'
           })
@@ -182,8 +179,7 @@ describe('References API', () => {
           id: 'ref-123',
           title: 'Test Page',
           collection: 'pages',
-          collectionDisplay: 'Pages',
-          status: 'published'
+          collectionDisplay: 'Pages'
         }
       })
     })
@@ -194,7 +190,6 @@ describe('References API', () => {
           first: vi.fn().mockResolvedValue({
             id: 'ref-456',
             title: null,
-            status: 'draft',
             collection_name: 'posts',
             display_name: 'Posts'
           })
@@ -233,8 +228,8 @@ describe('References API', () => {
         bind: vi.fn().mockReturnValue({
           all: vi.fn().mockResolvedValue({
             results: [
-              { id: '1', title: 'Page 1', status: 'published', collection_name: 'pages', display_name: 'Pages' },
-              { id: '2', title: 'Post 1', status: 'draft', collection_name: 'posts', display_name: 'Posts' }
+              { id: '1', title: 'Page 1', collection_name: 'pages', display_name: 'Pages' },
+              { id: '2', title: 'Post 1', collection_name: 'posts', display_name: 'Posts' }
             ]
           })
         })
@@ -246,8 +241,7 @@ describe('References API', () => {
         id: '1',
         title: 'Page 1',
         collection: 'pages',
-        collectionDisplay: 'Pages',
-        status: 'published'
+        collectionDisplay: 'Pages'
       })
     })
 
@@ -318,7 +312,7 @@ describe('References API', () => {
         bind: vi.fn().mockReturnValue({
           all: vi.fn().mockResolvedValue({
             results: [
-              { id: '1', title: null, status: 'draft', collection_name: 'pages', display_name: 'Pages' }
+              { id: '1', title: null, collection_name: 'pages', display_name: 'Pages' }
             ]
           })
         })
@@ -328,27 +322,12 @@ describe('References API', () => {
       expect(result.items[0].title).toBe('Untitled')
     })
 
-    it('should handle items with missing status', async () => {
-      mockDb.prepare = vi.fn().mockReturnValue({
-        bind: vi.fn().mockReturnValue({
-          all: vi.fn().mockResolvedValue({
-            results: [
-              { id: '1', title: 'Test', status: null, collection_name: 'pages', display_name: 'Pages' }
-            ]
-          })
-        })
-      })
-
-      const result = await referencesAPI.searchReferences(mockDb, {})
-      expect(result.items[0].status).toBe('draft')
-    })
-
     it('should use collection_name as fallback for collectionDisplay', async () => {
       mockDb.prepare = vi.fn().mockReturnValue({
         bind: vi.fn().mockReturnValue({
           all: vi.fn().mockResolvedValue({
             results: [
-              { id: '1', title: 'Test', status: 'published', collection_name: 'pages', display_name: null }
+              { id: '1', title: 'Test', collection_name: 'pages', display_name: null }
             ]
           })
         })

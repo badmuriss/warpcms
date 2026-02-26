@@ -10,7 +10,7 @@ export interface ContentItem {
   title: string
   slug: string
   modelName: string
-  statusBadge: string
+  preview?: string
   authorName: string
   formattedDate: string
   availableActions: string[]
@@ -18,7 +18,6 @@ export interface ContentItem {
 
 export interface ContentListPageData {
   modelName: string
-  status: string
   page: number
   search?: string
   models: Array<{
@@ -41,13 +40,12 @@ export function renderContentListPage(data: ContentListPageData): string {
   // Build current URL parameters to pass to edit page
   const urlParams = new URLSearchParams()
   if (data.modelName && data.modelName !== 'all') urlParams.set('type', data.modelName)
-  if (data.status && data.status !== 'all') urlParams.set('status', data.status)
   if (data.search) urlParams.set('search', data.search)
   if (data.page && data.page !== 1) urlParams.set('page', data.page.toString())
   const currentParams = urlParams.toString()
 
   // Check if filters are active (not in default state)
-  const hasActiveFilters = data.modelName !== 'all' || data.status !== 'all' || !!data.search
+  const hasActiveFilters = data.modelName !== 'all' || !!data.search
 
   // Prepare filter bar data
   const filterBarData: FilterBarData = {
@@ -62,15 +60,6 @@ export function renderContentListPage(data: ContentListPageData): string {
             label: model.displayName,
             selected: data.modelName === model.name
           }))
-        ]
-      },
-      {
-        name: 'status',
-        label: 'Status',
-        options: [
-          { value: 'all', label: 'All Status', selected: data.status === 'all' },
-          { value: 'draft', label: 'Draft', selected: data.status === 'draft' },
-          { value: 'published', label: 'Published', selected: data.status === 'published' }
         ]
       }
     ],
@@ -110,11 +99,11 @@ export function renderContentListPage(data: ContentListPageData): string {
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
-      key: 'statusBadge',
-      label: 'Status',
-      sortable: true,
-      sortType: 'string',
-      render: (value) => value
+      key: 'preview',
+      label: 'Preview',
+      sortable: false,
+      className: 'text-sm text-zinc-500 dark:text-zinc-400 max-w-xs truncate',
+      render: (_value, row) => `<span class="truncate block max-w-xs">${row.preview || ''}</span>`
     },
     {
       key: 'authorName',
@@ -197,7 +186,6 @@ export function renderContentListPage(data: ContentListPageData): string {
     baseUrl: '/admin/content',
     queryParams: {
       type: data.modelName,
-      status: data.status,
       ...(data.search ? { search: data.search } : {})
     },
     showPageSizeSelector: true,
@@ -248,25 +236,6 @@ export function renderContentListPage(data: ContentListPageData): string {
                           ${model.displayName}
                         </option>
                       `).join('')}
-                    </select>
-                    <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-cyan-600 dark:text-cyan-400 sm:size-4">
-                      <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-
-                <!-- Status Filter -->
-                <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Status</label>
-                  <div class="grid grid-cols-1">
-                    <select
-                      name="status"
-                      onchange="updateContentFilters('status', this.value)"
-                      class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-cyan-500/30 dark:outline-cyan-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cyan-500 dark:focus-visible:outline-cyan-400 min-w-40"
-                    >
-                      <option value="all" ${data.status === 'all' ? 'selected' : ''}>All Status</option>
-                      <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                      <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
                     </select>
                     <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-cyan-600 dark:text-cyan-400 sm:size-4">
                       <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -528,20 +497,6 @@ export function renderContentListPage(data: ContentListPageData): string {
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
                   </div>
 
-                  <!-- Status Filter -->
-                  <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Status</label>
-                    <select
-                      id="filterStatus"
-                      name="status"
-                      multiple
-                      class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10"
-                      size="4"
-                    >
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                    </select>
-                  </div>
                 </div>
               </div>
 
@@ -715,9 +670,6 @@ export function renderContentListPage(data: ContentListPageData): string {
                     \${result.relevance_score ? \` • Relevance: \${(result.relevance_score * 100).toFixed(0)}%\` : ''}
                   </p>
                   \${result.snippet ? \`<p class="text-sm text-zinc-600 dark:text-zinc-400">\${result.snippet}</p>\` : ''}
-                </div>
-                <div class="ml-4">
-                  <span class="px-2 py-1 text-xs rounded-full \${result.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}">\${result.status}</span>
                 </div>
               </div>
             </div>

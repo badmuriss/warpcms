@@ -38,14 +38,6 @@ app.post('/test-cleanup', async (c: Context) => {
       )
     `).run()
 
-    await db.prepare(`
-      DELETE FROM workflow_history
-      WHERE content_id IN (
-        SELECT id FROM content
-        WHERE title LIKE 'Test %' OR title LIKE '%E2E%' OR title LIKE '%Playwright%' OR title LIKE '%Sample%'
-      )
-    `).run()
-
     // Note: content_data table may not exist in all schemas
     try {
       await db.prepare(`
@@ -139,14 +131,6 @@ app.post('/test-cleanup', async (c: Context) => {
     try {
       await db.prepare(`
         DELETE FROM content_versions WHERE content_id NOT IN (SELECT id FROM content)
-      `).run()
-    } catch (e) {
-      // Table doesn't exist
-    }
-
-    try {
-      await db.prepare(`
-        DELETE FROM workflow_history WHERE content_id NOT IN (SELECT id FROM content)
       `).run()
     } catch (e) {
       // Table doesn't exist

@@ -1,16 +1,16 @@
-import { api_default, apiMediaRoutes, apiSystemRoutes, adminApiRoutes, router, adminSettingsRoutes, admin_content_default, adminLogsRoutes, userRoutes, auth_default, test_cleanup_default } from './chunk-33OLIVOQ.js';
-export { ROUTES_INFO, adminApiRoutes, admin_content_default as adminContentRoutes, router as adminDashboardRoutes, adminLogsRoutes, adminSettingsRoutes, userRoutes as adminUsersRoutes, api_content_crud_default as apiContentCrudRoutes, apiMediaRoutes, api_default as apiRoutes, apiSystemRoutes, auth_default as authRoutes } from './chunk-33OLIVOQ.js';
-import { schema_exports } from './chunk-EZEBTQTJ.js';
-export { Logger, PluginBootstrapService, PluginService as PluginServiceClass, apiTokens, cleanupRemovedCollections, collections, content, contentVersions, fullCollectionSync, getAvailableCollectionNames, getLogger, getManagedCollections, initLogger, insertCollectionSchema, insertContentSchema, insertLogConfigSchema, insertMediaSchema, insertPluginActivityLogSchema, insertPluginAssetSchema, insertPluginHookSchema, insertPluginRouteSchema, insertPluginSchema, insertSystemLogSchema, insertUserSchema, insertWorkflowHistorySchema, isCollectionManaged, loadCollectionConfig, loadCollectionConfigs, logConfig, media, pluginActivityLog, pluginAssets, pluginHooks, pluginRoutes, plugins, registerCollections, selectCollectionSchema, selectContentSchema, selectLogConfigSchema, selectMediaSchema, selectPluginActivityLogSchema, selectPluginAssetSchema, selectPluginHookSchema, selectPluginRouteSchema, selectPluginSchema, selectSystemLogSchema, selectUserSchema, selectWorkflowHistorySchema, syncCollection, syncCollections, systemLogs, users, validateCollectionConfig, workflowHistory } from './chunk-EZEBTQTJ.js';
-import { metricsMiddleware, bootstrapMiddleware } from './chunk-Q5RVVPSW.js';
-export { AuthManager, PermissionManager, bootstrapMiddleware, cacheHeaders, compressionMiddleware, detailedLoggingMiddleware, getActivePlugins, isPluginActive, logActivity, loggingMiddleware, optionalAuth, performanceLoggingMiddleware, requireActivePlugin, requireActivePlugins, requireAnyPermission, requireAuth, requirePermission, requireRole, securityHeaders, securityLoggingMiddleware } from './chunk-Q5RVVPSW.js';
-export { MigrationService } from './chunk-TUFDYIZM.js';
-export { renderFilterBar } from './chunk-TIM4N7T5.js';
-export { getConfirmationDialogScript, renderAdminLayout, renderAlert, renderConfirmationDialog, renderPagination, renderTable } from './chunk-TKHZHL3V.js';
-export { renderAdminLayoutCatalyst, renderLogo } from './chunk-VL2E5VAW.js';
+import { api_default, apiMediaRoutes, apiSystemRoutes, adminApiRoutes, router, adminSettingsRoutes, admin_content_default, adminLogsRoutes, userRoutes, auth_default, test_cleanup_default } from './chunk-MAK2VXHF.js';
+export { ROUTES_INFO, adminApiRoutes, admin_content_default as adminContentRoutes, router as adminDashboardRoutes, adminLogsRoutes, adminSettingsRoutes, userRoutes as adminUsersRoutes, api_content_crud_default as apiContentCrudRoutes, apiMediaRoutes, api_default as apiRoutes, apiSystemRoutes, auth_default as authRoutes } from './chunk-MAK2VXHF.js';
+import { schema_exports } from './chunk-X74SCHCI.js';
+export { Logger, PluginBootstrapService, PluginService as PluginServiceClass, apiTokens, collections, content, contentVersions, getLogger, initLogger, insertCollectionSchema, insertContentSchema, insertLogConfigSchema, insertMediaSchema, insertPluginActivityLogSchema, insertPluginAssetSchema, insertPluginHookSchema, insertPluginRouteSchema, insertPluginSchema, insertSystemLogSchema, insertUserSchema, logConfig, media, pluginActivityLog, pluginAssets, pluginHooks, pluginRoutes, plugins, selectCollectionSchema, selectContentSchema, selectLogConfigSchema, selectMediaSchema, selectPluginActivityLogSchema, selectPluginAssetSchema, selectPluginHookSchema, selectPluginRouteSchema, selectPluginSchema, selectSystemLogSchema, selectUserSchema, systemLogs, users } from './chunk-X74SCHCI.js';
+import { metricsMiddleware, bootstrapMiddleware } from './chunk-ZABMRZCN.js';
+export { AuthManager, PermissionManager, bootstrapMiddleware, cacheHeaders, compressionMiddleware, detailedLoggingMiddleware, getActivePlugins, isPluginActive, logActivity, loggingMiddleware, optionalAuth, performanceLoggingMiddleware, requireActivePlugin, requireActivePlugins, requireAnyPermission, requireAuth, requirePermission, requireRole, securityHeaders, securityLoggingMiddleware } from './chunk-ZABMRZCN.js';
+export { MigrationService } from './chunk-EEGFUWG5.js';
+export { renderFilterBar } from './chunk-U46L4ZR4.js';
+export { getConfirmationDialogScript, renderAdminLayout, renderAlert, renderConfirmationDialog, renderPagination, renderTable } from './chunk-H5S2NS2Q.js';
+export { renderAdminLayoutCatalyst, renderLogo } from './chunk-MPTYQKNE.js';
 export { HookSystemImpl, HookUtils, PluginManager as PluginManagerClass, PluginRegistryImpl, PluginValidator as PluginValidatorClass, ScopedHookSystem as ScopedHookSystemClass } from './chunk-2NY32F5L.js';
-import { package_default, getCoreVersion } from './chunk-JILKHKPS.js';
-export { QueryFilterBuilder, SONICJS_VERSION, TemplateRenderer, WARPJS_VERSION, buildQuery, escapeHtml, getCoreVersion, getWarpCMSVersion, renderTemplate, sanitizeInput, sanitizeObject, templateRenderer } from './chunk-JILKHKPS.js';
+import { package_default, getCoreVersion } from './chunk-A3BT36LJ.js';
+export { QueryFilterBuilder, SONICJS_VERSION, TemplateRenderer, WARPJS_VERSION, buildQuery, escapeHtml, getCoreVersion, getWarpCMSVersion, renderTemplate, sanitizeInput, sanitizeObject, templateRenderer } from './chunk-A3BT36LJ.js';
 import './chunk-SEM3GID4.js';
 export { metricsTracker } from './chunk-FICTAGD4.js';
 export { HOOKS } from './chunk-KY7VAKQ6.js';
@@ -74,6 +74,31 @@ function createWarpCMSApp(config = {}) {
       app.use("*", middleware);
     }
   }
+  app.get("/api/media/file/*", async (c) => {
+    try {
+      if (!c.env.MEDIA_BUCKET) {
+        return c.json({ error: "R2 storage is not configured" }, 503);
+      }
+      const url = new URL(c.req.url);
+      const r2Key = url.pathname.replace(/^\/api\/media\/file\//, "");
+      if (!r2Key) {
+        return c.notFound();
+      }
+      const object = await c.env.MEDIA_BUCKET.get(r2Key);
+      if (!object) {
+        return c.notFound();
+      }
+      const headers = new Headers();
+      object.httpMetadata?.contentType && headers.set("Content-Type", object.httpMetadata.contentType);
+      object.httpMetadata?.contentDisposition && headers.set("Content-Disposition", object.httpMetadata.contentDisposition);
+      headers.set("Cache-Control", "public, max-age=31536000");
+      headers.set("Access-Control-Allow-Origin", "*");
+      return new Response(object.body, { headers });
+    } catch (error) {
+      console.error("Error serving media file:", error);
+      return c.json({ error: "Failed to serve file" }, 500);
+    }
+  });
   app.route("/api", api_default);
   app.route("/api/media", apiMediaRoutes);
   app.route("/api/system", apiSystemRoutes);

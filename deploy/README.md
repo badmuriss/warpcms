@@ -6,7 +6,7 @@ Deploy WarpCMS headless CMS to Cloudflare Workers in one click.
 
 ## What is WarpCMS?
 
-WarpCMS is a minimal, edge-native headless CMS for Cloudflare Workers. Content types: images, PDFs, text, HTML, and files for download. Fork of [SonicJS](https://github.com/SonicJs-Org/sonicjs).
+WarpCMS is a minimal, edge-native headless CMS for Cloudflare Workers. Content types: images, PDFs, text, HTML, and files for download. Fork of [WarpCMS](https://github.com/SonicJs-Org/warpcms).
 
 ## Quick Start
 
@@ -43,18 +43,6 @@ src/
   collections/          # Your content collections
 wrangler.toml           # Cloudflare config
 package.json
-```
-
-## Adding Collections
-
-Create files in `src/collections/` and register in `src/index.ts`:
-
-```typescript
-import { createWarpCMSApp, registerCollections } from '@warpcms/core'
-import myCollection from './collections/my-collection'
-
-registerCollections([myCollection])
-export default createWarpCMSApp({ collections: { autoSync: true } })
 ```
 
 ## License

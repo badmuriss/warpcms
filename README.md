@@ -1,6 +1,6 @@
 # WarpCMS
 
-Minimal, edge-native headless CMS for Cloudflare Workers. Fork of [SonicJS](https://github.com/SonicJs-Org/sonicjs).
+Minimal, edge-native headless CMS for Cloudflare Workers. Fork of [WarpCMS](https://github.com/SonicJs-Org/warpcms).
 
 ## What is WarpCMS?
 

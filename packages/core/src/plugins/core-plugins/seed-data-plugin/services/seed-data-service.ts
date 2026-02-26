@@ -154,14 +154,11 @@ export class SeedDataService {
       throw new Error('No collections found. Please create collections first.')
     }
 
-    const statuses = ['draft', 'published', 'archived']
-
     // Create 200 content items
     let count = 0
     for (let i = 0; i < 200; i++) {
       const collection: any = allCollections[Math.floor(Math.random() * allCollections.length)]
       const author: any = allUsers[Math.floor(Math.random() * allUsers.length)]
-      const status = statuses[Math.floor(Math.random() * statuses.length)]
 
       let title: string
       let contentData: any
@@ -203,11 +200,10 @@ export class SeedDataService {
       const slug = `${this.generateSlug(title)}-${i}`
       const createdAt = this.randomDate()
       const createdAtTimestamp = Math.floor(createdAt.getTime() / 1000)
-      const publishedAtTimestamp = status === 'published' ? createdAtTimestamp : null
 
       const stmt = this.db.prepare(`
-        INSERT INTO content (id, collection_id, slug, title, data, status, published_at, author_id, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO content (id, collection_id, slug, title, data, author_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       await stmt.bind(
@@ -216,8 +212,6 @@ export class SeedDataService {
         slug,
         `${title} ${i}`,
         JSON.stringify(contentData),
-        status,
-        publishedAtTimestamp,
         author.id,
         createdAtTimestamp,
         createdAtTimestamp

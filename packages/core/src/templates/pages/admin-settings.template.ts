@@ -533,10 +533,9 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
               name="language"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
             >
+              <option value="pt" ${settings?.language === 'pt' ? 'selected' : ''}>Português</option>
               <option value="en" ${settings?.language === 'en' ? 'selected' : ''}>English</option>
-              <option value="es" ${settings?.language === 'es' ? 'selected' : ''}>Spanish</option>
-              <option value="fr" ${settings?.language === 'fr' ? 'selected' : ''}>French</option>
-              <option value="de" ${settings?.language === 'de' ? 'selected' : ''}>German</option>
+              <option value="es" ${settings?.language === 'es' ? 'selected' : ''}>Español</option>
             </select>
           </div>
           

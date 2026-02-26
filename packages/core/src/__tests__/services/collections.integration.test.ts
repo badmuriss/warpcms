@@ -182,7 +182,6 @@ describe.skip('Collections Integration Tests', () => {
           id: c.id,
           title: c.title,
           slug: c.slug,
-          status: c.status,
           published_at: c.publishedAt?.toISOString() || null,
           author: author.username,
           created_at: c.createdAt.toISOString()
@@ -195,7 +194,6 @@ describe.skip('Collections Integration Tests', () => {
           id: c.id,
           title: c.title,
           slug: c.slug,
-          status: c.status,
           publishedAt: c.publishedAt?.toISOString() || null,
           author: author.username,
           createdAt: c.createdAt.toISOString()
@@ -207,7 +205,7 @@ describe.skip('Collections Integration Tests', () => {
       expect(response.content).toHaveLength(2)
       expect(response.content[0].title).toBe('Welcome to WarpCMS AI')
       expect(response.content[0].author).toBe('admin')
-      expect(response.content[1].status).toBe('draft')
+      expect(response.content[1].publishedAt).toBeNull()
     })
   })
 
@@ -218,14 +216,12 @@ describe.skip('Collections Integration Tests', () => {
         title: 'Valid Blog Post',
         content: '<p>This is valid content</p>',
         excerpt: 'Valid excerpt',
-        tags: ['valid', 'tags'],
-        status: 'published'
+        tags: ['valid', 'tags']
       }
 
       const invalidContent = {
         // missing required title
-        content: '<p>Content without title</p>',
-        status: 'invalid_status' // not in enum
+        content: '<p>Content without title</p>'
       }
 
       // Simulate schema validation
@@ -259,7 +255,6 @@ describe.skip('Collections Integration Tests', () => {
       const invalidResult = validateData(invalidContent, collection.schema)
       expect(invalidResult.isValid).toBe(false)
       expect(invalidResult.errors).toContain('Field title is required')
-      expect(invalidResult.errors).toContain('Field status must be one of: draft, published, archived')
     })
 
     it('should handle complex nested schema validation', async () => {

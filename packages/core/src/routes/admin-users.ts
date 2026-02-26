@@ -14,9 +14,9 @@ const userRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 // Apply authentication middleware to all routes
 userRoutes.use('*', requireAuth())
 
-// Redirect /admin to /admin/dashboard
+// Redirect /admin to /admin/content
 userRoutes.get('/', (c) => {
-  return c.redirect('/admin/dashboard')
+  return c.redirect('/admin/content')
 })
 
 // Timezone options for profile form

@@ -8,7 +8,6 @@ export interface ContentFormData {
   title?: string
   slug?: string
   data?: any
-  status?: string
   contentType: ContentType
   isEdit?: boolean
   error?: string
@@ -203,8 +202,6 @@ export function renderContentFormPage(data: ContentFormData): string {
   const hasFileUpload = ct.fields.some(f => f.type === 'file')
   const descriptionText = ct.description || `Manage ${ct.displayName.toLowerCase()} content`
 
-  const selectClasses = 'col-start-1 row-start-1 w-full appearance-none rounded-md bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6'
-
   const pageContent = `
     <div class="space-y-6">
       <!-- Header -->
@@ -258,25 +255,66 @@ export function renderContentFormPage(data: ContentFormData): string {
             ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
             ${data.referrerParams ? `<input type="hidden" name="referrer_params" value="${escapeAttr(data.referrerParams)}">` : ''}
 
-            <!-- Status Select -->
-            <div>
-              <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
-              <div class="mt-2 grid grid-cols-1">
-                <select id="status" name="status" class="${selectClasses}">
-                  <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                  <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                </select>
-                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
-                  <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-
-            <!-- Title Field -->
+            <!-- Title + Slug Fields -->
             ${titleField ? `
               <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
                 <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Basic Information</h3>
                 ${renderField(titleField, getFieldValue('title'), data.validationErrors?.['title'])}
+                <div class="mt-4">
+                  <label for="slug" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">URL Slug</label>
+                  ${isEdit ? `
+                    <!-- Edit mode: readonly slug with edit/copy buttons -->
+                    <div class="mt-2">
+                      <div class="flex items-center gap-2">
+                        <div class="flex flex-1 rounded-lg shadow-sm">
+                          <span class="inline-flex items-center rounded-l-lg border border-r-0 border-zinc-950/10 dark:border-white/10 bg-zinc-50 dark:bg-zinc-800 px-3 text-sm text-zinc-500 dark:text-zinc-400">/</span>
+                          <input type="text" id="slug" name="slug" value="${escapeAttr(data.slug || '')}"
+                            readonly
+                            pattern="^[a-zA-Z0-9_-]+$"
+                            class="w-full rounded-r-lg bg-zinc-100 dark:bg-zinc-800/80 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 font-mono cursor-default focus:outline-none transition-shadow"
+                          />
+                        </div>
+                        <button type="button" id="slug-copy-btn" onclick="copySlug()" title="Copy slug"
+                          class="inline-flex items-center justify-center rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>
+                        </button>
+                        <button type="button" id="slug-edit-btn" onclick="enableSlugEdit()" title="Edit slug"
+                          class="inline-flex items-center justify-center rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                        </button>
+                      </div>
+                      <!-- Warning banner (hidden by default, shown when editing) -->
+                      <div id="slug-warning" class="hidden mt-2">
+                        <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-3">
+                          <div class="flex gap-2">
+                            <svg class="h-5 w-5 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                            <div>
+                              <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Changing the slug may break references</p>
+                              <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Websites or apps consuming this content via the slug URL will stop working if the slug changes.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <button type="button" onclick="cancelSlugEdit()" class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Cancel edit</button>
+                      </div>
+                      <div id="slug-status" class="mt-1"></div>
+                    </div>
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      API access: <code class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">/api/content/by-slug/${escapeHtml(data.slug || '')}</code>
+                    </p>
+                  ` : `
+                    <!-- Create mode: auto-generate with availability check -->
+                    <div class="mt-2 flex rounded-lg shadow-sm">
+                      <span class="inline-flex items-center rounded-l-lg border border-r-0 border-zinc-950/10 dark:border-white/10 bg-zinc-50 dark:bg-zinc-800 px-3 text-sm text-zinc-500 dark:text-zinc-400">/</span>
+                      <input type="text" id="slug" name="slug" value="${escapeAttr(data.slug || '')}"
+                        pattern="^[a-zA-Z0-9_-]+$"
+                        placeholder="auto-generated-from-title"
+                        class="w-full rounded-r-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
+                      />
+                    </div>
+                    <div id="slug-status" class="mt-1"></div>
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Leave blank to auto-generate from title. Only letters, numbers, hyphens, and underscores.</p>
+                  `}
+                </div>
               </div>
             ` : ''}
 
@@ -353,6 +391,121 @@ export function renderContentFormPage(data: ContentFormData): string {
     <script>
       ${hasFileUpload ? getFileUploadScript() : ''}
 
+      // Debounce helper
+      function debounce(fn, delay) {
+        var timer;
+        return function() {
+          var args = arguments;
+          var ctx = this;
+          clearTimeout(timer);
+          timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+        };
+      }
+
+      // Check slug availability via API
+      function checkSlugAvailability(slug, excludeId) {
+        var statusEl = document.getElementById('slug-status');
+        if (!statusEl) return;
+
+        if (!slug || slug.length === 0) {
+          statusEl.innerHTML = '';
+          return;
+        }
+
+        statusEl.innerHTML = '<p class="text-xs text-zinc-400 dark:text-zinc-500">Checking availability...</p>';
+
+        var url = '/api/content/check-slug?slug=' + encodeURIComponent(slug);
+        if (excludeId) url += '&excludeId=' + encodeURIComponent(excludeId);
+
+        fetch(url)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.available) {
+              statusEl.innerHTML = '<p class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Slug is available</p>';
+            } else {
+              statusEl.innerHTML = '<p class="text-xs text-red-600 dark:text-red-400 flex items-center gap-1"><svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> ' + (data.message || 'Slug is already in use') + '</p>';
+            }
+          })
+          .catch(function() {
+            statusEl.innerHTML = '';
+          });
+      }
+
+      var debouncedCheck = debounce(checkSlugAvailability, 400);
+      var contentId = ${isEdit ? `'${data.id}'` : 'null'};
+
+      ${isEdit ? `
+        // Edit mode: slug editing with warning
+        var originalSlug = '${escapeAttr(data.slug || '')}';
+
+        function copySlug() {
+          var text = '/api/content/by-slug/' + originalSlug;
+          navigator.clipboard.writeText(text).then(function() {
+            var btn = document.getElementById('slug-copy-btn');
+            btn.innerHTML = '<svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+            setTimeout(function() {
+              btn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>';
+            }, 1500);
+          });
+        }
+
+        function enableSlugEdit() {
+          var input = document.getElementById('slug');
+          if (input) {
+            input.removeAttribute('readonly');
+            input.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'cursor-default');
+            input.classList.add('bg-white', 'dark:bg-zinc-800', 'focus:ring-2', 'focus:ring-amber-500', 'dark:focus:ring-amber-400');
+            input.focus();
+            input.addEventListener('input', function() {
+              debouncedCheck(input.value, contentId);
+            });
+          }
+          document.getElementById('slug-warning').classList.remove('hidden');
+          document.getElementById('slug-edit-btn').classList.add('hidden');
+        }
+
+        function cancelSlugEdit() {
+          var input = document.getElementById('slug');
+          if (input) {
+            input.value = originalSlug;
+            input.setAttribute('readonly', '');
+            input.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'cursor-default');
+            input.classList.remove('bg-white', 'dark:bg-zinc-800', 'focus:ring-2', 'focus:ring-amber-500', 'dark:focus:ring-amber-400');
+          }
+          document.getElementById('slug-warning').classList.add('hidden');
+          document.getElementById('slug-edit-btn').classList.remove('hidden');
+          var statusEl = document.getElementById('slug-status');
+          if (statusEl) statusEl.innerHTML = '';
+        }
+      ` : `
+        // Create mode: auto-generate slug from title with debounced check
+        (function() {
+          var titleInput = document.getElementById('field-title');
+          var slugInput = document.getElementById('slug');
+          var slugManuallyEdited = false;
+
+          if (titleInput && slugInput) {
+            slugInput.addEventListener('input', function() {
+              slugManuallyEdited = true;
+              debouncedCheck(slugInput.value, null);
+            });
+
+            titleInput.addEventListener('input', function() {
+              if (!slugManuallyEdited || slugInput.value === '') {
+                slugManuallyEdited = false;
+                var generated = titleInput.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\\s-]/g, '')
+                  .replace(/\\s+/g, '-')
+                  .replace(/-+/g, '-');
+                slugInput.value = generated;
+                debouncedCheck(generated, null);
+              }
+            });
+          }
+        })();
+      `}
+
       function deleteContent(contentId) {
         showConfirmDialog('delete-content-confirm');
       }
@@ -365,7 +518,7 @@ export function renderContentFormPage(data: ContentFormData): string {
           if (response.ok) {
             window.location.href = '/admin/content';
           } else {
-            alert('Error deleting content');
+            console.error('Error deleting content');
           }
         });
       }

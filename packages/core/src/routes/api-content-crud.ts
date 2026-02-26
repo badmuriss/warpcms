@@ -1,47 +1,110 @@
 import { Hono } from 'hono'
 import { requireAuth } from '../middleware'
 import { getCacheService, CACHE_CONFIGS } from '../services'
+import { getContentType } from '../content-types'
 import type { Bindings, Variables } from '../app'
+
+/** Flatten raw content row into the public API shape with `value` + `meta` */
+function flattenContent(row: any) {
+  const data = row.data ? JSON.parse(row.data) : {}
+  const contentTypeName = row.collection_id as string
+  const ct = getContentType(contentTypeName)
+  const primaryField = ct?.primaryField
+
+  const value = primaryField ? (data[primaryField] ?? null) : null
+  const meta: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (k !== 'title' && k !== primaryField) {
+      meta[k] = v
+    }
+  }
+
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    contentType: contentTypeName,
+    value,
+    meta,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
+}
 
 const apiContentCrudRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
-// GET /api/content/check-slug - Check if slug is available in collection
-// Query params: collectionId, slug, excludeId (optional - when editing)
+// GET /api/content/check-slug - Check if slug is available (globally unique)
+// Query params: slug, excludeId (optional - when editing)
 // NOTE: This MUST come before /:id route to avoid route conflict
 apiContentCrudRoutes.get('/check-slug', async (c) => {
   try {
     const db = c.env.DB
-    const collectionId = c.req.query('collectionId')
     const slug = c.req.query('slug')
     const excludeId = c.req.query('excludeId') // When editing, exclude current item
-    
-    if (!collectionId || !slug) {
-      return c.json({ error: 'collectionId and slug are required' }, 400)
+
+    if (!slug) {
+      return c.json({ error: 'slug is required' }, 400)
     }
-    
-    // Check for existing content with this slug in the collection
-    let query = 'SELECT id FROM content WHERE collection_id = ? AND slug = ?'
-    const params: string[] = [collectionId, slug]
-    
+
+    // Check for existing content with this slug (globally unique)
+    let query = 'SELECT id FROM content WHERE slug = ?'
+    const params: string[] = [slug]
+
     if (excludeId) {
       query += ' AND id != ?'
       params.push(excludeId)
     }
-    
+
     const existing = await db.prepare(query).bind(...params).first()
-    
+
     if (existing) {
-      return c.json({ 
-        available: false, 
-        message: 'This URL slug is already in use in this collection' 
+      return c.json({
+        available: false,
+        message: 'This URL slug is already in use'
       })
     }
-    
+
     return c.json({ available: true })
   } catch (error: unknown) {
     console.error('Error checking slug:', error)
-    return c.json({ 
+    return c.json({
       error: 'Failed to check slug availability',
+      details: error instanceof Error ? error.message : String(error)
+    }, 500)
+  }
+})
+
+// GET /api/content/by-slug/:slug - Get single content item by slug (globally unique)
+// NOTE: This MUST come before /:id route to avoid route conflict
+apiContentCrudRoutes.get('/by-slug/:slug', async (c) => {
+  try {
+    const slug = c.req.param('slug')
+    const db = c.env.DB
+
+    const cache = getCacheService(CACHE_CONFIGS.api!)
+    const cacheKey = `content:by-slug:${slug}`
+
+    const cached = await cache.get(cacheKey)
+    if (cached) {
+      return c.json({ data: cached })
+    }
+
+    const stmt = db.prepare('SELECT * FROM content WHERE slug = ?')
+    const content = await stmt.bind(slug).first()
+
+    if (!content) {
+      return c.json({ error: 'Content not found' }, 404)
+    }
+
+    const flatContent = flattenContent(content)
+
+    await cache.set(cacheKey, flatContent)
+
+    return c.json({ data: flatContent })
+  } catch (error) {
+    console.error('Error fetching content by slug:', error)
+    return c.json({
+      error: 'Failed to fetch content',
       details: error instanceof Error ? error.message : String(error)
     }, 500)
   }
@@ -60,18 +123,7 @@ apiContentCrudRoutes.get('/:id', async (c) => {
       return c.json({ error: 'Content not found' }, 404)
     }
 
-    const transformedContent = {
-      id: (content as any).id,
-      title: (content as any).title,
-      slug: (content as any).slug,
-      status: (content as any).status,
-      collectionId: (content as any).collection_id,
-      data: (content as any).data ? JSON.parse((content as any).data) : {},
-      created_at: (content as any).created_at,
-      updated_at: (content as any).updated_at
-    }
-
-    return c.json({ data: transformedContent })
+    return c.json({ data: flattenContent(content) })
   } catch (error) {
     console.error('Error fetching content:', error)
     return c.json({
@@ -88,7 +140,7 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
     const user = c.get('user')
     const body = await c.req.json()
 
-    const { collectionId, title, slug, status, data } = body
+    const { collectionId, title, slug, data } = body
 
     // Validate required fields
     if (!collectionId) {
@@ -107,14 +159,14 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       .replace(/-+/g, '-')
       .trim()
 
-    // Check for duplicate slug within the same collection
+    // Check for duplicate slug (globally unique)
     const duplicateCheck = db.prepare(
-      'SELECT id FROM content WHERE collection_id = ? AND slug = ?'
+      'SELECT id FROM content WHERE slug = ?'
     )
-    const existing = await duplicateCheck.bind(collectionId, finalSlug).first()
+    const existing = await duplicateCheck.bind(finalSlug).first()
 
     if (existing) {
-      return c.json({ error: 'A content item with this slug already exists in this collection' }, 409)
+      return c.json({ error: 'A content item with this slug already exists' }, 409)
     }
 
     // Create new content
@@ -123,10 +175,10 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
 
     const insertStmt = db.prepare(`
       INSERT INTO content (
-        id, collection_id, slug, title, data, status,
+        id, collection_id, slug, title, data,
         author_id, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -135,7 +187,6 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       finalSlug,
       title,
       JSON.stringify(data || {}),
-      status || 'draft',
       user?.userId || 'system',
       now,
       now
@@ -143,7 +194,8 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
 
     // Invalidate cache
     const cache = getCacheService(CACHE_CONFIGS.api!)
-    await cache.invalidate(`content:list:${collectionId}:*`)
+    await cache.invalidate('content:list:*')
+    await cache.invalidate('content:by-slug:*')
     await cache.invalidate('content-filtered:*')
 
     // Get the created content
@@ -155,8 +207,7 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
         id: createdContent.id,
         title: createdContent.title,
         slug: createdContent.slug,
-        status: createdContent.status,
-        collectionId: createdContent.collection_id,
+        contentType: createdContent.collection_id,
         data: createdContent.data ? JSON.parse(createdContent.data) : {},
         created_at: createdContent.created_at,
         updated_at: createdContent.updated_at
@@ -201,13 +252,18 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
         .trim()
+
+      // Check for duplicate slug (globally unique, excluding current item)
+      const slugCheck = await db.prepare(
+        'SELECT id FROM content WHERE slug = ? AND id != ?'
+      ).bind(finalSlug, id).first()
+
+      if (slugCheck) {
+        return c.json({ error: 'A content item with this slug already exists' }, 409)
+      }
+
       updates.push('slug = ?')
       params.push(finalSlug)
-    }
-
-    if (body.status !== undefined) {
-      updates.push('status = ?')
-      params.push(body.status)
     }
 
     if (body.data !== undefined) {
@@ -234,7 +290,8 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
     // Invalidate cache
     const cache = getCacheService(CACHE_CONFIGS.api!)
     await cache.delete(cache.generateKey('content', id))
-    await cache.invalidate(`content:list:${existing.collection_id}:*`)
+    await cache.invalidate('content:list:*')
+    await cache.invalidate('content:by-slug:*')
     await cache.invalidate('content-filtered:*')
 
     // Get updated content
@@ -246,8 +303,7 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
         id: updatedContent.id,
         title: updatedContent.title,
         slug: updatedContent.slug,
-        status: updatedContent.status,
-        collectionId: updatedContent.collection_id,
+        contentType: updatedContent.collection_id,
         data: updatedContent.data ? JSON.parse(updatedContent.data) : {},
         created_at: updatedContent.created_at,
         updated_at: updatedContent.updated_at
@@ -283,7 +339,8 @@ apiContentCrudRoutes.delete('/:id', requireAuth(), async (c) => {
     // Invalidate cache
     const cache = getCacheService(CACHE_CONFIGS.api!)
     await cache.delete(cache.generateKey('content', id))
-    await cache.invalidate(`content:list:${existing.collection_id}:*`)
+    await cache.invalidate('content:list:*')
+    await cache.invalidate('content:by-slug:*')
     await cache.invalidate('content-filtered:*')
 
     return c.json({ success: true })

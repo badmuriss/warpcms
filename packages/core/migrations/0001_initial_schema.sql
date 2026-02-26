@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS collections (
 -- Content table with scheduling, workflow, review, and metadata columns
 CREATE TABLE IF NOT EXISTS content (
   id TEXT PRIMARY KEY,
-  collection_id TEXT NOT NULL REFERENCES collections(id),
+  collection_id TEXT NOT NULL, -- content type name (image, text, file)
   slug TEXT NOT NULL,
   title TEXT NOT NULL,
   data TEXT NOT NULL, -- JSON content data

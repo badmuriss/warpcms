@@ -1,14 +1,13 @@
 import { Hono } from 'hono'
 import { html } from 'hono/html'
-import type { D1Database } from '@cloudflare/workers-types'
 import { requireAuth } from '../middleware'
-import { renderContentFormPage, ContentFormData } from '../templates/pages/admin-content-form.template'
+import { renderContentFormPage } from '../templates/pages/admin-content-form.template'
 import { renderContentListPage, ContentListPageData } from '../templates/pages/admin-content-list.template'
 import { renderAlert } from '../templates/components/alert.template'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
-import { getContentType, getAllContentTypes, CONTENT_TYPES } from '../content-types'
-import type { ContentType, ContentTypeField } from '../content-types'
+import { getContentType, getAllContentTypes } from '../content-types'
+import type { ContentTypeField } from '../content-types'
 
 const adminContentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -65,7 +64,6 @@ adminContentRoutes.get('/', async (c) => {
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '20')
     const typeName = url.searchParams.get('type') || 'all'
-    const status = url.searchParams.get('status') || 'all'
     const search = url.searchParams.get('search') || ''
     const successMessage = url.searchParams.get('success') || ''
     const offset = (page - 1) * limit
@@ -84,11 +82,6 @@ adminContentRoutes.get('/', async (c) => {
       params.push(typeName)
     }
 
-    if (status !== 'all') {
-      conditions.push('c.status = ?')
-      params.push(status)
-    }
-
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
     // Get total count
@@ -98,7 +91,7 @@ adminContentRoutes.get('/', async (c) => {
 
     // Get content items
     const contentStmt = db.prepare(`
-      SELECT c.id, c.title, c.slug, c.status, c.collection_id, c.created_at, c.updated_at,
+      SELECT c.id, c.title, c.slug, c.collection_id, c.data, c.created_at, c.updated_at,
              u.first_name, u.last_name, u.email as author_email
       FROM content c
       LEFT JOIN users u ON c.author_id = u.id
@@ -108,15 +101,7 @@ adminContentRoutes.get('/', async (c) => {
     `)
     const { results } = await contentStmt.bind(...params, limit, offset).all()
 
-    const statusConfig: Record<string, { class: string; text: string }> = {
-      draft: { class: 'bg-zinc-50 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 ring-1 ring-inset ring-zinc-600/20 dark:ring-zinc-500/20', text: 'Draft' },
-      published: { class: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20', text: 'Published' },
-    }
-
     const contentItems = (results || []).map((row: any) => {
-      const cfg = (statusConfig[row.status] ?? statusConfig.draft)!
-      const statusBadge = `<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${cfg.class}">${cfg.text}</span>`
-
       const authorName = row.first_name && row.last_name
         ? `${row.first_name} ${row.last_name}`
         : row.author_email || 'Unknown'
@@ -125,12 +110,25 @@ adminContentRoutes.get('/', async (c) => {
       const ct = getContentType(row.collection_id)
       const typeDisplayName = ct?.displayName || row.collection_id || 'Unknown'
 
+      // Generate preview from data
+      let preview = ''
+      try {
+        const parsed = row.data ? JSON.parse(row.data) : {}
+        if (row.collection_id === 'text') {
+          const text = parsed.content || parsed.body || parsed.text || ''
+          preview = text.length > 120 ? text.substring(0, 120) + '...' : text
+        } else if (row.collection_id === 'image' || row.collection_id === 'file') {
+          const url = parsed.url || parsed.file || parsed.src || ''
+          preview = url ? url.split('/').pop() || url : ''
+        }
+      } catch { /* ignore parse errors */ }
+
       return {
         id: row.id,
         title: row.title,
         slug: row.slug,
         modelName: typeDisplayName,
-        statusBadge,
+        preview,
         authorName,
         formattedDate: new Date(row.updated_at).toLocaleDateString(),
         availableActions: [] as string[],
@@ -145,7 +143,6 @@ adminContentRoutes.get('/', async (c) => {
 
     const pageData: ContentListPageData = {
       modelName: typeName,
-      status,
       page,
       search,
       models: types,
@@ -221,7 +218,7 @@ adminContentRoutes.get('/new', async (c) => {
     const contentType = getContentType(typeName)
     if (!contentType) {
       return c.html(renderContentFormPage({
-        contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', fields: [] },
+        contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
         error: 'Content type not found.',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       }))
@@ -236,7 +233,7 @@ adminContentRoutes.get('/new', async (c) => {
   } catch (error) {
     console.error('Error loading new content form:', error)
     return c.html(renderContentFormPage({
-      contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', fields: [] },
+      contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
       error: 'Failed to load content form.',
       user: c.get('user') ? { name: c.get('user')!.email, email: c.get('user')!.email, role: c.get('user')!.role } : undefined,
     }))
@@ -265,7 +262,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
 
     if (!content) {
       return c.html(renderContentFormPage({
-        contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', fields: [] },
+        contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
         error: 'Content not found.',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       }))
@@ -277,6 +274,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       displayName: content.collection_id || 'Unknown',
       description: '',
       icon: '',
+      primaryField: '',
       fields: [],
     }
 
@@ -287,7 +285,6 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       title: content.title,
       slug: content.slug,
       data: contentData,
-      status: content.status,
       contentType,
       isEdit: true,
       referrerParams,
@@ -297,7 +294,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
   } catch (error) {
     console.error('Error loading edit content form:', error)
     return c.html(renderContentFormPage({
-      contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', fields: [] },
+      contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
       error: 'Failed to load content for editing.',
       user: c.get('user') ? { name: c.get('user')!.email, email: c.get('user')!.email, role: c.get('user')!.role } : undefined,
     }))
@@ -312,7 +309,6 @@ adminContentRoutes.post('/', async (c) => {
     const user = c.get('user')
     const formData = await c.req.formData()
     const typeName = formData.get('content_type') as string
-    const action = formData.get('action') as string
 
     const contentType = getContentType(typeName)
     if (!contentType) {
@@ -337,22 +333,38 @@ adminContentRoutes.post('/', async (c) => {
       }))
     }
 
-    // Generate slug
-    let slug = (data.title || 'untitled').toLowerCase()
+    // Use provided slug or generate from title
+    const rawSlug = (formData.get('slug') as string) || (data.title || 'untitled')
+    let slug = rawSlug.toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
 
-    let status = formData.get('status') as string || 'draft'
-    if (action === 'save_and_publish') status = 'published'
+    // Check for duplicate slug (globally unique)
+    const slugExists = await db.prepare('SELECT id FROM content WHERE slug = ?').bind(slug).first()
+    if (slugExists) {
+      const errorMsg = 'A content item with this slug already exists. Please choose a different slug.'
+      const isHTMX = c.req.header('HX-Request') === 'true'
+      if (isHTMX) {
+        return c.html(renderAlert({ type: 'error', message: errorMsg, dismissible: true }))
+      }
+      return c.html(renderContentFormPage({
+        contentType,
+        title: data.title,
+        slug,
+        data,
+        error: errorMsg,
+        user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+      }))
+    }
 
     const contentId = crypto.randomUUID()
     const now = Date.now()
 
     await db.prepare(`
-      INSERT INTO content (id, collection_id, slug, title, data, status, author_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(contentId, typeName, slug, data.title || 'Untitled', JSON.stringify(data), status, user?.userId || 'unknown', now, now).run()
+      INSERT INTO content (id, collection_id, slug, title, data, author_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(contentId, typeName, slug, data.title || 'Untitled', JSON.stringify(data), user?.userId || 'unknown', now, now).run()
 
     // Invalidate cache
     const cache = getCacheService(CACHE_CONFIGS.content!)
@@ -361,7 +373,7 @@ adminContentRoutes.post('/', async (c) => {
     const referrerParams = formData.get('referrer_params') as string
     const redirectUrl = referrerParams
       ? `/admin/content?${referrerParams}&success=Content+created+successfully`
-      : `/admin/content?type=${typeName}&success=Content+created+successfully`
+      : `/admin/content?success=Content+created+successfully`
 
     const isHTMX = c.req.header('HX-Request') === 'true'
     return isHTMX
@@ -381,7 +393,6 @@ adminContentRoutes.put('/:id', async (c) => {
     const id = c.req.param('id')
     const user = c.get('user')
     const formData = await c.req.formData()
-    const action = formData.get('action') as string
 
     const db = c.env.DB
 
@@ -414,20 +425,39 @@ adminContentRoutes.put('/:id', async (c) => {
       }))
     }
 
-    let slug = (data.title || 'untitled').toLowerCase()
+    // Use provided slug or generate from title
+    const rawSlug = (formData.get('slug') as string) || (data.title || 'untitled')
+    let slug = rawSlug.toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
 
-    let status = formData.get('status') as string || existingContent.status
-    if (action === 'save_and_publish') status = 'published'
+    // Check for duplicate slug (globally unique, excluding current item)
+    const slugExists = await db.prepare('SELECT id FROM content WHERE slug = ? AND id != ?').bind(slug, id).first()
+    if (slugExists) {
+      const errorMsg = 'A content item with this slug already exists. Please choose a different slug.'
+      const isHTMX = c.req.header('HX-Request') === 'true'
+      if (isHTMX) {
+        return c.html(renderAlert({ type: 'error', message: errorMsg, dismissible: true }))
+      }
+      return c.html(renderContentFormPage({
+        id,
+        contentType,
+        title: data.title,
+        slug,
+        data,
+        error: errorMsg,
+        isEdit: true,
+        user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
+      }))
+    }
 
     const now = Date.now()
 
     await db.prepare(`
-      UPDATE content SET slug = ?, title = ?, data = ?, status = ?, updated_at = ?
+      UPDATE content SET slug = ?, title = ?, data = ?, updated_at = ?
       WHERE id = ?
-    `).bind(slug, data.title || 'Untitled', JSON.stringify(data), status, now, id).run()
+    `).bind(slug, data.title || 'Untitled', JSON.stringify(data), now, id).run()
 
     // Invalidate cache
     const cache = getCacheService(CACHE_CONFIGS.content!)

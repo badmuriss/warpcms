@@ -184,7 +184,6 @@ apiRoutes.get('/', (c) => {
                     collection_id: { type: 'string' },
                     title: { type: 'string' },
                     slug: { type: 'string' },
-                    status: { type: 'string', enum: ['draft', 'published', 'archived'] },
                     data: { type: 'object' }
                   }
                 }
@@ -314,7 +313,6 @@ apiRoutes.get('/', (c) => {
             id: { type: 'string', format: 'uuid' },
             title: { type: 'string' },
             slug: { type: 'string' },
-            status: { type: 'string', enum: ['draft', 'published', 'archived'] },
             collectionId: { type: 'string', format: 'uuid' },
             data: { type: 'object' },
             created_at: { type: 'integer' },
@@ -469,7 +467,6 @@ apiRoutes.get('/content', async (c) => {
       id: row.id,
       title: row.title,
       slug: row.slug,
-      status: row.status,
       collectionId: row.collection_id,
       data: row.data ? JSON.parse(row.data) : {},
       created_at: row.created_at,
