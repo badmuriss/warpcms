@@ -8,7 +8,7 @@ import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
 import { getContentType, getAllContentTypes } from '../content-types'
 import type { ContentTypeField } from '../content-types'
-import { getLocale } from '../i18n'
+import { getLocale, t } from '../i18n'
 
 const adminContentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -198,12 +198,12 @@ adminContentRoutes.get('/new', async (c) => {
         <div class="mb-6">
           <a href="/admin/content" class="inline-flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Back to Content
+            ${t('content.form.backToContent', locale)}
           </a>
         </div>
         <div class="mb-8">
-          <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Create New Content</h1>
-          <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Choose a content type to get started</p>
+          <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">${t('content.form.createNewContentPage', locale)}</h1>
+          <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">${t('content.form.chooseContentType', locale)}</p>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           ${cards}
@@ -211,7 +211,7 @@ adminContentRoutes.get('/new', async (c) => {
       `
 
       return c.html(renderAdminLayoutCatalyst({
-        title: 'New Content',
+        title: t('content.form.newContent', locale),
         currentPath: '/admin/content',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
         version: c.get('appVersion'),
