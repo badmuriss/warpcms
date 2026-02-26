@@ -1,0 +1,185 @@
+{
+  "project": "WarpCMS",
+  "branchName": "ralph/content-remodel",
+  "description": "Content Feature Remodel - Strip dead code, fix broken saving, simplify to working CRUD for 3 content types (image, text, file)",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Remove dead collections system",
+      "description": "As a developer, I want to remove the unused dynamic collections infrastructure so the codebase only contains code that is actually used.",
+      "acceptanceCriteria": [
+        "Delete packages/core/src/services/collection-loader.ts (if it exists) or remove collection-loader exports from services/index.ts",
+        "Delete packages/core/src/services/collection-loader.test.ts",
+        "Delete packages/core/src/services/collection-sync.ts",
+        "Delete packages/core/src/services/collection-sync.test.ts",
+        "Remove the GET /api/collections endpoint from packages/core/src/routes/api.ts",
+        "Remove any imports or references to collection-loader or collection-sync in route files",
+        "Content continues to use collection_id column with type name strings (image, text, file) — do NOT touch the content table or its queries",
+        "Do NOT drop the collections DB table — just remove code that references it",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Remove version history system",
+      "description": "As a developer, I want to remove the unused version history system to reduce code complexity.",
+      "acceptanceCriteria": [
+        "Remove 3 routes from packages/core/src/routes/admin-content.ts: GET /:id/versions, POST /:id/restore/:version, GET /:id/version/:version/preview",
+        "Remove the import of version-history.template from admin-content.ts",
+        "Remove INSERT INTO content_versions statements from the POST / (create) and PUT /:id (update) handlers in admin-content.ts",
+        "Remove the SELECT MAX(version) query from the PUT handler in admin-content.ts",
+        "Delete packages/core/src/templates/components/version-history.template.ts",
+        "Remove showVersionHistory() JS function from admin-content-form.template.ts",
+        "Remove the 'View Version History' button from the sidebar in admin-content-form.template.ts",
+        "Do NOT drop the content_versions DB table — just stop writing to it",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Remove workflow history and simplify statuses",
+      "description": "As a developer, I want to simplify statuses to draft/published and remove workflow tracking writes.",
+      "acceptanceCriteria": [
+        "Remove INSERT INTO workflow_history statements from the POST / (create) and PUT /:id (update) handlers in admin-content.ts",
+        "In the content list route (GET /), remove statusConfig entries for review, scheduled, archived — keep only draft and published",
+        "In the content list template, remove review/scheduled/archived from the status filter dropdown options",
+        "In the content form template sidebar, the status select should only have draft and published options (it already does — verify this is still the case)",
+        "Remove the deleted status handling — delete means hard delete (handled in a later story)",
+        "Do NOT drop the workflow_history DB table — just stop writing to it",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Remove bulk actions and duplicate",
+      "description": "As a developer, I want to remove bulk actions and duplicate to simplify the content list and form.",
+      "acceptanceCriteria": [
+        "Remove the POST /duplicate route handler from admin-content.ts",
+        "Remove the POST /bulk-action route handler from admin-content.ts",
+        "Remove bulk action UI from admin-content-list.template.ts (checkboxes, bulk action bar/dropdown if present)",
+        "Remove the duplicate button and its confirmation dialog from admin-content-form.template.ts",
+        "Remove the duplicateContent(), performDuplicateContent() JS functions from admin-content-form.template.ts",
+        "Remove the duplicate-content-confirm dialog rendering from admin-content-form.template.ts",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Remove auto-save from form",
+      "description": "As a developer, I want to remove the broken auto-save feature from the content form.",
+      "acceptanceCriteria": [
+        "Remove the scheduleAutoSave() function from admin-content-form.template.ts",
+        "Remove the DOMContentLoaded event listener that attaches input/change handlers for auto-save",
+        "Remove save_and_continue action handling from the POST / (create) handler in admin-content.ts — only save and save_and_publish actions remain",
+        "Remove save_and_continue action handling from the PUT /:id (update) handler in admin-content.ts",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Convert delete to hard delete",
+      "description": "As a content editor, I want delete to permanently remove content instead of soft-deleting it.",
+      "acceptanceCriteria": [
+        "In the DELETE /:id handler in admin-content.ts, change UPDATE content SET status='deleted' to DELETE FROM content WHERE id = ?",
+        "The handler should return an HTMX response that refreshes the content list after deletion",
+        "Remove the deleted status filter option from the content list page if still present",
+        "Remove any references to status='deleted' in the content list WHERE clause logic",
+        "Keep the delete confirmation dialog in the form template (deleteContent/performDeleteContent functions)",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Implement real media upload with R2",
+      "description": "As a content editor, I want file uploads to actually store files so that image and file content types work.",
+      "acceptanceCriteria": [
+        "Replace the stub POST /upload handler in packages/core/src/plugins/core-plugins/media/index.ts with real upload logic",
+        "The handler must parse multipart form data and extract the uploaded file",
+        "Store the file in R2 using c.env.R2 (or env.R2 from the plugin context) with a unique key (e.g., media/{uuid}/{original-filename})",
+        "Return JSON: { url: '/api/media/file/{key}', filename: string, size: number, type: string }",
+        "Add a GET /file/:key+ route to the media API that serves files from R2 with correct Content-Type headers",
+        "If R2 binding is not available, return a 503 error with a clear message",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "The form template already has working upload JS (handleFileDrop, handleFileSelect, uploadFile functions) that POSTs to /api/media/upload and reads { url } from the response. The existing client-side code should work once the backend returns real data."
+    },
+    {
+      "id": "US-008",
+      "title": "Rewrite content form to single-column layout and fix HTMX bugs",
+      "description": "As a content editor, I want a clean single-column form where saving actually works.",
+      "acceptanceCriteria": [
+        "Remove the duplicate <div id='form-messages'> — keep only one, above the form",
+        "Remove the 3-column grid layout (lg:grid-cols-3) — form should be single-column, max-width ~2xl",
+        "Move the status <select> inside the <form> tag (remove the form='content-form' attribute pattern)",
+        "Move the submit buttons inside the <form> tag",
+        "Remove the sidebar entirely (Publishing panel, Content Info panel, Quick Actions panel)",
+        "Status select should be a simple draft/published dropdown at the top of the form, below the header",
+        "Keep Save and Cancel buttons at the bottom of the form",
+        "Remove the Save & Publish button — the status select handles this",
+        "Remove the Quill richtext CDN/init code (getQuillCDNAndInit function) — no content types use richtext currently",
+        "Keep the file upload JS (handleFileDrop, handleFileSelect, uploadFile, clearFileField) and the renderField function",
+        "Keep the delete button and confirmation dialog for edit mode",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "This is the largest story. The form is in packages/core/src/templates/pages/admin-content-form.template.ts. After this change, the form should be: header -> status select -> field sections -> save/cancel buttons, all inside one <form> tag. The HTMX attributes (hx-post, hx-put, hx-target, hx-encoding) stay on the form."
+    },
+    {
+      "id": "US-009",
+      "title": "Verify content create works for all 3 types",
+      "description": "As a content editor, I want to create image, text, and file content and have it save to the database.",
+      "acceptanceCriteria": [
+        "Navigate to /admin/content/new, select Text type, fill in title and content, click Save — content appears in the list",
+        "Navigate to /admin/content/new, select Image type, fill in title, upload an image, click Save — content appears in the list",
+        "Navigate to /admin/content/new, select File type, fill in title, upload a file, click Save — content appears in the list",
+        "Leaving a required field empty shows a validation error on the form",
+        "After successful save, user is redirected to content list with a success message",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "This story is for end-to-end verification. If create doesn't work, debug and fix the POST / handler in admin-content.ts or the form template. The route handler should insert into the content table and respond with HX-Redirect."
+    },
+    {
+      "id": "US-010",
+      "title": "Verify content update works for all 3 types",
+      "description": "As a content editor, I want to edit existing content and have changes persist.",
+      "acceptanceCriteria": [
+        "Click edit on a Text content item — form loads with existing title and content values",
+        "Change the title and save — the updated title appears in the content list",
+        "Click edit on an Image content item — form loads with existing values and image preview",
+        "Change the image and save — the new image URL is stored",
+        "Click edit on a File content item — form loads with existing values and file preview",
+        "After successful update, user is redirected with a success message",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "This story is for end-to-end verification. If update doesn't work, debug and fix the PUT /:id handler in admin-content.ts or the form template. The route handler should update the content table and respond with HX-Redirect."
+    }
+  ]
+}

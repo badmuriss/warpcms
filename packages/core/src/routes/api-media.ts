@@ -45,6 +45,10 @@ apiMediaRoutes.use('*', requireAuth())
 // Upload single file
 apiMediaRoutes.post('/upload', async (c) => {
   try {
+    if (!c.env.MEDIA_BUCKET) {
+      return c.json({ error: 'R2 storage is not configured. Set the MEDIA_BUCKET binding.' }, 503)
+    }
+
     const user = c.get('user')!
     const formData = await c.req.formData()
     const fileData = formData.get('file')
@@ -164,6 +168,10 @@ apiMediaRoutes.post('/upload', async (c) => {
 
     return c.json({
       success: true,
+      url: `/api/media/file/${r2Key}`,
+      filename: mediaRecord.original_name,
+      size: mediaRecord.size,
+      type: mediaRecord.mime_type,
       file: {
         id: mediaRecord.id,
         filename: mediaRecord.filename,

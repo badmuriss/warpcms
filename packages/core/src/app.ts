@@ -150,6 +150,39 @@ export function createWarpCMSApp(config: WarpCMSConfig = {}): WarpCMSApp {
     }
   }
 
+  // Serve uploaded media files from R2 (public, no auth required)
+  app.get('/api/media/file/*', async (c) => {
+    try {
+      if (!c.env.MEDIA_BUCKET) {
+        return c.json({ error: 'R2 storage is not configured' }, 503)
+      }
+
+      const url = new URL(c.req.url)
+      const r2Key = url.pathname.replace(/^\/api\/media\/file\//, '')
+
+      if (!r2Key) {
+        return c.notFound()
+      }
+
+      const object = await c.env.MEDIA_BUCKET.get(r2Key)
+
+      if (!object) {
+        return c.notFound()
+      }
+
+      const headers = new Headers()
+      object.httpMetadata?.contentType && headers.set('Content-Type', object.httpMetadata.contentType)
+      object.httpMetadata?.contentDisposition && headers.set('Content-Disposition', object.httpMetadata.contentDisposition)
+      headers.set('Cache-Control', 'public, max-age=31536000')
+      headers.set('Access-Control-Allow-Origin', '*')
+
+      return new Response(object.body as any, { headers })
+    } catch (error) {
+      console.error('Error serving media file:', error)
+      return c.json({ error: 'Failed to serve file' }, 500)
+    }
+  })
+
   // Core routes
   // Routes are being imported incrementally from routes/*
   // Each route is tested and migrated one-by-one

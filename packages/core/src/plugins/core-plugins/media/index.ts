@@ -45,19 +45,76 @@ export function createMediaPlugin(): Plugin {
     })
   })
 
-  // POST /media/upload - Upload media file
+  // POST /media/upload - Upload media file to R2
   mediaAPI.post('/upload', async (c) => {
-    // File upload logic would integrate with existing media service
-    return c.json({
-      message: 'File uploaded successfully',
-      data: {
-        id: 'media-123',
-        filename: 'example.jpg',
-        url: '/media/example.jpg',
-        size: 1024,
-        type: 'image/jpeg'
+    try {
+      const r2 = (c.env as any).MEDIA_BUCKET || (c.env as any).R2
+      if (!r2) {
+        return c.json({ error: 'R2 storage is not configured. Set the MEDIA_BUCKET binding.' }, 503)
       }
-    })
+
+      const formData = await c.req.formData()
+      const fileData = formData.get('file')
+
+      if (!fileData || typeof fileData === 'string') {
+        return c.json({ error: 'No file provided' }, 400)
+      }
+
+      const file = fileData as File
+      const fileId = crypto.randomUUID()
+      const r2Key = `media/${fileId}/${file.name}`
+
+      const arrayBuffer = await file.arrayBuffer()
+      await r2.put(r2Key, arrayBuffer, {
+        httpMetadata: {
+          contentType: file.type,
+          contentDisposition: `inline; filename="${file.name}"`
+        }
+      })
+
+      return c.json({
+        url: `/api/media/file/${r2Key}`,
+        filename: file.name,
+        size: file.size,
+        type: file.type
+      })
+    } catch (error) {
+      console.error('Upload error:', error)
+      return c.json({ error: 'Upload failed' }, 500)
+    }
+  })
+
+  // GET /media/file/* - Serve files from R2
+  mediaAPI.get('/file/*', async (c) => {
+    try {
+      const r2 = (c.env as any).MEDIA_BUCKET || (c.env as any).R2
+      if (!r2) {
+        return c.json({ error: 'R2 storage is not configured' }, 503)
+      }
+
+      const url = new URL(c.req.url)
+      const r2Key = url.pathname.replace(/^.*\/file\//, '')
+
+      if (!r2Key) {
+        return c.notFound()
+      }
+
+      const object = await r2.get(r2Key)
+
+      if (!object) {
+        return c.notFound()
+      }
+
+      const headers = new Headers()
+      object.httpMetadata?.contentType && headers.set('Content-Type', object.httpMetadata.contentType)
+      object.httpMetadata?.contentDisposition && headers.set('Content-Disposition', object.httpMetadata.contentDisposition)
+      headers.set('Cache-Control', 'public, max-age=31536000')
+
+      return new Response(object.body, { headers })
+    } catch (error) {
+      console.error('Error serving file:', error)
+      return c.json({ error: 'Failed to serve file' }, 500)
+    }
   })
 
   // GET /media/:id - Get media file info

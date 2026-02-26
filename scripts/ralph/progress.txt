@@ -1,3 +1,103 @@
 # Ralph Progress Log
 Started: Wed Feb 25 02:44:26 PM -03 2026
+
+## Codebase Patterns
+- Collection types (CollectionConfig etc.) are in `src/types/collection-config.ts` and still exported from `src/types/index.ts` — type definitions kept even though runtime code removed
+- Bootstrap middleware (`src/middleware/bootstrap.ts`) only runs migrations — tests are stale and test features (syncCollections, PluginBootstrapService) that were already removed from the actual code
+- Pre-existing test failures: 4 (2 in bootstrap.test.ts, 2 in admin-layout-catalyst.test.ts) — do not count these as regressions
+- Only stage files you changed — working tree has uncommitted changes from prior Spec 001 work
+- Run typecheck with `npx tsc --noEmit` from packages/core, tests with `npx vitest --run` from packages/core
+- Pre-existing typecheck errors (17) all from plugins: email-templates-plugin, ai-search-plugin, design/routes — ignore these
+- `content_versions` and `workflow_history` tables still referenced in plugins/schema/migrations — only admin-content.ts writes removed
+- Content list template has 3 separate status filter locations: FilterBarData object, inline HTML `<select>`, and advanced search multi-select — update all 3 when changing status options
+- Plugin routes (PluginBuilder.addRoute) are NOT mounted — real API handlers are in routes/*.ts, mounted in app.ts
+- Form upload JS reads `result.url` from the response — upload endpoints must return top-level `url` field
+- Public file serving routes must be mounted in app.ts BEFORE apiMediaRoutes to avoid auth middleware
+
+---
+
+## 2026-02-26 - US-001
+- What was implemented: Removed dead collections system (service files, tests, API endpoints, exports)
+- Files changed:
+  - Deleted: `src/services/collection-loader.ts`, `src/services/collection-loader.test.ts`, `src/services/collection-sync.ts`, `src/services/collection-sync.test.ts`
+  - Deleted: `src/__tests__/collections/test-items.test.ts`, `src/collections/test-items.collection.ts`, `src/collections/README.md`
+  - Modified: `src/services/index.ts` (removed collection exports)
+  - Modified: `src/index.ts` (removed collection function re-exports)
+  - Modified: `src/routes/api.ts` (removed GET /collections and GET /collections/:collection/content endpoints + OpenAPI spec entries)
+  - Modified: `src/middleware/bootstrap.test.ts` (removed stale syncCollections mock/import/assertions)
+- **Learnings for future iterations:**
+  - The `bootstrap.ts` middleware already had collection-sync removed from runtime code, but the test file still mocked it — always check if test mocks match actual code
+  - The `/api/content` endpoint also had a `collection` query param filter referencing the collections DB table — this was kept since the PRD only says to remove collection-loader/sync code, not all SQL references
+  - `QueryFilterBuilder` and `QueryFilter` are still used by the `/content` endpoint
+---
+
+## 2026-02-26 - US-002
+- What was implemented: Removed version history system — routes, INSERT statements, template, and UI
+- Files changed:
+  - Modified: `src/routes/admin-content.ts` (removed import of version-history.template, removed GET /:id/versions + POST /:id/restore/:version + GET /:id/version/:version/preview routes, removed INSERT INTO content_versions from POST / and PUT /:id, removed SELECT MAX(version) query from PUT /:id)
+  - Deleted: `src/templates/components/version-history.template.ts`
+  - Modified: `src/templates/pages/admin-content-form.template.ts` (removed showVersionHistory() JS function, removed "View Version History" button from sidebar)
+- **Learnings for future iterations:**
+  - `content_versions` table is still referenced in schema.ts, migrations-bundle.ts, plugin-validator.ts, test-cleanup files, database-tools-plugin, and workflow-plugin — only the admin-content.ts writes were removed per AC
+  - Pre-existing typecheck errors (17 total) all come from plugins: email-templates-plugin, ai-search-plugin, design/routes — these are not regressions
+  - The form template has a 3-column grid layout with a sidebar containing duplicate, delete, version history, and content info panels — version history button removed but other sidebar panels remain for now
+---
+
+## 2026-02-26 - US-003
+- What was implemented: Removed workflow history writes and simplified statuses to draft/published only
+- Files changed:
+  - Modified: `src/routes/admin-content.ts` (removed INSERT INTO workflow_history from POST / create and PUT /:id update handlers, removed statusConfig entries for review/scheduled/archived/deleted, simplified WHERE clause logic to remove deleted status special-casing)
+  - Modified: `src/templates/pages/admin-content-list.template.ts` (removed review/scheduled/archived/deleted from all 3 status filter dropdowns: FilterBarData options, inline HTML select, and advanced search multi-select)
+- **Learnings for future iterations:**
+  - `workflow_history` table still referenced in schema.ts, migrations-bundle.ts, and plugins — only the admin-content.ts writes were removed per AC
+  - The content form template sidebar status select already only had draft/published — no changes needed there
+  - The content list had 3 separate places where status options were rendered: FilterBarData object, inline HTML select, and advanced search multi-select — all 3 needed updating
+---
+
+## 2026-02-26 - US-004
+- What was implemented: Removed bulk actions and duplicate content feature
+- Files changed:
+  - Modified: `src/routes/admin-content.ts` (removed POST /duplicate and POST /bulk-action route handlers — 66 lines deleted)
+  - Modified: `src/templates/pages/admin-content-list.template.ts` (removed bulkActions array items, set selectable to false to remove checkboxes, removed bulk-actions-modal div, removed all bulk action JS — updateBulkActionsButton, toggleBulkActionsDropdown, performBulkAction, updateDialogContent, executeBulkAction, getActionText — and bulk-action-confirm confirmation dialog; removed unused renderConfirmationDialog import)
+  - Modified: `src/templates/pages/admin-content-form.template.ts` (removed Duplicate Content button from Quick Actions sidebar, removed duplicate-content-confirm dialog rendering, removed duplicateContent() and performDuplicateContent() JS functions)
+- **Learnings for future iterations:**
+  - The table component (`components/table.template.ts`) has a `selectable` boolean that controls checkbox rendering — set to false to remove checkboxes
+  - The `bulkActions` property on FilterBarData is optional — setting to empty array or omitting it removes the bulk actions dropdown
+  - The content list template's `<script>` block was almost entirely bulk action code — after removal, only `getConfirmationDialogScript()` utility remains (used by hx-confirm in table delete buttons)
+  - The form template's Quick Actions sidebar now only has the Delete button for edit mode — consider removing the entire Quick Actions panel if it only has one action
+---
+
+## 2026-02-26 - US-005
+- What was implemented: Removed broken auto-save feature from content form and save_and_continue action from route handlers
+- Files changed:
+  - Modified: `src/templates/pages/admin-content-form.template.ts` (removed scheduleAutoSave() function, autoSaveTimeout variable, and DOMContentLoaded event listener that attached input/change handlers)
+  - Modified: `src/routes/admin-content.ts` (removed save_and_continue redirect logic from both POST / create and PUT /:id update handlers — simplified ternary to just use referrerParams or default redirect)
+- **Learnings for future iterations:**
+  - The auto-save used a 30-second timeout and posted to form.action with action='autosave' — this action was never handled server-side, so it was always a no-op
+  - save_and_continue redirected back to the edit form instead of the list — removing it simplifies both handlers to a single referrerParams check
+  - The `action` variable is still read from formData in both handlers for save_and_publish — don't remove the action extraction
+---
+
+## 2026-02-26 - US-006
+- What was implemented: Converted soft delete (UPDATE status='deleted') to hard delete (DELETE FROM content) in the DELETE /:id handler
+- Files changed:
+  - Modified: `src/routes/admin-content.ts` (changed DELETE handler from `UPDATE content SET status='deleted'` to `DELETE FROM content WHERE id = ?`, removed unused `now` variable, updated comment from "soft" to "hard delete")
+- **Learnings for future iterations:**
+  - The content list template had no remaining 'deleted' status filter options — US-003 already cleaned those up
+  - The delete handler already returns an HTMX response that triggers a content list refresh via `hx-get="/admin/content" hx-trigger="load"` — no changes needed there
+  - The form template's delete confirmation dialog (`deleteContent` / `performDeleteContent` functions) uses `fetch` with `method: 'DELETE'` and redirects on success — works with both soft and hard delete
+---
+
+## 2026-02-26 - US-007
+- What was implemented: Real media upload with R2 storage — fixed upload response format, added R2 availability check, added file serving route
+- Files changed:
+  - Modified: `src/routes/api-media.ts` (added R2 availability check returning 503 if MEDIA_BUCKET not configured, added `url`, `filename`, `size`, `type` fields to upload response so form JS can read `result.url`)
+  - Modified: `src/app.ts` (added public GET `/api/media/file/*` route before apiMediaRoutes mount — serves files from R2 with correct Content-Type, no auth required)
+  - Modified: `src/plugins/core-plugins/media/index.ts` (replaced stub upload handler with real R2 upload logic and added GET `/file/*` route for file serving)
+- **Learnings for future iterations:**
+  - Plugin routes from `PluginBuilder.addRoute()` are NOT mounted in app.ts — the plugin system registers them in metadata but there's no code to mount plugin routes into the Hono app. The real handlers are in `routes/api-media.ts` mounted at `/api/media`.
+  - The form upload JS reads `result.url || result.data?.url` — the upload response MUST include a top-level `url` field for the form to work
+  - `apiMediaRoutes` has `use('*', requireAuth())` — file serving routes must be mounted OUTSIDE this router (directly in app.ts) to avoid requiring auth for public file access
+  - The app already has a `/files/*` route in app.ts that serves from R2 — the new `/api/media/file/*` route follows the same pattern
+  - The `media` database table exists in schema.ts and the upload handler writes to it — keep both the DB write and the R2 upload
 ---
