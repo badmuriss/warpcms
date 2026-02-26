@@ -4,6 +4,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import { requireAuth } from '../middleware'
 import { renderContentFormPage, ContentFormData } from '../templates/pages/admin-content-form.template'
 import { renderContentListPage, ContentListPageData } from '../templates/pages/admin-content-list.template'
+import { renderAlert } from '../templates/components/alert.template'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
 import { getContentType, getAllContentTypes, CONTENT_TYPES } from '../content-types'
@@ -66,6 +67,7 @@ adminContentRoutes.get('/', async (c) => {
     const typeName = url.searchParams.get('type') || 'all'
     const status = url.searchParams.get('status') || 'all'
     const search = url.searchParams.get('search') || ''
+    const successMessage = url.searchParams.get('success') || ''
     const offset = (page - 1) * limit
 
     // Build where conditions - no JOIN on collections, use collection_id as type name
@@ -150,6 +152,7 @@ adminContentRoutes.get('/', async (c) => {
       contentItems,
       totalItems,
       itemsPerPage: limit,
+      successMessage,
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       version: c.get('appVersion'),
     }
@@ -320,6 +323,11 @@ adminContentRoutes.post('/', async (c) => {
     const { data, errors } = extractFormData(contentType.fields, formData)
 
     if (Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).flat().join('. ')
+      const isHTMX = c.req.header('HX-Request') === 'true'
+      if (isHTMX) {
+        return c.html(renderAlert({ type: 'error', message: errorMessages, dismissible: true }))
+      }
       return c.html(renderContentFormPage({
         contentType,
         data,
@@ -352,8 +360,8 @@ adminContentRoutes.post('/', async (c) => {
 
     const referrerParams = formData.get('referrer_params') as string
     const redirectUrl = referrerParams
-      ? `/admin/content?${referrerParams}&success=Content created successfully!`
-      : `/admin/content?type=${typeName}&success=Content created successfully!`
+      ? `/admin/content?${referrerParams}&success=Content+created+successfully`
+      : `/admin/content?type=${typeName}&success=Content+created+successfully`
 
     const isHTMX = c.req.header('HX-Request') === 'true'
     return isHTMX
@@ -390,6 +398,11 @@ adminContentRoutes.put('/:id', async (c) => {
     const { data, errors } = extractFormData(contentType.fields, formData)
 
     if (Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).flat().join('. ')
+      const isHTMX = c.req.header('HX-Request') === 'true'
+      if (isHTMX) {
+        return c.html(renderAlert({ type: 'error', message: errorMessages, dismissible: true }))
+      }
       return c.html(renderContentFormPage({
         id,
         contentType,
@@ -423,8 +436,8 @@ adminContentRoutes.put('/:id', async (c) => {
 
     const referrerParams = formData.get('referrer_params') as string
     const redirectUrl = referrerParams
-      ? `/admin/content?${referrerParams}&success=Content updated successfully!`
-      : `/admin/content?type=${existingContent.collection_id}&success=Content updated successfully!`
+      ? `/admin/content?${referrerParams}&success=Content+updated+successfully`
+      : `/admin/content?type=${existingContent.collection_id}&success=Content+updated+successfully`
 
     const isHTMX = c.req.header('HX-Request') === 'true'
     return isHTMX

@@ -3,6 +3,7 @@ import { renderPagination, PaginationData } from '../components/pagination.templ
 import { renderTable, TableData, TableColumn } from '../components/table.template'
 import type { FilterBarData } from '../filter-bar.template'
 import { getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { renderAlert } from '../components/alert.template'
 
 export interface ContentItem {
   id: string
@@ -27,6 +28,7 @@ export interface ContentListPageData {
   contentItems: ContentItem[]
   totalItems: number
   itemsPerPage: number
+  successMessage?: string
   user?: {
     name: string
     email: string
@@ -220,6 +222,8 @@ export function renderContentListPage(data: ContentListPageData): string {
           </a>
         </div>
       </div>
+      ${data.successMessage ? `<div class="mb-6">${renderAlert({ type: 'success', message: data.successMessage, dismissible: true })}</div>` : ''}
+
       <!-- Filters -->
       <div class="relative rounded-xl mb-6">
         <!-- Gradient Background -->

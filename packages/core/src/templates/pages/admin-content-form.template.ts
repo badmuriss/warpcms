@@ -345,7 +345,7 @@ export function renderContentFormPage(data: ContentFormData): string {
       cancelText: 'Cancel',
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
-      onConfirm: `performDeleteContent('\${data.id}')`
+      onConfirm: `performDeleteContent('${data.id}')`
     })}
 
     ${getConfirmationDialogScript()}
