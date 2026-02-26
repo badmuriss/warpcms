@@ -2,7 +2,7 @@ import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/a
 import { renderPagination, PaginationData } from '../components/pagination.template'
 import { renderTable, TableData, TableColumn } from '../components/table.template'
 import type { FilterBarData } from '../filter-bar.template'
-import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 
 export interface ContentItem {
   id: string
@@ -79,11 +79,7 @@ export function renderContentListPage(data: ContentListPageData): string {
         onclick: 'location.reload()'
       }
     ],
-    bulkActions: [
-      { label: 'Publish', value: 'publish', icon: 'check-circle' },
-      { label: 'Unpublish', value: 'unpublish', icon: 'x-circle' },
-      { label: 'Delete', value: 'delete', icon: 'trash', className: 'text-pink-600' }
-    ]
+    bulkActions: []
   }
 
   // Prepare table data
@@ -178,7 +174,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     tableId: 'content-table',
     columns: tableColumns,
     rows: data.contentItems,
-    selectable: true,
+    selectable: false,
     rowClickable: true,
     rowClickUrl: (row: ContentItem) => `/admin/content/${row.id}/edit${currentParams ? `?ref=${encodeURIComponent(currentParams)}` : ''}`,
     emptyMessage: 'No content found. Create your first content item to get started.'
@@ -445,222 +441,8 @@ export function renderContentListPage(data: ContentListPageData): string {
     </div>
     
     <!-- Modals -->
-    <div id="bulk-actions-modal"></div>
     <div id="versions-modal"></div>
     
-    <script>
-      // Update bulk actions button state
-      function updateBulkActionsButton() {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"].row-checkbox');
-        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-        const btn = document.getElementById('bulk-actions-btn');
-        const menu = document.getElementById('bulk-actions-menu');
-
-        if (!btn) return;
-
-        if (checkedCount > 0) {
-          btn.disabled = false;
-          btn.className = 'inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm text-zinc-950 dark:text-white text-sm font-medium rounded-full ring-1 ring-inset ring-cyan-200/50 dark:ring-cyan-700/50 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-cyan-900/30 dark:hover:to-blue-900/30 hover:ring-cyan-300 dark:hover:ring-cyan-600 transition-all duration-200';
-        } else {
-          btn.disabled = true;
-          btn.className = 'inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/60 backdrop-blur-sm text-zinc-400 dark:text-zinc-600 text-sm font-medium rounded-full ring-1 ring-inset ring-zinc-200/50 dark:ring-zinc-700/50 cursor-not-allowed';
-          // Hide menu when no items selected
-          if (menu) {
-            menu.classList.remove('scale-100', 'opacity-100');
-            menu.classList.add('scale-95', 'opacity-0', 'hidden');
-          }
-        }
-      }
-
-      // Select all functionality
-      document.addEventListener('change', function(e) {
-        if (e.target.id === 'select-all') {
-          const checkboxes = document.querySelectorAll('.row-checkbox');
-          checkboxes.forEach(cb => cb.checked = e.target.checked);
-          updateBulkActionsButton();
-        } else if (e.target.classList.contains('row-checkbox')) {
-          updateBulkActionsButton();
-        }
-      });
-
-      // Initialize button state on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        updateBulkActionsButton();
-      });
-
-      // Toggle bulk actions dropdown
-      function toggleBulkActionsDropdown() {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"].row-checkbox');
-        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-
-        if (checkedCount === 0) return;
-
-        const menu = document.getElementById('bulk-actions-menu');
-        const isHidden = menu.classList.contains('hidden');
-
-        if (isHidden) {
-          menu.classList.remove('hidden');
-          setTimeout(() => {
-            menu.classList.remove('scale-95', 'opacity-0');
-            menu.classList.add('scale-100', 'opacity-100');
-          }, 10);
-        } else {
-          menu.classList.remove('scale-100', 'opacity-100');
-          menu.classList.add('scale-95', 'opacity-0');
-          setTimeout(() => {
-            menu.classList.add('hidden');
-          }, 100);
-        }
-      }
-
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('bulk-actions-dropdown');
-        const menu = document.getElementById('bulk-actions-menu');
-        if (dropdown && menu && !dropdown.contains(e.target)) {
-          menu.classList.remove('scale-100', 'opacity-100');
-          menu.classList.add('scale-95', 'opacity-0');
-          setTimeout(() => {
-            menu.classList.add('hidden');
-          }, 100);
-        }
-      });
-
-      // Store current bulk action context
-      // Using var instead of let to avoid redeclaration errors when HTMX re-executes script tags
-      var currentBulkAction = null;
-      var currentSelectedIds = [];
-
-      // Perform bulk action
-      function performBulkAction(action) {
-        const selectedIds = Array.from(document.querySelectorAll('input[type="checkbox"].row-checkbox:checked'))
-          .map(cb => cb.value)
-          .filter(id => id);
-
-        if (selectedIds.length === 0) {
-          alert('Please select at least one item');
-          return;
-        }
-
-        // Store context for confirmation
-        currentBulkAction = action;
-        currentSelectedIds = selectedIds;
-
-        // Update dialog content based on action
-        updateDialogContent(action, selectedIds.length);
-
-        // Show confirmation dialog
-        showConfirmDialog('bulk-action-confirm');
-      }
-
-      // Update dialog content dynamically
-      function updateDialogContent(action, count) {
-        const dialog = document.getElementById('bulk-action-confirm');
-        const titleEl = dialog.querySelector('h3');
-        const messageEl = dialog.querySelector('p');
-        const confirmBtn = dialog.querySelector('.confirm-button');
-
-        let title, message, btnText, btnClass;
-
-        switch(action) {
-          case 'delete':
-            title = 'Confirm Bulk Delete';
-            message = 'Are you sure you want to delete ' + count + ' selected item' + (count > 1 ? 's' : '') + '? This action cannot be undone.';
-            btnText = 'Delete';
-            btnClass = 'bg-red-500 hover:bg-red-400';
-            break;
-          case 'publish':
-            title = 'Confirm Bulk Publish';
-            message = 'Are you sure you want to publish ' + count + ' selected item' + (count > 1 ? 's' : '') + '? They will become publicly visible.';
-            btnText = 'Publish';
-            btnClass = 'bg-green-500 hover:bg-green-400';
-            break;
-          case 'draft':
-            title = 'Confirm Bulk Draft';
-            message = 'Are you sure you want to move ' + count + ' selected item' + (count > 1 ? 's' : '') + ' to draft status? They will be unpublished.';
-            btnText = 'Move to Draft';
-            btnClass = 'bg-blue-500 hover:bg-blue-400';
-            break;
-          default:
-            title = 'Confirm Bulk Action';
-            message = 'Are you sure you want to perform this action on ' + count + ' selected item' + (count > 1 ? 's' : '') + '?';
-            btnText = 'Confirm';
-            btnClass = 'bg-blue-500 hover:bg-blue-400';
-        }
-
-        titleEl.textContent = title;
-        messageEl.textContent = message;
-        confirmBtn.textContent = btnText;
-        confirmBtn.className = confirmBtn.className.replace(/bg-\w+-\d+\s+hover:bg-\w+-\d+/, btnClass);
-      }
-
-      // Execute the bulk action after confirmation
-      function executeBulkAction() {
-        if (!currentBulkAction || currentSelectedIds.length === 0) return;
-
-        // Close dropdown
-        const menu = document.getElementById('bulk-actions-menu');
-        menu.classList.add('hidden');
-
-        fetch('/admin/content/bulk-action', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            action: currentBulkAction,
-            ids: currentSelectedIds
-          })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            location.reload();
-          } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-          }
-        })
-        .catch(err => {
-          console.error('Bulk action error:', err);
-          alert('Failed to perform bulk action');
-        })
-        .finally(() => {
-          // Clear context
-          currentBulkAction = null;
-          currentSelectedIds = [];
-        });
-      }
-
-      // Helper to get action text for display
-      function getActionText(action) {
-        const actionCount = currentSelectedIds.length;
-        switch(action) {
-          case 'publish':
-            return \`publish \${actionCount} item\${actionCount > 1 ? 's' : ''}\`;
-          case 'draft':
-            return \`move \${actionCount} item\${actionCount > 1 ? 's' : ''} to draft\`;
-          case 'delete':
-            return \`delete \${actionCount} item\${actionCount > 1 ? 's' : ''}\`;
-          default:
-            return \`perform action on \${actionCount} item\${actionCount > 1 ? 's' : ''}\`;
-        }
-      }
-
-    </script>
-
-    <!-- Confirmation Dialog for Bulk Actions -->
-    ${renderConfirmationDialog({
-      id: 'bulk-action-confirm',
-      title: 'Confirm Bulk Action',
-      message: 'Are you sure you want to perform this action? This operation will affect multiple items.',
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-      confirmClass: 'bg-blue-500 hover:bg-blue-400',
-      iconColor: 'blue',
-      onConfirm: 'executeBulkAction()'
-    })}
-
-    <!-- Confirmation Dialog Script -->
     ${getConfirmationDialogScript()}
 
     <!-- Advanced Search Modal -->

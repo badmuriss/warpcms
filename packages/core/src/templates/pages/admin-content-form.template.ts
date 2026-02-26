@@ -341,16 +341,6 @@ export function renderContentFormPage(data: ContentFormData): string {
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
             <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Quick Actions</h3>
             <div class="space-y-2">
-              <button
-                type="button"
-                onclick="duplicateContent()"
-                class="w-full inline-flex items-center gap-x-2 px-3 py-2 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
-              >
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-                Duplicate Content
-              </button>
               ${isEdit ? `
                 <button
                   type="button"
@@ -410,17 +400,6 @@ export function renderContentFormPage(data: ContentFormData): string {
 
     <!-- Confirmation Dialogs -->
     ${renderConfirmationDialog({
-      id: 'duplicate-content-confirm',
-      title: 'Duplicate Content',
-      message: 'Create a copy of this content?',
-      confirmText: 'Duplicate',
-      cancelText: 'Cancel',
-      iconColor: 'blue',
-      confirmClass: 'bg-blue-500 hover:bg-blue-400',
-      onConfirm: 'performDuplicateContent()'
-    })}
-
-    ${renderConfirmationDialog({
       id: 'delete-content-confirm',
       title: 'Delete Content',
       message: 'Are you sure you want to delete this content? This action cannot be undone.',
@@ -437,30 +416,6 @@ export function renderContentFormPage(data: ContentFormData): string {
 
     <script>
       ${hasFileUpload ? getFileUploadScript() : ''}
-
-      // Quick actions
-      function duplicateContent() {
-        showConfirmDialog('duplicate-content-confirm');
-      }
-
-      function performDuplicateContent() {
-        var form = document.getElementById('content-form');
-        var formData = new FormData(form);
-        formData.append('action', 'duplicate');
-
-        fetch('/admin/content/duplicate', {
-          method: 'POST',
-          body: formData
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-          if (data.success) {
-            window.location.href = '/admin/content/' + data.id + '/edit';
-          } else {
-            alert('Error duplicating content');
-          }
-        });
-      }
 
       function deleteContent(contentId) {
         showConfirmDialog('delete-content-confirm');
