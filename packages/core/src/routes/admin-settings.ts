@@ -81,6 +81,7 @@ adminSettingsRoutes.get('/general', async (c) => {
     settings: { ...getDefaultSettings(), general: generalSettings },
     activeTab: 'general',
     locale,
+    userLanguage: locale,
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))
@@ -393,6 +394,13 @@ adminSettingsRoutes.post('/general', async (c) => {
 
     // Save settings to database
     const success = await settingsService.saveGeneralSettings(settings)
+
+    // Also update the current user's language preference
+    const validLocales = ['en', 'pt', 'es']
+    const userLanguage = validLocales.includes(settings.language) ? settings.language : 'en'
+    await db.prepare('UPDATE users SET language = ?, updated_at = ? WHERE id = ?')
+      .bind(userLanguage, Date.now(), user.userId)
+      .run()
 
     if (success) {
       return c.json({

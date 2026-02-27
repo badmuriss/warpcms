@@ -16,6 +16,7 @@ export interface SettingsPageData {
   activeTab?: string
   version?: string
   locale?: string;
+  userLanguage?: string;
 }
 
 export interface GeneralSettings {
@@ -82,7 +83,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
       <!-- Settings Content -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
         <div id="settings-content" class="p-8">
-          ${renderTabContent(activeTab, data.settings, locale)}
+          ${renderTabContent(activeTab, data.settings, locale, data.userLanguage)}
         </div>
       </div>
     </div>
@@ -125,6 +126,9 @@ export function renderSettingsPage(data: SettingsPageData): string {
       // Initialize tab-specific features on page load
       const currentTab = '${activeTab}';
 
+      // Track original language to detect changes after save
+      var __originalSettingsLanguage = '${data.userLanguage || 'en'}';
+
       async function saveGeneralSettings() {
         // Collect all form data from general settings
         const formData = new FormData();
@@ -154,6 +158,11 @@ export function renderSettingsPage(data: SettingsPageData): string {
 
           if (result.success) {
             showNotification(result.message || window.__i18n.savedSuccess, 'success');
+            // Reload page if language changed to render in new locale
+            var langSelect = document.getElementById('settings-language');
+            if (langSelect && langSelect.value !== __originalSettingsLanguage) {
+              setTimeout(function() { window.location.reload(); }, 600);
+            }
           } else {
             showNotification(result.error || window.__i18n.saveFailed, 'error');
           }
@@ -490,20 +499,20 @@ function renderTabButton(tabId: string, label: string, iconPath: string, activeT
   `
 }
 
-function renderTabContent(activeTab: string, settings?: SettingsPageData['settings'], locale = 'en'): string {
+function renderTabContent(activeTab: string, settings?: SettingsPageData['settings'], locale = 'en', userLanguage = 'en'): string {
   switch (activeTab) {
     case 'general':
-      return renderGeneralSettings(settings?.general, locale)
+      return renderGeneralSettings(settings?.general, locale, userLanguage)
     case 'migrations':
       return renderMigrationSettings(settings?.migrations, locale)
     case 'database-tools':
       return renderDatabaseToolsSettings(settings?.databaseTools, locale)
     default:
-      return renderGeneralSettings(settings?.general, locale)
+      return renderGeneralSettings(settings?.general, locale, userLanguage)
   }
 }
 
-function renderGeneralSettings(settings?: GeneralSettings, locale = 'en'): string {
+function renderGeneralSettings(settings?: GeneralSettings, locale = 'en', userLanguage = 'en'): string {
   return `
     <div class="space-y-6">
       <div>
@@ -564,12 +573,13 @@ function renderGeneralSettings(settings?: GeneralSettings, locale = 'en'): strin
           <div>
             <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('settings.language', locale)}</label>
             <select
+              id="settings-language"
               name="language"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
             >
-              <option value="pt" ${settings?.language === 'pt' ? 'selected' : ''}>Português</option>
-              <option value="en" ${settings?.language === 'en' ? 'selected' : ''}>English</option>
-              <option value="es" ${settings?.language === 'es' ? 'selected' : ''}>Español</option>
+              <option value="en" ${userLanguage === 'en' ? 'selected' : ''}>English</option>
+              <option value="pt" ${userLanguage === 'pt' ? 'selected' : ''}>Português</option>
+              <option value="es" ${userLanguage === 'es' ? 'selected' : ''}>Español</option>
             </select>
           </div>
           

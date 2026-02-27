@@ -35,17 +35,11 @@ const TIMEZONES = [
   { value: 'Australia/Sydney', label: 'Sydney' }
 ]
 
-// Language options for profile form
+// Language options for profile form (supported i18n locales)
 const LANGUAGES = [
   { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'zh', label: 'Chinese' }
+  { value: 'pt', label: 'Português' },
+  { value: 'es', label: 'Español' }
 ]
 
 // Role options for user form
@@ -151,7 +145,9 @@ userRoutes.put('/profile', async (c) => {
     const phone = sanitizeInput(formData.get('phone')?.toString()) || null
     const bio = sanitizeInput(formData.get('bio')?.toString()) || null
     const timezone = formData.get('timezone')?.toString() || 'UTC'
-    const language = formData.get('language')?.toString() || 'en'
+    const rawLanguage = formData.get('language')?.toString() || 'en'
+    const validLocales = ['en', 'pt', 'es']
+    const language = validLocales.includes(rawLanguage) ? rawLanguage : 'en'
     const emailNotifications = formData.get('email_notifications') === '1'
 
     // Validate required fields

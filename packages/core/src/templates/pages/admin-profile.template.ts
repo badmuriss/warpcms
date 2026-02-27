@@ -418,6 +418,9 @@ export function renderProfilePage(data: ProfilePageData): string {
         twoFaComingSoon: '${t('users.form.twoFaComingSoon', locale)}'
       };
 
+      // Track original language to detect changes after save
+      var __originalLanguage = '${data.profile.language || 'en'}';
+
       function showChangePasswordModal() {
         document.getElementById('password-modal').classList.remove('hidden');
       }
@@ -442,6 +445,14 @@ export function renderProfilePage(data: ProfilePageData): string {
       document.getElementById('password-modal').addEventListener('click', function(e) {
         if (e.target === this) {
           closePasswordModal();
+        }
+      });
+
+      // Reload page after language change to render in new locale
+      document.getElementById('profile-form').addEventListener('htmx:afterSettle', function(e) {
+        var newLang = document.getElementById('language').value;
+        if (newLang !== __originalLanguage) {
+          setTimeout(function() { window.location.reload(); }, 600);
         }
       });
     </script>
