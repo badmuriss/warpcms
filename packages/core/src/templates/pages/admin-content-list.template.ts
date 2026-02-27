@@ -408,8 +408,8 @@ export function renderContentListPage(data: ContentListPageData): string {
       
       <!-- Content List -->
       <div id="content-list">
-        ${renderTable(tableData)}
-        ${renderPagination(paginationData)}
+        ${renderTable(tableData, locale)}
+        ${renderPagination(paginationData, locale)}
       </div>
       
     </div>

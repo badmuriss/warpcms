@@ -387,10 +387,10 @@ export function renderUsersListPage(data: UsersListPageData): string {
       </div>
 
       <!-- Users Table -->
-      ${renderTable(tableData)}
+      ${renderTable(tableData, locale)}
 
       <!-- Pagination -->
-      ${data.pagination ? renderPagination(data.pagination) : ''}
+      ${data.pagination ? renderPagination(data.pagination, locale) : ''}
     </div>
 
     <script>

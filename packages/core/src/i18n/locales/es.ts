@@ -484,4 +484,12 @@ export const es: TranslationData = {
       registrationFailed: 'Error en el registro. Por favor, inténtalo de nuevo.',
     },
   },
+  components: {
+    dismiss: 'Descartar',
+    previous: 'Anterior',
+    next: 'Siguiente',
+    showingResults: 'Mostrando {{start}} a {{end}} de {{total}} resultados',
+    perPage: 'Por página:',
+    noDataAvailable: 'No hay datos disponibles',
+  },
 }

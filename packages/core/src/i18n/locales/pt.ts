@@ -484,4 +484,12 @@ export const pt: TranslationData = {
       registrationFailed: 'Falha no cadastro. Por favor, tente novamente.',
     },
   },
+  components: {
+    dismiss: 'Dispensar',
+    previous: 'Anterior',
+    next: 'Próximo',
+    showingResults: 'Mostrando {{start}} a {{end}} de {{total}} resultados',
+    perPage: 'Por página:',
+    noDataAvailable: 'Nenhum dado disponível',
+  },
 }

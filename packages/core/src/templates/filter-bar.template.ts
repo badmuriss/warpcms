@@ -1,3 +1,5 @@
+import { t } from '../i18n'
+
 export interface FilterOption {
   value: string
   label: string
@@ -28,7 +30,7 @@ export interface FilterBarData {
   }>
 }
 
-export function renderFilterBar(data: FilterBarData): string {
+export function renderFilterBar(data: FilterBarData, locale = 'en'): string {
   return `
     <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 mb-6">
       <form id="filter-form" class="flex flex-wrap gap-4 items-center">

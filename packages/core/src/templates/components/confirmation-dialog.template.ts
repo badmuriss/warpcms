@@ -1,3 +1,5 @@
+import { t } from '../../i18n'
+
 export interface ConfirmationDialogOptions {
   id: string
   title: string
@@ -7,15 +9,17 @@ export interface ConfirmationDialogOptions {
   confirmClass?: string
   iconColor?: 'red' | 'yellow' | 'blue'
   onConfirm?: string // JavaScript code to execute on confirm
+  locale?: string
 }
 
 export function renderConfirmationDialog(options: ConfirmationDialogOptions): string {
+  const locale = options.locale || 'en'
   const {
     id,
     title,
     message,
-    confirmText = 'Confirm',
-    cancelText = 'Cancel',
+    confirmText = t('common.confirm', locale),
+    cancelText = t('common.cancel', locale),
     confirmClass = 'bg-red-500 hover:bg-red-400',
     iconColor = 'red',
     onConfirm = ''

@@ -482,4 +482,12 @@ export const en = {
       registrationFailed: 'Registration failed. Please try again.',
     },
   },
+  components: {
+    dismiss: 'Dismiss',
+    previous: 'Previous',
+    next: 'Next',
+    showingResults: 'Showing {{start}} to {{end}} of {{total}} results',
+    perPage: 'Per page:',
+    noDataAvailable: 'No data available',
+  },
 } as const

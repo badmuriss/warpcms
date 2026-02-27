@@ -1,3 +1,5 @@
+import { t } from '../../i18n'
+
 export interface PaginationData {
   currentPage: number
   totalPages: number
@@ -13,7 +15,7 @@ export interface PaginationData {
   pageSizeOptions?: number[]
 }
 
-export function renderPagination(data: PaginationData): string {
+export function renderPagination(data: PaginationData, locale = 'en'): string {
   // Show pagination if there are multiple pages OR if page size selector is enabled
   const shouldShowPagination = data.totalPages > 1 || (data.showPageSizeSelector !== false && data.totalItems > 0)
 
@@ -64,18 +66,18 @@ export function renderPagination(data: PaginationData): string {
         <div class="flex-1 flex justify-between sm:hidden">
           ${data.currentPage > 1 ? `
             <a href="${buildUrl(data.currentPage - 1)}" class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Previous
+              ${t('components.previous', locale)}
             </a>
           ` : `
-            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">Previous</span>
+            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">${t('components.previous', locale)}</span>
           `}
 
           ${data.currentPage < data.totalPages ? `
             <a href="${buildUrl(data.currentPage + 1)}" class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Next
+              ${t('components.next', locale)}
             </a>
           ` : `
-            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">Next</span>
+            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">${t('components.next', locale)}</span>
           `}
         </div>
       ` : ''}
@@ -84,13 +86,11 @@ export function renderPagination(data: PaginationData): string {
       <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
         <div class="flex items-center gap-4">
           <p class="text-sm text-zinc-500 dark:text-zinc-400">
-            Showing <span class="font-medium text-zinc-950 dark:text-white">${data.startItem}</span> to
-            <span class="font-medium text-zinc-950 dark:text-white">${data.endItem}</span> of
-            <span class="font-medium text-zinc-950 dark:text-white">${data.totalItems}</span> results
+            ${t('components.showingResults', locale, { start: `<span class="font-medium text-zinc-950 dark:text-white">${data.startItem}</span>`, end: `<span class="font-medium text-zinc-950 dark:text-white">${data.endItem}</span>`, total: `<span class="font-medium text-zinc-950 dark:text-white">${data.totalItems}</span>` })}
           </p>
           ${data.showPageSizeSelector !== false ? `
             <div class="flex items-center gap-2">
-              <label for="page-size" class="text-sm text-zinc-500 dark:text-zinc-400">Per page:</label>
+              <label for="page-size" class="text-sm text-zinc-500 dark:text-zinc-400">${t('components.perPage', locale)}</label>
               <div class="grid grid-cols-1">
                 <select
                   id="page-size"
@@ -117,7 +117,7 @@ export function renderPagination(data: PaginationData): string {
             ${data.currentPage > 1 ? `
             <a href="${buildUrl(data.currentPage - 1)}"
                class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Previous
+              ${t('components.previous', locale)}
             </a>
           ` : ''}
 
@@ -172,7 +172,7 @@ export function renderPagination(data: PaginationData): string {
           ${data.currentPage < data.totalPages ? `
             <a href="${buildUrl(data.currentPage + 1)}"
                class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Next
+              ${t('components.next', locale)}
             </a>
           ` : ''}
           </div>
