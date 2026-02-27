@@ -4,6 +4,7 @@ import { renderTable, TableData, TableColumn } from '../components/table.templat
 import type { FilterBarData } from '../filter-bar.template'
 import { getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 import { renderAlert } from '../components/alert.template'
+import { t } from '../../i18n'
 
 export interface ContentItem {
   id: string
@@ -38,6 +39,8 @@ export interface ContentListPageData {
 }
 
 export function renderContentListPage(data: ContentListPageData): string {
+  const locale = data.locale || 'en'
+
   // Build current URL parameters to pass to edit page
   const urlParams = new URLSearchParams()
   if (data.modelName && data.modelName !== 'all') urlParams.set('type', data.modelName)
@@ -53,9 +56,9 @@ export function renderContentListPage(data: ContentListPageData): string {
     filters: [
       {
         name: 'type',
-        label: 'Type',
+        label: t('content.list.type', locale),
         options: [
-          { value: 'all', label: 'All Types', selected: data.modelName === 'all' },
+          { value: 'all', label: t('content.list.allTypes', locale), selected: data.modelName === 'all' },
           ...data.models.map(model => ({
             value: model.name,
             label: model.displayName,
@@ -66,7 +69,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     ],
     actions: [
       {
-        label: 'Refresh',
+        label: t('content.list.refresh', locale),
         className: 'btn-secondary',
         onclick: 'location.reload()'
       }
@@ -78,7 +81,7 @@ export function renderContentListPage(data: ContentListPageData): string {
   const tableColumns: TableColumn[] = [
     {
       key: 'title',
-      label: 'Title',
+      label: t('content.list.titleColumn', locale),
       sortable: true,
       sortType: 'string',
       render: (value, row) => `
@@ -94,35 +97,35 @@ export function renderContentListPage(data: ContentListPageData): string {
     },
     {
       key: 'modelName',
-      label: 'Type',
+      label: t('content.list.typeColumn', locale),
       sortable: true,
       sortType: 'string',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'preview',
-      label: 'Preview',
+      label: t('content.list.previewColumn', locale),
       sortable: false,
       className: 'text-sm text-zinc-500 dark:text-zinc-400 max-w-xs truncate',
       render: (_value, row) => `<span class="truncate block max-w-xs">${row.preview || ''}</span>`
     },
     {
       key: 'authorName',
-      label: 'Author',
+      label: t('content.list.authorColumn', locale),
       sortable: true,
       sortType: 'string',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'formattedDate',
-      label: 'Updated',
+      label: t('content.list.updatedColumn', locale),
       sortable: true,
       sortType: 'date',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('content.list.actionsColumn', locale),
       sortable: false,
       className: 'text-sm font-medium',
       render: (value, row) => `
@@ -130,7 +133,7 @@ export function renderContentListPage(data: ContentListPageData): string {
           <button
             class="inline-flex items-center justify-center p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 ring-1 ring-inset ring-cyan-600/20 dark:ring-cyan-500/20 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 transition-colors"
             onclick="window.location.href='/admin/content/${row.id}/edit${currentParams ? `?ref=${encodeURIComponent(currentParams)}` : ''}'"
-            title="Edit"
+            title="${t('content.list.editAction', locale)}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
@@ -139,7 +142,7 @@ export function renderContentListPage(data: ContentListPageData): string {
           <button
             class="inline-flex items-center justify-center p-1.5 rounded-lg bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 ring-1 ring-inset ring-purple-600/20 dark:ring-purple-500/20 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
             onclick="window.open('/api/content/${row.id}', '_blank')"
-            title="View API"
+            title="${t('content.list.viewApiAction', locale)}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
@@ -148,10 +151,10 @@ export function renderContentListPage(data: ContentListPageData): string {
           <button
             class="inline-flex items-center justify-center p-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/20 dark:ring-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
             hx-delete="/admin/content/${row.id}"
-            hx-confirm="Are you sure you want to delete this content item?"
+            hx-confirm="${t('content.list.confirmDelete', locale)}"
             hx-target="#content-list"
             hx-swap="outerHTML"
-            title="Delete"
+            title="${t('content.list.deleteAction', locale)}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -169,7 +172,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     selectable: false,
     rowClickable: true,
     rowClickUrl: (row: ContentItem) => `/admin/content/${row.id}/edit${currentParams ? `?ref=${encodeURIComponent(currentParams)}` : ''}`,
-    emptyMessage: 'No content found. Create your first content item to get started.'
+    emptyMessage: t('content.list.emptyState', locale)
   }
 
   // Prepare pagination data
@@ -199,15 +202,15 @@ export function renderContentListPage(data: ContentListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Content Management</h1>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage and organize your content items</p>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('content.list.title', locale)}</h1>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('content.list.subtitle', locale)}</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <a href="/admin/content/new" class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm">
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            New Content
+            ${t('content.list.newContent', locale)}
           </a>
         </div>
       </div>
@@ -224,14 +227,14 @@ export function renderContentListPage(data: ContentListPageData): string {
               <div class="flex items-center space-x-4 flex-1">
                 <!-- Type Filter -->
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Type</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('content.list.type', locale)}</label>
                   <div class="grid grid-cols-1">
                     <select
                       name="type"
                       onchange="updateContentFilters('type', this.value)"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-cyan-500/30 dark:outline-cyan-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cyan-500 dark:focus-visible:outline-cyan-400 min-w-40"
                     >
-                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>All Types</option>
+                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>${t('content.list.allTypes', locale)}</option>
                       ${data.models.map(model => `
                         <option value="${model.name}" ${data.modelName === model.name ? 'selected' : ''}>
                           ${model.displayName}
@@ -246,7 +249,7 @@ export function renderContentListPage(data: ContentListPageData): string {
 
                 <!-- Search Input -->
                 <div class="flex-1 max-w-md">
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('content.list.search', locale)}</label>
                   <form onsubmit="performContentSearch(event)" class="flex items-center space-x-2">
                     <div class="relative group flex-1">
                       <input
@@ -255,7 +258,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                         id="content-search-input"
                         value="${data.search || ''}"
                         oninput="toggleContentClearButton()"
-                        placeholder="Search content..."
+                        placeholder="${t('content.list.searchPlaceholder', locale)}"
                         class="w-full rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2.5 pl-11 pr-10 text-sm text-zinc-950 dark:text-white border-2 border-cyan-200/50 dark:border-cyan-700/50 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-zinc-800 focus:shadow-lg focus:shadow-cyan-500/20 dark:focus:shadow-cyan-400/20 transition-all duration-300"
                       >
                       <div class="absolute left-3.5 top-2.5 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 dark:from-cyan-300 dark:to-blue-400 opacity-90 group-focus-within:opacity-100 transition-opacity">
@@ -281,7 +284,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                       </svg>
-                      Search
+                      ${t('content.list.search', locale)}
                     </button>
                   </form>
                   <script>
@@ -330,7 +333,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                 </div>
               </div>
               <div class="flex items-center gap-x-3">
-                <span class="text-sm/6 font-medium text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm">${data.totalItems} ${data.totalItems === 1 ? 'item' : 'items'}</span>
+                <span class="text-sm/6 font-medium text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm">${data.totalItems === 1 ? t('content.list.item', locale, { count: data.totalItems }) : t('content.list.items', locale, { count: data.totalItems })}</span>
                 ${filterBarData.actions?.map(action => `
                   <button
                     ${action.onclick ? `onclick="${action.onclick}"` : ''}
@@ -338,7 +341,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                     ${action.hxTarget ? `hx-target="${action.hxTarget}"` : ''}
                     class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm text-zinc-950 dark:text-white text-sm font-medium rounded-full ring-1 ring-inset ring-cyan-200/50 dark:ring-cyan-700/50 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-cyan-900/30 dark:hover:to-blue-900/30 hover:ring-cyan-300 dark:hover:ring-cyan-600 transition-all duration-200"
                   >
-                    ${action.label === 'Refresh' ? `
+                    ${action.label === t('content.list.refresh', locale) ? `
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                       </svg>
@@ -431,7 +434,7 @@ export function renderContentListPage(data: ContentListPageData): string {
             <!-- Header -->
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-lg font-semibold text-zinc-950 dark:text-white" id="modal-title">
-                🔍 Advanced Search
+                ${t('content.list.advancedSearch', locale)}
               </h3>
               <button onclick="closeAdvancedSearch()" class="text-zinc-400 hover:text-zinc-500 dark:hover:text-zinc-300">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -444,13 +447,13 @@ export function renderContentListPage(data: ContentListPageData): string {
             <form id="advancedSearchForm" class="space-y-4">
               <!-- Search Input -->
               <div>
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search Query</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('content.list.searchQuery', locale)}</label>
                 <div class="relative">
                   <input
                     type="text"
                     id="searchQuery"
                     name="query"
-                    placeholder="Enter your search query..."
+                    placeholder="${t('content.list.searchQueryPlaceholder', locale)}"
                     class="w-full rounded-lg bg-white dark:bg-white/5 px-4 py-3 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-indigo-500"
                     autocomplete="off"
                   />
@@ -460,27 +463,27 @@ export function renderContentListPage(data: ContentListPageData): string {
 
               <!-- Mode Toggle -->
               <div>
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search Mode</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('content.list.searchMode', locale)}</label>
                 <div class="flex gap-4">
                   <label class="flex items-center">
                     <input type="radio" name="mode" value="ai" checked class="mr-2">
-                    <span class="text-sm text-zinc-950 dark:text-white">🤖 AI Search (Semantic)</span>
+                    <span class="text-sm text-zinc-950 dark:text-white">${t('content.list.aiSearch', locale)}</span>
                   </label>
                   <label class="flex items-center">
                     <input type="radio" name="mode" value="keyword" class="mr-2">
-                    <span class="text-sm text-zinc-950 dark:text-white">🔤 Keyword Search</span>
+                    <span class="text-sm text-zinc-950 dark:text-white">${t('content.list.keywordSearch', locale)}</span>
                   </label>
                 </div>
               </div>
 
               <!-- Filters -->
               <div class="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-                <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Filters</h4>
+                <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">${t('content.list.filters', locale)}</h4>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Type Filter -->
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Types</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('content.list.types', locale)}</label>
                     <select
                       id="filterCollections"
                       name="collections"
@@ -488,14 +491,14 @@ export function renderContentListPage(data: ContentListPageData): string {
                       class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10"
                       size="4"
                     >
-                      <option value="">All Types</option>
+                      <option value="">${t('content.list.allTypes', locale)}</option>
                       ${data.models.map(
                         (model) => `
                           <option value="${model.name}">${model.displayName}</option>
                         `
                       ).join('')}
                     </select>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">${t('content.list.selectMultipleHint', locale)}</p>
                   </div>
 
                 </div>
@@ -508,13 +511,13 @@ export function renderContentListPage(data: ContentListPageData): string {
                   onclick="closeAdvancedSearch()"
                   class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700"
                 >
-                  Cancel
+                  ${t('common.cancel', locale)}
                 </button>
                 <button
                   type="submit"
                   class="inline-flex items-center justify-center rounded-lg bg-indigo-600 text-white px-6 py-2.5 text-sm font-semibold hover:bg-indigo-500 shadow-sm"
                 >
-                  Search
+                  ${t('content.list.search', locale)}
                 </button>
               </div>
             </form>
@@ -657,18 +660,18 @@ export function renderContentListPage(data: ContentListPageData): string {
         const resultsSection = document.getElementById('searchResults');
         
         if (searchData.results.length === 0) {
-          resultsDiv.innerHTML = '<p class="text-sm text-zinc-500 dark:text-zinc-400">No results found.</p>';
+          resultsDiv.innerHTML = '<p class="text-sm text-zinc-500 dark:text-zinc-400">${t('content.list.noResultsFound', locale)}</p>';
         } else {
           resultsDiv.innerHTML = searchData.results.map(result => \`
             <div class="p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800">
               <div class="flex items-start justify-between">
                 <div class="flex-1">
                   <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-1">
-                    <a href="/admin/content/\${result.id}/edit" class="hover:text-indigo-600 dark:hover:text-indigo-400">\${result.title || 'Untitled'}</a>
+                    <a href="/admin/content/\${result.id}/edit" class="hover:text-indigo-600 dark:hover:text-indigo-400">\${result.title || '${t('content.list.untitled', locale)}'}</a>
                   </h4>
                   <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
                     \${result.collection_name} • \${new Date(result.created_at).toLocaleDateString()}
-                    \${result.relevance_score ? \` • Relevance: \${(result.relevance_score * 100).toFixed(0)}%\` : ''}
+                    \${result.relevance_score ? \` • ${t('content.list.relevance', locale)}: \${(result.relevance_score * 100).toFixed(0)}%\` : ''}
                   </p>
                   \${result.snippet ? \`<p class="text-sm text-zinc-600 dark:text-zinc-400">\${result.snippet}</p>\` : ''}
                 </div>
@@ -689,12 +692,13 @@ export function renderContentListPage(data: ContentListPageData): string {
 
   // Prepare layout data
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Content Management',
-    pageTitle: 'Content Management',
+    title: t('content.list.title', locale),
+    pageTitle: t('content.list.title', locale),
     currentPath: '/admin/content',
     user: data.user,
     version: data.version,
-    content: pageContent
+    content: pageContent,
+    locale,
   }
 
   return renderAdminLayoutCatalyst(layoutData)

@@ -1,6 +1,7 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../components/alert.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { t } from '../../i18n'
 import type { ContentType, ContentTypeField } from '../../content-types'
 
 export interface ContentFormData {
@@ -24,7 +25,7 @@ export interface ContentFormData {
 }
 
 /** Render a single field based on its ContentTypeField definition */
-function renderField(field: ContentTypeField, value: any, errors?: string[]): string {
+function renderField(field: ContentTypeField, value: any, errors?: string[], locale = 'en'): string {
   const errorHTML = errors && errors.length > 0
     ? `<p class="mt-1 text-sm text-red-600 dark:text-red-400">${errors.join(', ')}</p>`
     : ''
@@ -103,14 +104,14 @@ function renderField(field: ContentTypeField, value: any, errors?: string[]): st
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
               </svg>
               <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <span class="font-semibold text-cyan-600 dark:text-cyan-400">Click to upload</span> or drag and drop
+                <span class="font-semibold text-cyan-600 dark:text-cyan-400">${t('content.form.clickToUpload', locale)}</span> ${t('content.form.orDragAndDrop', locale)}
               </p>
-              <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${field.helpText || 'Any file'}</p>
+              <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${field.helpText || t('content.form.anyFile', locale)}</p>
               <div id="upload-progress-${field.name}" class="hidden mt-3">
                 <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
                   <div id="upload-bar-${field.name}" class="bg-cyan-500 h-2 rounded-full transition-all" style="width: 0%"></div>
                 </div>
-                <p id="upload-status-${field.name}" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Uploading...</p>
+                <p id="upload-status-${field.name}" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('content.form.uploading', locale)}</p>
               </div>
             </div>
             <input type="file" id="file-input-${field.name}" class="hidden"
@@ -121,7 +122,7 @@ function renderField(field: ContentTypeField, value: any, errors?: string[]): st
               <button type="button" onclick="clearFileField('${field.name}')"
                 class="mt-2 inline-flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Remove file
+                ${t('content.form.removeFile', locale)}
               </button>
             ` : ''}
           </div>
@@ -136,11 +137,11 @@ function renderField(field: ContentTypeField, value: any, errors?: string[]): st
           <label for="field-${field.name}" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${field.label}</label>
           <div class="mt-2">
             <input type="text" id="field-${field.name}" name="${field.name}" value="${escapeAttr(tagsValue)}"
-              placeholder="${escapeAttr(field.placeholder || 'Comma-separated tags')}"
+              placeholder="${escapeAttr(field.placeholder || t('content.form.commaSeparatedTags', locale))}"
               class="${inputClasses}"
             />
           </div>
-          <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Separate tags with commas</p>
+          <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('content.form.separateTagsWithCommas', locale)}</p>
           ${errorHTML}
         </div>
       `
@@ -183,7 +184,10 @@ function escapeAttr(str: string): string {
 export function renderContentFormPage(data: ContentFormData): string {
   const isEdit = data.isEdit || !!data.id
   const ct = data.contentType
-  const title = isEdit ? `Edit: ${data.title || 'Content'}` : `New ${ct.displayName}`
+  const locale = data.locale || 'en'
+  const title = isEdit
+    ? t('content.form.editTitle', locale, { name: data.title || 'Content' })
+    : t('content.form.newTitle', locale, { name: ct.displayName })
 
   const backUrl = data.referrerParams
     ? `/admin/content?${data.referrerParams}`
@@ -201,14 +205,14 @@ export function renderContentFormPage(data: ContentFormData): string {
   const tagFields = ct.fields.filter(f => f.type === 'tags')
 
   const hasFileUpload = ct.fields.some(f => f.type === 'file')
-  const descriptionText = ct.description || `Manage ${ct.displayName.toLowerCase()} content`
+  const descriptionText = ct.description || t('content.form.manageContent', locale, { name: ct.displayName.toLowerCase() })
 
   const pageContent = `
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${isEdit ? 'Edit Content' : 'New Content'}</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${isEdit ? t('content.form.editContent', locale) : t('content.form.newContent', locale)}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
             ${descriptionText}
           </p>
@@ -218,7 +222,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Back to Content
+            ${t('content.form.backToContent', locale)}
           </a>
         </div>
       </div>
@@ -233,7 +237,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             </div>
             <div>
               <h2 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${ct.displayName}</h2>
-              <p class="text-sm/6 text-zinc-500 dark:text-zinc-400">${isEdit ? 'Update your content' : 'Create new content'}</p>
+              <p class="text-sm/6 text-zinc-500 dark:text-zinc-400">${isEdit ? t('content.form.updateYourContent', locale) : t('content.form.createNewContent', locale)}</p>
             </div>
           </div>
         </div>
@@ -259,10 +263,10 @@ export function renderContentFormPage(data: ContentFormData): string {
             <!-- Title + Slug Fields -->
             ${titleField ? `
               <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
-                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Basic Information</h3>
-                ${renderField(titleField, getFieldValue('title'), data.validationErrors?.['title'])}
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">${t('content.form.basicInformation', locale)}</h3>
+                ${renderField(titleField, getFieldValue('title'), data.validationErrors?.['title'], locale)}
                 <div class="mt-4">
-                  <label for="slug" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">URL Slug</label>
+                  <label for="slug" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('content.form.urlSlug', locale)}</label>
                   ${isEdit ? `
                     <!-- Edit mode: readonly slug with edit/copy buttons -->
                     <div class="mt-2">
@@ -275,11 +279,11 @@ export function renderContentFormPage(data: ContentFormData): string {
                             class="w-full rounded-r-lg bg-zinc-100 dark:bg-zinc-800/80 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 font-mono cursor-default focus:outline-none transition-shadow"
                           />
                         </div>
-                        <button type="button" id="slug-copy-btn" onclick="copySlug()" title="Copy slug"
+                        <button type="button" id="slug-copy-btn" onclick="copySlug()" title="${t('content.form.copySlug', locale)}"
                           class="inline-flex items-center justify-center rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/></svg>
                         </button>
-                        <button type="button" id="slug-edit-btn" onclick="enableSlugEdit()" title="Edit slug"
+                        <button type="button" id="slug-edit-btn" onclick="enableSlugEdit()" title="${t('content.form.editSlug', locale)}"
                           class="inline-flex items-center justify-center rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                         </button>
@@ -290,17 +294,17 @@ export function renderContentFormPage(data: ContentFormData): string {
                           <div class="flex gap-2">
                             <svg class="h-5 w-5 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
                             <div>
-                              <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Changing the slug may break references</p>
-                              <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Websites or apps consuming this content via the slug URL will stop working if the slug changes.</p>
+                              <p class="text-sm font-medium text-amber-800 dark:text-amber-300">${t('content.form.slugWarningTitle', locale)}</p>
+                              <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">${t('content.form.slugWarningBody', locale)}</p>
                             </div>
                           </div>
                         </div>
-                        <button type="button" onclick="cancelSlugEdit()" class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Cancel edit</button>
+                        <button type="button" onclick="cancelSlugEdit()" class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">${t('content.form.cancelEdit', locale)}</button>
                       </div>
                       <div id="slug-status" class="mt-1"></div>
                     </div>
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                      API access: <code class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">/api/content/by-slug/${escapeHtml(data.slug || '')}</code>
+                      ${t('content.form.apiAccess', locale)} <code class="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">/api/content/by-slug/${escapeHtml(data.slug || '')}</code>
                     </p>
                   ` : `
                     <!-- Create mode: auto-generate with availability check -->
@@ -313,7 +317,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                       />
                     </div>
                     <div id="slug-status" class="mt-1"></div>
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Leave blank to auto-generate from title. Only letters, numbers, hyphens, and underscores.</p>
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('content.form.slugAutoGenerate', locale)}</p>
                   `}
                 </div>
               </div>
@@ -322,9 +326,9 @@ export function renderContentFormPage(data: ContentFormData): string {
             <!-- Content Fields -->
             ${contentFields.length > 0 ? `
               <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
-                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Content Details</h3>
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">${t('content.form.contentDetails', locale)}</h3>
                 <div class="space-y-4">
-                  ${contentFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name])).join('')}
+                  ${contentFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name], locale)).join('')}
                 </div>
               </div>
             ` : ''}
@@ -332,9 +336,9 @@ export function renderContentFormPage(data: ContentFormData): string {
             <!-- Tags -->
             ${tagFields.length > 0 ? `
               <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-4 ring-1 ring-zinc-950/5 dark:ring-white/10">
-                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Organization</h3>
+                <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">${t('content.form.organization', locale)}</h3>
                 <div class="space-y-4">
-                  ${tagFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name])).join('')}
+                  ${tagFields.map(f => renderField(f, getFieldValue(f.name), data.validationErrors?.[f.name], locale)).join('')}
                 </div>
               </div>
             ` : ''}
@@ -342,7 +346,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             <!-- Action Buttons -->
             <div class="pt-6 border-t border-zinc-950/5 dark:border-white/10 flex items-center justify-between">
               <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
-                Cancel
+                ${t('common.cancel', locale)}
               </a>
               <div class="flex items-center gap-x-3">
                 ${isEdit ? `
@@ -354,7 +358,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
                     </svg>
-                    Delete
+                    ${t('common.delete', locale)}
                   </button>
                 ` : ''}
                 <button
@@ -366,7 +370,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                   </svg>
-                  ${isEdit ? 'Update' : 'Save'}
+                  ${isEdit ? t('content.form.update', locale) : t('content.form.save', locale)}
                 </button>
               </div>
             </div>
@@ -378,10 +382,10 @@ export function renderContentFormPage(data: ContentFormData): string {
     <!-- Confirmation Dialogs -->
     ${renderConfirmationDialog({
       id: 'delete-content-confirm',
-      title: 'Delete Content',
-      message: 'Are you sure you want to delete this content? This action cannot be undone.',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: t('content.form.deleteContent', locale),
+      message: t('content.form.deleteMessage', locale),
+      confirmText: t('common.delete', locale),
+      cancelText: t('common.cancel', locale),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: `performDeleteContent('${data.id}')`
@@ -529,11 +533,12 @@ export function renderContentFormPage(data: ContentFormData): string {
 
   const layoutData: AdminLayoutCatalystData = {
     title: title,
-    pageTitle: 'Content Management',
+    pageTitle: t('content.form.contentManagement', locale),
     currentPath: '/admin/content',
     user: data.user,
     content: pageContent,
-    version: data.version
+    version: data.version,
+    locale
   }
 
   return renderAdminLayoutCatalyst(layoutData)

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 0004: Remove status, published_at from content; drop workflow_history
+-- Migration 0005: Remove status, published_at from content; drop workflow_history
 -- =============================================================================
 -- Content no longer has a draft/published lifecycle. All content is visible.
 -- The workflow_history table only tracked status transitions, so it is removed.
