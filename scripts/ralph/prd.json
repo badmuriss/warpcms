@@ -1,0 +1,278 @@
+{
+  "project": "WarpCMS",
+  "branchName": "ralph/i18n",
+  "description": "Admin UI Internationalization - Full i18n for the admin panel in English, Portuguese, and Spanish",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create i18n translation infrastructure",
+      "description": "As a developer, I need a lightweight translation system so that templates can render strings in any supported language.",
+      "acceptanceCriteria": [
+        "Create src/i18n/t.ts with a t(key, locale, params?) function that looks up a translation key for a given locale",
+        "Create src/i18n/types.ts that exports a TranslationKeys type derived from the English locale file — typos in keys are caught at build time",
+        "Create src/i18n/index.ts that re-exports t and types",
+        "Create src/i18n/locales/en.ts with the English translations object, organized by namespace (e.g., common.save, common.cancel, common.delete, common.confirm, nav.dashboard, nav.content, nav.users, nav.settings)",
+        "Create src/i18n/locales/pt.ts with Portuguese translations for the same keys",
+        "Create src/i18n/locales/es.ts with Spanish translations for the same keys",
+        "The common namespace must include: save, cancel, delete, confirm, edit, create, back, search, loading, noResults, actions, status, active, inactive, error, success, warning",
+        "The nav namespace must include: dashboard, content, users, plugins, cache, design, logs, settings, apiReference, myProfile, signOut",
+        "t() supports string interpolation: t('content.editTitle', 'en', { name: 'About' }) returns 'Edit: About' — use {{variable}} placeholders in translation strings",
+        "t() falls back to English if a key is missing in the requested locale",
+        "t() returns the key itself if it is missing from all locales (with a console.warn in development)",
+        "Typecheck passes",
+        "Unit tests cover: key lookup, fallback behavior, interpolation, missing key handling"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "This is the foundation — all subsequent stories depend on it. Keep the initial locale files small (just common + nav namespaces). Other namespaces will be added as each page is translated."
+    },
+    {
+      "id": "US-002",
+      "title": "Add language preference to user schema",
+      "description": "As a developer, I need to store each user's language preference so it persists across sessions.",
+      "acceptanceCriteria": [
+        "Add language column to users table in src/db/schema.ts: text type, default 'en', not null",
+        "Create a Drizzle migration for the new column",
+        "Existing users default to 'en' on migration (use DEFAULT value)",
+        "Accepted values: 'en', 'pt', 'es'",
+        "Typecheck passes",
+        "Existing tests still pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "The users table is defined in packages/core/src/db/schema.ts. Run migrations from packages/core/."
+    },
+    {
+      "id": "US-003",
+      "title": "Pass locale to all admin route handlers and template signatures",
+      "description": "As a developer, I need every admin route handler to resolve the current user's locale and pass it to render functions.",
+      "acceptanceCriteria": [
+        "Create a helper function (e.g., getLocale(c) or similar) that extracts the authenticated user's language field from the request context",
+        "Each admin route handler in src/routes/admin-*.ts calls this helper and passes the resulting locale string to template render functions",
+        "All template render functions in src/templates/pages/admin-*.template.ts accept a locale parameter (add to their interfaces/signatures)",
+        "Layout render functions (admin-layout-catalyst.template.ts, admin-layout-v2.template.ts) accept locale parameter",
+        "Unauthenticated pages (login, register) default to 'en'",
+        "No strings are translated yet — just the plumbing to pass locale through. Templates receive it but don't use it yet",
+        "Typecheck passes",
+        "Existing tests still pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "This is mechanical plumbing — add locale param to every render function signature and every route handler call. Don't translate any strings yet."
+    },
+    {
+      "id": "US-004",
+      "title": "Extract and translate navigation and layout strings",
+      "description": "As a user, I want the sidebar, top bar, and layout elements in my preferred language.",
+      "acceptanceCriteria": [
+        "Add layout namespace to all 3 locale files (en.ts, pt.ts, es.ts) with keys for: sidebar menu labels, user dropdown items, page branding text",
+        "In admin-layout-catalyst.template.ts: replace all hardcoded sidebar menu labels with t() calls (Content, Dashboard, Users, Plugins, Cache, Design, Logs, Settings, API Reference, etc.)",
+        "In admin-layout-catalyst.template.ts: replace user dropdown items ('My Profile', 'Sign Out') with t() calls",
+        "In admin-layout-v2.template.ts: apply same changes if it has hardcoded strings",
+        "All 3 locales (en, pt, es) have complete translations for the layout namespace",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "The layout templates are in src/templates/layouts/. Import t from ../../i18n."
+    },
+    {
+      "id": "US-005",
+      "title": "Extract and translate Dashboard page strings",
+      "description": "As a user, I want the dashboard in my preferred language so I can understand stats and activity at a glance.",
+      "acceptanceCriteria": [
+        "Add dashboard namespace to all 3 locale files with keys for stat labels, section headers, and any other text",
+        "In admin-dashboard.template.ts: replace hardcoded strings with t() calls — stat labels ('Total Users', 'Active Users', 'Administrators', 'Active This Week'), section headers ('Recent Activity', 'Analytics'), and any other visible text",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Extract and translate Content List page strings",
+      "description": "As a user, I want the content list page in my preferred language.",
+      "acceptanceCriteria": [
+        "Add content.list namespace to all 3 locale files with keys for: page title, filter labels, table headers, empty state message, action button labels, status badges",
+        "In admin-content-list.template.ts: replace all hardcoded strings with t() calls",
+        "Filter labels, table column headers, and empty state ('No content found') all translated",
+        "Status badge labels ('Draft', 'Published') translated",
+        "Action buttons ('New Content', 'Edit', 'Delete') translated",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Extract and translate Content Form page strings",
+      "description": "As a user, I want the content create/edit form in my preferred language.",
+      "acceptanceCriteria": [
+        "Add content.form namespace to all 3 locale files with keys for: section headers, field labels, help text, placeholders, validation messages, upload strings, button labels",
+        "In admin-content-form.template.ts: replace hardcoded strings with t() calls",
+        "Section headers ('Basic Information', 'Content Details', 'Organization') translated",
+        "Field labels ('Title', 'Slug', 'URL Slug') and help text ('Leave blank to auto-generate...') translated",
+        "Slug validation messages ('Slug is available', 'Slug is already in use') translated",
+        "File upload strings ('Click to upload', 'Drag and drop', 'Upload complete!', 'Upload failed') translated",
+        "Button labels ('Save', 'Cancel', 'Delete') translated (can reuse common namespace)",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "The content form is the largest template. Focus on visible text — don't translate HTML attributes, data attributes, or CSS class names."
+    },
+    {
+      "id": "US-008",
+      "title": "Extract and translate User List page strings",
+      "description": "As a user, I want the user management list page in my preferred language.",
+      "acceptanceCriteria": [
+        "Add users.list namespace to all 3 locale files with keys for: page title, table headers, role badges, status badges, action buttons, search placeholder, empty state",
+        "In admin-users-list.template.ts: replace hardcoded strings with t() calls",
+        "Role badges ('Admin', 'Editor', 'Author', 'Viewer') translated",
+        "Status badges ('Active', 'Inactive') translated (can reuse common namespace)",
+        "Table headers and 'Add User' button translated",
+        "Confirmation dialog text ('Toggle User Status?', 'Are you sure?') translated",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Extract and translate User Form pages strings",
+      "description": "As a user, I want the new user, edit user, and profile pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add users.form namespace to all 3 locale files with keys for: field labels, placeholders, button labels, page titles",
+        "In admin-users-new.template.ts: replace hardcoded strings with t() calls — page title ('Add New User'), field labels ('First Name', 'Last Name', 'Email', 'Username', 'Password', 'Role'), submit button",
+        "In admin-users-edit.template.ts: replace hardcoded strings with t() calls — page title ('Edit User'), same field labels as new, update button",
+        "In admin-users-profile.template.ts: replace hardcoded strings with t() calls — page title ('My Profile'), field labels, save button",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Extract and translate Settings page strings",
+      "description": "As a user, I want the settings tabs (General, Migrations, Database Tools) in my preferred language.",
+      "acceptanceCriteria": [
+        "Add settings namespace to all 3 locale files with keys for: tab labels, field labels, help text, button labels, status labels, warning messages",
+        "In admin-settings.template.ts: replace hardcoded strings with t() calls",
+        "Tab labels ('General', 'Migrations', 'Database Tools') translated",
+        "General tab: field labels ('Site Name', 'Site Description', 'Admin Email', 'Timezone', 'Language', 'Maintenance Mode') and help text translated",
+        "Migrations tab: status labels ('Applied', 'Pending'), 'Run Pending' button translated",
+        "Database Tools tab: all labels and warning messages translated",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "The language dropdown already lists pt/en/es — it just needs functional wiring (done in US-015)."
+    },
+    {
+      "id": "US-011",
+      "title": "Extract and translate Authentication page strings",
+      "description": "As a user, I want the login and register pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add auth namespace to all 3 locale files with keys for: page titles, field labels, button text, error messages, links",
+        "In admin-login.template.ts: replace hardcoded strings with t() calls — title ('Sign In'), field labels ('Email', 'Password'), button ('Sign In'), register link text",
+        "In admin-register.template.ts: replace hardcoded strings with t() calls — title ('Create Account'), field labels, button ('Register'), login link text",
+        "Since user is not authenticated, use 'en' as default locale (already set in US-003)",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Auth pages use 'en' as the default since there is no authenticated user to read preference from."
+    },
+    {
+      "id": "US-012",
+      "title": "Extract and translate shared component strings",
+      "description": "As a developer, I need all reusable components to support translated strings.",
+      "acceptanceCriteria": [
+        "Add components namespace to all 3 locale files with keys for: alert defaults, dialog defaults, pagination, table, filter bar",
+        "In alert.template.ts: default message text uses t() calls if any exist",
+        "In confirmation-dialog.template.ts: default confirm/cancel button text translated ('Confirm', 'Cancel')",
+        "In pagination.template.ts: 'Previous'/'Next' labels translated",
+        "In table.template.ts: empty state messages, sort labels translated",
+        "In filter-bar.template.ts: 'Search...', 'Clear Filters' translated (if these components render hardcoded strings)",
+        "All component render functions accept locale parameter",
+        "All 3 locales complete",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Some components may already receive their text as parameters from parent templates. Only translate text that is hardcoded within the component itself."
+    },
+    {
+      "id": "US-013",
+      "title": "Extract and translate Plugins and Cache page strings",
+      "description": "As a user, I want the plugins list and cache management pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add plugins namespace and cache namespace to all 3 locale files",
+        "In admin-plugins-list.template.ts: replace hardcoded strings with t() calls — page title, plugin status badges, action buttons, empty state",
+        "In admin-cache.template.ts: replace hardcoded strings with t() calls — page title, labels, action buttons",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Extract and translate Design and Logs page strings",
+      "description": "As a user, I want the design page and all log pages in my preferred language.",
+      "acceptanceCriteria": [
+        "Add design namespace and logs namespace to all 3 locale files",
+        "In admin-design.template.ts: replace hardcoded strings with t() calls",
+        "In admin-logs.template.ts (list): replace hardcoded strings — page title, table headers, filter labels, empty state",
+        "In admin-log-details.template.ts: replace hardcoded strings — labels, back button",
+        "In admin-log-config.template.ts: replace hardcoded strings — labels, form fields",
+        "In admin-activity-log.template.ts: replace hardcoded strings — labels, table headers",
+        "All 3 locales complete",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Wire language preference in user profile and settings",
+      "description": "As a user, I want to change my language preference from my profile or general settings so the UI updates immediately.",
+      "acceptanceCriteria": [
+        "Language dropdown on user profile page shows the current user's language preference (read from DB)",
+        "Selecting a new language on the profile page saves it to the user record in the database",
+        "The existing language dropdown in general settings becomes functional — changing it updates the current user's language preference",
+        "After saving a language change, the page reloads and renders in the newly selected language",
+        "The language field is included in the user profile update route handler",
+        "All 3 locales complete for any new UI text",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "The language dropdown in general settings (admin-settings.template.ts lines 530-540) already shows pt/en/es options but is non-functional. Wire it to actually save."
+    }
+  ]
+}
