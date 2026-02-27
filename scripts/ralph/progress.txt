@@ -25,6 +25,8 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - i18n: Auth template files are named `auth-login.template.ts` and `auth-register.template.ts` (NOT `admin-login`/`admin-register`)
 - i18n: Shared components use locale as a second positional param with default 'en' (e.g., `renderTable(data, locale)`) — NOT as part of data interfaces
 - i18n: Confirmation dialog reuses `common.confirm` / `common.cancel` for defaults via `t()` — no duplicate component keys needed
+- i18n: For dynamic status labels that used `.charAt(0).toUpperCase() + .slice(1)`, replace with a `statusLabels` Record lookup using translated strings
+- i18n: Client-side concatenation like `Plugin ${action}d successfully` doesn't work for i18n — use separate keys per action
 - Pre-existing plugin errors in typecheck (email-templates-plugin, ai-search-plugin, design routes) — ignore these
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
@@ -233,4 +235,21 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - filter-bar.template.ts has NO hardcoded strings — filter labels, options, and action labels all come from parent templates
   - pagination.template.ts "Showing X to Y of Z results" uses `showingResults` key with `{{start}}`, `{{end}}`, `{{total}}` interpolation — HTML spans are passed as interpolation values to preserve styling
   - Components use locale as a second param with default 'en' (e.g., `renderTable(data, locale)`) NOT as part of the data interface — keeps data interfaces clean
+---
+
+## 2026-02-27 - US-013
+- Extracted and translated all Plugins List and Cache Dashboard page strings
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `plugins` namespace (45+ keys: page header, categories, statuses, stats, sort options, install/uninstall/toggle notifications, confirmation dialog) and `cache` namespace (35+ keys: page header, stat cards, table headers, performance metrics, health status, confirmation dialogs, client-side alerts)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for plugins and cache namespaces
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for plugins and cache namespaces
+  - `packages/core/src/templates/pages/admin-plugins-list.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; injected `window.__i18n` for client-side JS (toggle/install/uninstall notifications, status badge updates, empty state); added `statusLabels` Record for translated status badges; passed locale to `renderPluginCard()` and layout data
+  - `packages/core/src/templates/pages/admin-cache.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; injected `window.__i18n` for client-side JS (clear cache alerts); passed locale to `renderNamespaceRow()`, `renderPerformanceMetric()`, `renderHealthStatus()`; passed locale to layout data
+- **Learnings for future iterations:**
+  - Plugins page has 9 category labels and 4 status labels in filter sidebar — these are defined as arrays at the top of `renderPluginsListPage()` and need t() calls for each label
+  - Plugin status badge uses `plugin.status.charAt(0).toUpperCase() + plugin.status.slice(1)` — replaced with `statusLabels` Record lookup using translated strings from common namespace
+  - Client-side toggle notification used template literal `Plugin ${action}d successfully` — split into two separate i18n keys (pluginActivatedSuccess / pluginDeactivatedSuccess) since concatenation doesn't work for i18n
+  - Cache template has multiple private render functions (`renderNamespaceRow`, `renderPerformanceMetric`, `renderHealthStatus`) — each gets locale as last param with default 'en'
+  - Cache health status config object has labels and messages per status level — all need t() calls with locale
+  - The "Core" badge text on plugin cards needs translation — easily missed since it's a short inline conditional
 ---
