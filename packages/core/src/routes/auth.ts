@@ -6,6 +6,7 @@ import { html } from 'hono/html'
 import { AuthManager, requireAuth } from '../middleware'
 import { renderLoginPage, LoginPageData } from '../templates/pages/auth-login.template'
 import { renderRegisterPage, RegisterPageData } from '../templates/pages/auth-register.template'
+import { t } from '../i18n'
 import { getCacheService, CACHE_CONFIGS } from '../services'
 import { authValidationService, isRegistrationEnabled, isFirstUserRegistration } from '../services/auth-validation'
 import type { RegistrationData } from '../services/auth-validation'
@@ -356,7 +357,7 @@ authRoutes.post('/register/form', async (c) => {
       if (!registrationEnabled) {
         return c.html(html`
           <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Registration is currently disabled. Please contact an administrator.
+            ${t('auth.register.registrationDisabled', 'en')}
           </div>
         `)
       }
@@ -406,7 +407,7 @@ authRoutes.post('/register/form', async (c) => {
     if (existingUser) {
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          User with this email or username already exists
+          ${t('auth.register.userAlreadyExists', 'en')}
         </div>
       `)
     }
@@ -453,7 +454,7 @@ authRoutes.post('/register/form', async (c) => {
 
     return c.html(html`
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        Account created successfully! Redirecting...
+        ${t('auth.register.accountCreated', 'en')}
         <script>
           setTimeout(() => {
             window.location.href = '${redirectUrl}';
@@ -465,7 +466,7 @@ authRoutes.post('/register/form', async (c) => {
     console.error('Registration error:', error)
     return c.html(html`
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        Registration failed. Please try again.
+        ${t('auth.register.registrationFailed', 'en')}
       </div>
     `)
   }
@@ -502,17 +503,17 @@ authRoutes.post('/login/form', async (c) => {
     if (!user) {
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          Invalid email or password
+          ${t('auth.login.invalidCredentials', 'en')}
         </div>
       `)
     }
-    
+
     // Verify password
     const isValidPassword = await AuthManager.verifyPassword(password, user.password_hash)
     if (!isValidPassword) {
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          Invalid email or password
+          ${t('auth.login.invalidCredentials', 'en')}
         </div>
       `)
     }
@@ -541,7 +542,7 @@ authRoutes.post('/login/form', async (c) => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <div class="flex-1">
-              <p class="text-sm font-medium text-green-700 dark:text-lime-300">Login successful! Redirecting to admin dashboard...</p>
+              <p class="text-sm font-medium text-green-700 dark:text-lime-300">${t('auth.login.loginSuccess', 'en')}</p>
             </div>
           </div>
           <script>
@@ -556,7 +557,7 @@ authRoutes.post('/login/form', async (c) => {
     console.error('Login error:', error)
     return c.html(html`
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        Login failed. Please try again.
+        ${t('auth.login.loginFailed', 'en')}
       </div>
     `)
   }

@@ -1,4 +1,5 @@
 import { renderAlert } from '../components/alert.template'
+import { t } from '../../i18n'
 
 export interface RegisterPageData {
   error?: string
@@ -6,13 +7,14 @@ export interface RegisterPageData {
 }
 
 export function renderRegisterPage(data: RegisterPageData): string {
+  const locale = data.locale || 'en'
   return `
     <!DOCTYPE html>
-    <html lang="en" class="h-full dark">
+    <html lang="${locale}" class="h-full dark">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Register - WarpCMS</title>
+      <title>${t('auth.register.pageTitle', locale)}</title>
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
       <script src="https://unpkg.com/htmx.org@2.0.3"></script>
       <script src="https://cdn.tailwindcss.com"></script>
@@ -42,7 +44,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
             </svg>
           </div>
           <h1 class="mt-6 text-3xl font-semibold tracking-tight text-white">WarpCMS</h1>
-          <p class="mt-2 text-sm text-zinc-400">Create your account and get started</p>
+          <p class="mt-2 text-sm text-zinc-400">${t('auth.register.subtitle', locale)}</p>
         </div>
 
         <!-- Form Container -->
@@ -63,7 +65,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label for="firstName" class="block text-sm font-medium text-white mb-2">
-                    First Name
+                    ${t('auth.register.firstName', locale)}
                   </label>
                   <input
                     id="firstName"
@@ -71,12 +73,12 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     type="text"
                     required
                     class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                    placeholder="First name"
+                    placeholder="${t('auth.register.firstNamePlaceholder', locale)}"
                   >
                 </div>
                 <div>
                   <label for="lastName" class="block text-sm font-medium text-white mb-2">
-                    Last Name
+                    ${t('auth.register.lastName', locale)}
                   </label>
                   <input
                     id="lastName"
@@ -84,7 +86,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     type="text"
                     required
                     class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                    placeholder="Last name"
+                    placeholder="${t('auth.register.lastNamePlaceholder', locale)}"
                   >
                 </div>
               </div>
@@ -92,7 +94,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
               <!-- Username -->
               <div>
                 <label for="username" class="block text-sm font-medium text-white mb-2">
-                  Username
+                  ${t('auth.register.username', locale)}
                 </label>
                 <input
                   id="username"
@@ -100,14 +102,14 @@ export function renderRegisterPage(data: RegisterPageData): string {
                   type="text"
                   required
                   class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                  placeholder="Choose a username"
+                  placeholder="${t('auth.register.usernamePlaceholder', locale)}"
                 >
               </div>
 
               <!-- Email -->
               <div>
                 <label for="email" class="block text-sm font-medium text-white mb-2">
-                  Email Address
+                  ${t('auth.register.emailLabel', locale)}
                 </label>
                 <input
                   id="email"
@@ -116,14 +118,14 @@ export function renderRegisterPage(data: RegisterPageData): string {
                   autocomplete="email"
                   required
                   class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                  placeholder="Enter your email"
+                  placeholder="${t('auth.register.emailPlaceholder', locale)}"
                 >
               </div>
 
               <!-- Password -->
               <div>
                 <label for="password" class="block text-sm font-medium text-white mb-2">
-                  Password
+                  ${t('auth.register.passwordLabel', locale)}
                 </label>
                 <input
                   id="password"
@@ -133,7 +135,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                   required
                   minlength="8"
                   class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                  placeholder="Create a password (min. 8 characters)"
+                  placeholder="${t('auth.register.passwordPlaceholder', locale)}"
                 >
               </div>
 
@@ -142,15 +144,15 @@ export function renderRegisterPage(data: RegisterPageData): string {
                 type="submit"
                 class="w-full rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-900 transition-colors"
               >
-                Create Account
+                ${t('auth.register.createAccount', locale)}
               </button>
             </form>
 
             <!-- Links -->
             <div class="mt-6 text-center">
               <p class="text-sm text-zinc-400">
-                Already have an account?
-                <a href="/auth/login" class="font-semibold text-white hover:text-zinc-300 transition-colors">Sign in here</a>
+                ${t('auth.register.haveAccount', locale)}
+                <a href="/auth/login" class="font-semibold text-white hover:text-zinc-300 transition-colors">${t('auth.register.signInHere', locale)}</a>
               </p>
             </div>
 

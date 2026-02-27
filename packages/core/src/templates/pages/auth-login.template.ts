@@ -1,4 +1,5 @@
 import { renderAlert } from '../components/alert.template'
+import { t } from '../../i18n'
 
 export interface LoginPageData {
   error?: string
@@ -8,13 +9,14 @@ export interface LoginPageData {
 }
 
 export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = false): string {
+  const locale = data.locale || 'en'
   return `
     <!DOCTYPE html>
-    <html lang="en" class="h-full dark">
+    <html lang="${locale}" class="h-full dark">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Login - WarpCMS</title>
+      <title>${t('auth.login.pageTitle', locale)}</title>
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
       <script src="https://unpkg.com/htmx.org@2.0.3"></script>
       <script src="https://cdn.tailwindcss.com"></script>
@@ -45,8 +47,8 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
           <div class="mx-auto w-64 mb-8">
             <span class="font-bold tracking-tight text-cyan-400" style="font-size: 2.5rem">WarpCMS</span>
           </div>
-          <h2 class="mt-6 text-xl font-medium text-white">Welcome Back</h2>
-          <p class="mt-2 text-sm text-zinc-400">Sign in to your account to continue</p>
+          <h2 class="mt-6 text-xl font-medium text-white">${t('auth.login.welcomeBack', locale)}</h2>
+          <p class="mt-2 text-sm text-zinc-400">${t('auth.login.subtitle', locale)}</p>
         </div>
 
         <!-- Form Container -->
@@ -70,7 +72,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
               <!-- Email -->
               <div>
                 <label for="email" class="block text-sm font-medium text-white mb-2">
-                  Email Address
+                  ${t('auth.login.emailLabel', locale)}
                 </label>
                 <input
                   id="email"
@@ -79,14 +81,14 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                   autocomplete="email"
                   required
                   class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                  placeholder="Enter your email"
+                  placeholder="${t('auth.login.emailPlaceholder', locale)}"
                 >
               </div>
 
               <!-- Password -->
               <div>
                 <label for="password" class="block text-sm font-medium text-white mb-2">
-                  Password
+                  ${t('auth.login.passwordLabel', locale)}
                 </label>
                 <input
                   id="password"
@@ -95,7 +97,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                   autocomplete="current-password"
                   required
                   class="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white transition-shadow"
-                  placeholder="Enter your password"
+                  placeholder="${t('auth.login.passwordPlaceholder', locale)}"
                 >
               </div>
 
@@ -104,15 +106,15 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                 type="submit"
                 class="w-full rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-900 transition-colors"
               >
-                Sign In
+                ${t('auth.login.signIn', locale)}
               </button>
             </form>
 
             <!-- Links -->
             <div class="mt-6 text-center">
               <p class="text-sm text-zinc-400">
-                Don't have an account?
-                <a href="/auth/register" class="font-semibold text-white hover:text-zinc-300 transition-colors">Create one here</a>
+                ${t('auth.login.noAccount', locale)}
+                <a href="/auth/register" class="font-semibold text-white hover:text-zinc-300 transition-colors">${t('auth.login.createOneHere', locale)}</a>
               </p>
             </div>
           </div>
@@ -145,7 +147,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
               if (form && !form.querySelector('.demo-mode-notice')) {
                 const notice = document.createElement('div');
                 notice.className = 'demo-mode-notice mb-6 rounded-lg bg-blue-500/10 p-4 ring-1 ring-blue-500/20';
-                notice.innerHTML = '<div class="flex items-start gap-x-3"><svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div><h3 class="text-sm font-semibold text-blue-300">Demo Mode</h3><p class="mt-1 text-sm text-blue-400">Login form prefilled with demo credentials</p></div></div>';
+                notice.innerHTML = '<div class="flex items-start gap-x-3"><svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div><h3 class="text-sm font-semibold text-blue-300">${t('auth.login.demoMode', locale)}</h3><p class="mt-1 text-sm text-blue-400">${t('auth.login.demoPrefilled', locale)}</p></div></div>';
                 form.insertBefore(notice, form.firstChild);
               }
             }
