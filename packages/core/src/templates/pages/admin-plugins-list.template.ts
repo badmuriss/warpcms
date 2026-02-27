@@ -1,5 +1,6 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { t } from '../../i18n'
 
 export interface Plugin {
   id: string
@@ -38,23 +39,25 @@ export interface PluginsListPageData {
 }
 
 export function renderPluginsListPage(data: PluginsListPageData): string {
+  const locale = data.locale || 'en'
+
   const categories = [
-    { value: 'content', label: 'Content Management' },
-    { value: 'media', label: 'Media' },
-    { value: 'editor', label: 'Editors' },
-    { value: 'seo', label: 'SEO & Analytics' },
-    { value: 'security', label: 'Security' },
-    { value: 'utilities', label: 'Utilities' },
-    { value: 'system', label: 'System' },
-    { value: 'development', label: 'Development' },
-    { value: 'demo', label: 'Demo' }
+    { value: 'content', label: t('plugins.categoryContentManagement', locale) },
+    { value: 'media', label: t('plugins.categoryMedia', locale) },
+    { value: 'editor', label: t('plugins.categoryEditors', locale) },
+    { value: 'seo', label: t('plugins.categorySeoAnalytics', locale) },
+    { value: 'security', label: t('plugins.categorySecurity', locale) },
+    { value: 'utilities', label: t('plugins.categoryUtilities', locale) },
+    { value: 'system', label: t('plugins.categorySystem', locale) },
+    { value: 'development', label: t('plugins.categoryDevelopment', locale) },
+    { value: 'demo', label: t('plugins.categoryDemo', locale) }
   ];
 
   const statuses = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'uninstalled', label: 'Available to Install' },
-    { value: 'error', label: 'Error' }
+    { value: 'active', label: t('common.active', locale) },
+    { value: 'inactive', label: t('common.inactive', locale) },
+    { value: 'uninstalled', label: t('plugins.statusAvailableToInstall', locale) },
+    { value: 'error', label: t('common.error', locale) }
   ];
 
   // Calculate counts
@@ -79,8 +82,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Plugins</h1>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage and extend functionality with plugins</p>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('plugins.title', locale)}</h1>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('plugins.subtitle', locale)}</p>
         </div>
       </div>
 
@@ -94,12 +97,11 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
           </div>
           <div class="ml-3 flex-1">
             <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-200">
-              Experimental Feature
+              ${t('plugins.experimentalFeature', locale)}
             </h3>
             <div class="mt-2 text-sm text-amber-700 dark:text-amber-300">
               <p>
-                Plugin management is currently under active development. While functional, some features may change or have limitations.
-                Please report any issues you encounter on our <a href="https://discord.gg/8bMy6bv3sZ" target="_blank" class="font-medium underline hover:text-amber-900 dark:hover:text-amber-100">Discord community</a>.
+                ${t('plugins.experimentalDescription', locale)} <a href="https://discord.gg/8bMy6bv3sZ" target="_blank" class="font-medium underline hover:text-amber-900 dark:hover:text-amber-100">${t('plugins.discordCommunity', locale)}</a>.
               </p>
             </div>
           </div>
@@ -111,7 +113,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
         <aside class="w-full lg:w-48 flex-shrink-0 space-y-8 lg:sticky lg:top-6 lg:self-start">
           <!-- Categories Filter -->
           <div>
-            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">Categories</h3>
+            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">${t('plugins.categories', locale)}</h3>
             <div class="space-y-3">
               ${categories.map(cat => {
                 const count = categoryCounts[cat.value] || 0;
@@ -139,7 +141,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
 
           <!-- Status Filter -->
           <div>
-            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">Status</h3>
+            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">${t('plugins.statusFilter', locale)}</h3>
             <div class="space-y-3">
               ${statuses.map(status => {
                 const count = statusCounts[status.value] || 0;
@@ -204,19 +206,19 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
           <!-- Stats Row (Compact) -->
           <div class="flex flex-wrap gap-4 mb-6">
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('plugins.statsTotal', locale)}</div>
               <div class="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">${data.stats?.total || 0}</div>
             </div>
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Active</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('plugins.statsActive', locale)}</div>
               <div class="mt-1 text-lg font-semibold text-emerald-600 dark:text-emerald-400">${data.stats?.active || 0}</div>
             </div>
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Available</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('plugins.statsAvailable', locale)}</div>
               <div class="mt-1 text-lg font-semibold text-zinc-600 dark:text-zinc-400">${data.stats?.uninstalled || 0}</div>
             </div>
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Errors</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('plugins.statsErrors', locale)}</div>
               <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">${data.stats?.errors || 0}</div>
             </div>
           </div>
@@ -232,7 +234,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
               <input
                 id="search-input"
                 type="text"
-                placeholder="Search plugins..."
+                placeholder="${t('plugins.searchPlaceholder', locale)}"
                 oninput="filterAndSortPlugins()"
                 class="block w-full h-9 rounded-md border-0 py-1.5 pl-10 text-zinc-900 ring-1 ring-inset ring-zinc-300 placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-zinc-600 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700 dark:focus:ring-zinc-500 sm:text-sm sm:leading-6"
               >
@@ -240,12 +242,12 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
 
             <div class="flex items-center gap-3 w-full sm:w-auto">
               <select id="sort-filter" onchange="filterAndSortPlugins()" class="block w-full sm:w-auto h-9 rounded-md border-0 py-1.5 pl-3 pr-8 text-zinc-900 ring-1 ring-inset ring-zinc-300 focus:ring-2 focus:ring-inset focus:ring-zinc-600 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700 dark:focus:ring-zinc-500 sm:text-sm sm:leading-6">
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
-                <option value="newest">Newest Installed</option>
-                <option value="updated">Recently Updated</option>
-                <option value="popular">Popularity</option>
-                <option value="rating">Highest Rated</option>
+                <option value="name-asc">${t('plugins.sortNameAsc', locale)}</option>
+                <option value="name-desc">${t('plugins.sortNameDesc', locale)}</option>
+                <option value="newest">${t('plugins.sortNewest', locale)}</option>
+                <option value="updated">${t('plugins.sortUpdated', locale)}</option>
+                <option value="popular">${t('plugins.sortPopular', locale)}</option>
+                <option value="rating">${t('plugins.sortRating', locale)}</option>
               </select>
 
               <button
@@ -261,13 +263,30 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
 
           <!-- Plugins Grid -->
           <div id="plugins-grid" class="grid gap-6" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-            ${data.plugins.map(plugin => renderPluginCard(plugin)).join('')}
+            ${data.plugins.map(plugin => renderPluginCard(plugin, locale)).join('')}
           </div>
         </div>
       </div>
     </div>
 
     <script>
+      window.__i18n = {
+        pluginActivatedSuccess: '${t('plugins.pluginActivatedSuccess', locale)}',
+        pluginDeactivatedSuccess: '${t('plugins.pluginDeactivatedSuccess', locale)}',
+        failedToActivatePlugin: '${t('plugins.failedToActivatePlugin', locale)}',
+        failedToDeactivatePlugin: '${t('plugins.failedToDeactivatePlugin', locale)}',
+        installing: '${t('plugins.installing', locale)}',
+        pluginInstalledSuccess: '${t('plugins.pluginInstalledSuccess', locale)}',
+        failedToInstallPlugin: '${t('plugins.failedToInstallPlugin', locale)}',
+        install: '${t('plugins.install', locale)}',
+        pluginUninstalledSuccess: '${t('plugins.pluginUninstalledSuccess', locale)}',
+        failedToUninstallPlugin: '${t('plugins.failedToUninstallPlugin', locale)}',
+        noPluginsFound: '${t('plugins.noPluginsFound', locale)}',
+        noPluginsFoundHint: '${t('plugins.noPluginsFoundHint', locale)}',
+        active: '${t('common.active', locale)}',
+        inactive: '${t('common.inactive', locale)}',
+      };
+
       async function togglePlugin(pluginId, action, event) {
         const button = event.target.closest('button');
         if (!button) return;
@@ -294,8 +313,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
             if (action === 'activate') {
               // Update status badge
               statusBadge.className = 'status-badge inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20';
-              statusBadge.innerHTML = '<div class="w-1.5 h-1.5 bg-emerald-500 dark:bg-emerald-400 rounded-full mr-1.5"></div>Active';
-              
+              statusBadge.innerHTML = '<div class="w-1.5 h-1.5 bg-emerald-500 dark:bg-emerald-400 rounded-full mr-1.5"></div>' + window.__i18n.active;
+
               // Update button state to Active
               button.className = 'bg-emerald-600 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 toggle-button';
               button.setAttribute('aria-checked', 'true');
@@ -308,8 +327,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
             } else {
               // Update status badge
               statusBadge.className = 'status-badge inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-zinc-50 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 ring-zinc-600/20';
-              statusBadge.innerHTML = '<div class="w-1.5 h-1.5 bg-zinc-500 dark:bg-zinc-400 rounded-full mr-1.5"></div>Inactive';
-              
+              statusBadge.innerHTML = '<div class="w-1.5 h-1.5 bg-zinc-500 dark:bg-zinc-400 rounded-full mr-1.5"></div>' + window.__i18n.inactive;
+
               // Update button state to Inactive
               button.className = 'bg-zinc-200 dark:bg-zinc-700 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 toggle-button';
               button.setAttribute('aria-checked', 'false');
@@ -321,9 +340,11 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
               }
             }
 
-            showNotification(\`Plugin \${action}d successfully\`, 'success');
+            const msg = action === 'activate' ? window.__i18n.pluginActivatedSuccess : window.__i18n.pluginDeactivatedSuccess;
+            showNotification(msg, 'success');
           } else {
-            throw new Error(result.error || \`Failed to \${action} plugin\`);
+            const failMsg = action === 'activate' ? window.__i18n.failedToActivatePlugin : window.__i18n.failedToDeactivatePlugin;
+            throw new Error(result.error || failMsg);
           }
         } catch (error) {
           showNotification(error.message, 'error');
@@ -336,8 +357,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
       async function installPlugin(pluginName) {
         const button = event.target;
         button.disabled = true;
-        button.textContent = 'Installing...';
-        
+        button.textContent = window.__i18n.installing;
+
         try {
           const response = await fetch('/admin/plugins/install', {
             method: 'POST',
@@ -346,19 +367,19 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
             },
             body: JSON.stringify({ name: pluginName })
           });
-          
+
           const result = await response.json();
-          
+
           if (result.success) {
-            showNotification('Plugin installed successfully!', 'success');
+            showNotification(window.__i18n.pluginInstalledSuccess, 'success');
             setTimeout(() => location.reload(), 1500);
           } else {
-            throw new Error(result.error || 'Failed to install plugin');
+            throw new Error(result.error || window.__i18n.failedToInstallPlugin);
           }
         } catch (error) {
           showNotification(error.message, 'error');
           button.disabled = false;
-          button.textContent = 'Install';
+          button.textContent = window.__i18n.install;
         }
       }
       
@@ -386,10 +407,10 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
           const result = await response.json();
 
           if (result.success) {
-            showNotification('Plugin uninstalled successfully!', 'success');
+            showNotification(window.__i18n.pluginUninstalledSuccess, 'success');
             setTimeout(() => location.reload(), 1500);
           } else {
-            throw new Error(result.error || 'Failed to uninstall plugin');
+            throw new Error(result.error || window.__i18n.failedToUninstallPlugin);
           }
         } catch (error) {
           showNotification(error.message, 'error');
@@ -476,8 +497,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
                 <svg class="w-12 h-12 text-zinc-400 dark:text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-1">No plugins found</h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Try adjusting your filters or search terms</p>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-1">\${window.__i18n.noPluginsFound}</h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">\${window.__i18n.noPluginsFoundHint}</p>
               </div>
             \`;
             pluginsGrid.appendChild(noResultsMsg);
@@ -496,10 +517,10 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
     <!-- Confirmation Dialogs -->
     ${renderConfirmationDialog({
       id: 'uninstall-plugin-confirm',
-      title: 'Uninstall Plugin',
-      message: 'Are you sure you want to uninstall this plugin? This action cannot be undone.',
-      confirmText: 'Uninstall',
-      cancelText: 'Cancel',
+      title: t('plugins.uninstallPlugin', locale),
+      message: t('plugins.uninstallConfirmMessage', locale),
+      confirmText: t('plugins.uninstall', locale),
+      cancelText: t('common.cancel', locale),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: 'performUninstallPlugin()'
@@ -509,18 +530,19 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Plugins',
-    pageTitle: 'Plugin Management',
+    title: t('plugins.title', locale),
+    pageTitle: t('plugins.pluginManagement', locale),
     currentPath: '/admin/plugins',
     user: data.user,
     version: data.version,
+    locale,
     content: pageContent
   }
 
   return renderAdminLayoutCatalyst(layoutData)
 }
 
-function renderPluginCard(plugin: Plugin): string {
+function renderPluginCard(plugin: Plugin, locale = 'en'): string {
   const statusColors = {
     active: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20',
     inactive: 'bg-zinc-50 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 ring-zinc-600/20',
@@ -535,13 +557,20 @@ function renderPluginCard(plugin: Plugin): string {
     uninstalled: '<div class="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-600 rounded-full mr-1.5"></div>'
   }
 
+  const statusLabels: Record<string, string> = {
+    active: t('common.active', locale),
+    inactive: t('common.inactive', locale),
+    error: t('common.error', locale),
+    uninstalled: t('plugins.statusAvailableToInstall', locale),
+  }
+
   // Core system plugins that cannot be deactivated
   const criticalCorePlugins = ['core-auth', 'core-media']
   const canToggle = !criticalCorePlugins.includes(plugin.id)
 
   let actionButton = ''
   if (plugin.status === 'uninstalled') {
-    actionButton = `<button onclick="event.stopPropagation(); installPlugin('${plugin.name}')" class="w-full sm:w-auto bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm">Install</button>`
+    actionButton = `<button onclick="event.stopPropagation(); installPlugin('${plugin.name}')" class="w-full sm:w-auto bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm">${t('plugins.install', locale)}</button>`
   } else {
     const isActive = plugin.status === 'active';
     const action = isActive ? 'deactivate' : 'activate';
@@ -552,14 +581,14 @@ function renderPluginCard(plugin: Plugin): string {
     if (canToggle) {
       actionButton = `
       <button onclick="event.stopPropagation(); togglePlugin('${plugin.id}', '${action}', event)" type="button" class="${bgClass} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 toggle-button" role="switch" aria-checked="${isActive}">
-        <span class="sr-only">Toggle plugin</span>
+        <span class="sr-only">${t('plugins.togglePlugin', locale)}</span>
         <span aria-hidden="true" class="${translateClass} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out toggle-knob"></span>
       </button>
       `
     } else {
       // Critical core plugins cannot be toggled
       actionButton = `
-      <div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent bg-emerald-600/50 opacity-50" title="Core plugin cannot be disabled">
+      <div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent bg-emerald-600/50 opacity-50" title="${t('plugins.corePluginCannotBeDisabled', locale)}">
         <span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0"></span>
       </div>
       `
@@ -584,7 +613,7 @@ function renderPluginCard(plugin: Plugin): string {
             <div class="flex items-center gap-2">
               <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">${plugin.displayName}</h3>
               <span class="status-badge inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${statusColors[plugin.status]}">
-                ${statusIcons[plugin.status]}${plugin.status.charAt(0).toUpperCase() + plugin.status.slice(1)}
+                ${statusIcons[plugin.status]}${statusLabels[plugin.status] || plugin.status}
               </span>
             </div>
             <p class="text-xs text-zinc-500 dark:text-zinc-400">v${plugin.version} • ${plugin.author}</p>
@@ -593,7 +622,7 @@ function renderPluginCard(plugin: Plugin): string {
         
         <div class="flex items-center gap-1">
           ${!plugin.isCore && plugin.status !== 'uninstalled' ? `
-          <button onclick="event.stopPropagation(); uninstallPlugin('${plugin.id}')" class="text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400 p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" title="Uninstall Plugin">
+          <button onclick="event.stopPropagation(); uninstallPlugin('${plugin.id}')" class="text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400 p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" title="${t('plugins.uninstallPlugin', locale)}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
@@ -608,7 +637,7 @@ function renderPluginCard(plugin: Plugin): string {
         <span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
           ${plugin.category}
         </span>
-        ${plugin.isCore ? '<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">Core</span>' : ''}
+        ${plugin.isCore ? `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">${t('plugins.core', locale)}</span>` : ''}
         
         ${plugin.dependencies && plugin.dependencies.map(dep => `
           <span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
