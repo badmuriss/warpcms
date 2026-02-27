@@ -1,4 +1,5 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
+import { t } from '../../i18n'
 
 interface BaseUser {
   name: string
@@ -56,14 +57,15 @@ export interface LogsListPageData {
 
 export function renderLogsListPage(data: LogsListPageData) {
   const { logs, pagination, filters, user } = data
+  const locale = data.locale || 'en'
 
   const content = `
     <div>
       <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div class="sm:flex-auto">
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">System Logs</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('logs.title', locale)}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
-            Monitor and analyze system activity, errors, and performance metrics.
+            ${t('logs.subtitle', locale)}
           </p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 flex gap-x-2">
@@ -71,13 +73,13 @@ export function renderLogsListPage(data: LogsListPageData) {
             href="/admin/logs/config"
             class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors shadow-sm"
           >
-            Configure
+            ${t('logs.configure', locale)}
           </a>
           <a
             href="/admin/logs/export?${new URLSearchParams(filters).toString()}"
             class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
           >
-            Export
+            ${t('logs.export', locale)}
           </a>
         </div>
       </div>
@@ -92,7 +94,7 @@ export function renderLogsListPage(data: LogsListPageData) {
             <form method="GET" action="/admin/logs" class="space-y-4">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="relative group">
-                  <label for="search" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                  <label for="search" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.searchLabel', locale)}</label>
                   <div class="relative">
                     <div class="absolute left-3.5 top-2.5 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 dark:from-cyan-300 dark:to-blue-400 opacity-90 group-focus-within:opacity-100 transition-opacity">
                       <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -104,61 +106,61 @@ export function renderLogsListPage(data: LogsListPageData) {
                       name="search"
                       id="search"
                       value="${filters.search}"
-                      placeholder="Search messages..."
+                      placeholder="${t('logs.searchPlaceholder', locale)}"
                       class="w-full rounded-full bg-transparent pl-11 pr-4 py-2 text-sm text-zinc-950 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400 border-2 border-cyan-200/50 dark:border-cyan-700/50 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 dark:focus:shadow-cyan-400/20 transition-all duration-300"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label for="level" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Level</label>
+                  <label for="level" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.level', locale)}</label>
                   <select
                     name="level"
                     id="level"
                     class="w-full rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white border-2 border-cyan-200/50 dark:border-cyan-700/50 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 dark:focus:shadow-cyan-400/20 transition-all duration-300"
                   >
-                    <option value="">All Levels</option>
-                    <option value="debug" ${filters.level === 'debug' ? 'selected' : ''}>Debug</option>
-                    <option value="info" ${filters.level === 'info' ? 'selected' : ''}>Info</option>
-                    <option value="warn" ${filters.level === 'warn' ? 'selected' : ''}>Warning</option>
-                    <option value="error" ${filters.level === 'error' ? 'selected' : ''}>Error</option>
-                    <option value="fatal" ${filters.level === 'fatal' ? 'selected' : ''}>Fatal</option>
+                    <option value="">${t('logs.allLevels', locale)}</option>
+                    <option value="debug" ${filters.level === 'debug' ? 'selected' : ''}>${t('logs.levelDebug', locale)}</option>
+                    <option value="info" ${filters.level === 'info' ? 'selected' : ''}>${t('logs.levelInfo', locale)}</option>
+                    <option value="warn" ${filters.level === 'warn' ? 'selected' : ''}>${t('logs.levelWarning', locale)}</option>
+                    <option value="error" ${filters.level === 'error' ? 'selected' : ''}>${t('logs.levelError', locale)}</option>
+                    <option value="fatal" ${filters.level === 'fatal' ? 'selected' : ''}>${t('logs.levelFatal', locale)}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Category</label>
+                  <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.category', locale)}</label>
                   <select
                     name="category"
                     id="category"
                     class="w-full rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white border-2 border-cyan-200/50 dark:border-cyan-700/50 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 dark:focus:shadow-cyan-400/20 transition-all duration-300"
                   >
-                    <option value="">All Categories</option>
-                    <option value="auth" ${filters.category === 'auth' ? 'selected' : ''}>Authentication</option>
-                    <option value="api" ${filters.category === 'api' ? 'selected' : ''}>API</option>
-                    <option value="workflow" ${filters.category === 'workflow' ? 'selected' : ''}>Workflow</option>
-                    <option value="plugin" ${filters.category === 'plugin' ? 'selected' : ''}>Plugin</option>
-                    <option value="media" ${filters.category === 'media' ? 'selected' : ''}>Media</option>
-                    <option value="system" ${filters.category === 'system' ? 'selected' : ''}>System</option>
-                    <option value="security" ${filters.category === 'security' ? 'selected' : ''}>Security</option>
-                    <option value="error" ${filters.category === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="">${t('logs.allCategories', locale)}</option>
+                    <option value="auth" ${filters.category === 'auth' ? 'selected' : ''}>${t('logs.categoryAuthentication', locale)}</option>
+                    <option value="api" ${filters.category === 'api' ? 'selected' : ''}>${t('logs.categoryApi', locale)}</option>
+                    <option value="workflow" ${filters.category === 'workflow' ? 'selected' : ''}>${t('logs.categoryWorkflow', locale)}</option>
+                    <option value="plugin" ${filters.category === 'plugin' ? 'selected' : ''}>${t('logs.categoryPlugin', locale)}</option>
+                    <option value="media" ${filters.category === 'media' ? 'selected' : ''}>${t('logs.categoryMedia', locale)}</option>
+                    <option value="system" ${filters.category === 'system' ? 'selected' : ''}>${t('logs.categorySystem', locale)}</option>
+                    <option value="security" ${filters.category === 'security' ? 'selected' : ''}>${t('logs.categorySecurity', locale)}</option>
+                    <option value="error" ${filters.category === 'error' ? 'selected' : ''}>${t('logs.categoryError', locale)}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label for="source" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Source</label>
+                  <label for="source" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.source', locale)}</label>
                   <input
                     type="text"
                     name="source"
                     id="source"
                     value="${filters.source}"
-                    placeholder="e.g., http-middleware"
+                    placeholder="${t('logs.sourcePlaceholder', locale)}"
                     class="w-full rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400 border-2 border-cyan-200/50 dark:border-cyan-700/50 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:shadow-lg focus:shadow-cyan-500/20 dark:focus:shadow-cyan-400/20 transition-all duration-300"
                   />
                 </div>
 
                 <div>
-                  <label for="start_date" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Start Date</label>
+                  <label for="start_date" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.startDate', locale)}</label>
                   <input
                     type="datetime-local"
                     name="start_date"
@@ -169,7 +171,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                 </div>
 
                 <div>
-                  <label for="end_date" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">End Date</label>
+                  <label for="end_date" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('logs.endDate', locale)}</label>
                   <input
                     type="datetime-local"
                     name="end_date"
@@ -184,19 +186,19 @@ export function renderLogsListPage(data: LogsListPageData) {
                     type="submit"
                     class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-sm"
                   >
-                    Apply Filters
+                    ${t('logs.applyFilters', locale)}
                   </button>
                   <a
                     href="/admin/logs"
                     class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors shadow-sm"
                   >
-                    Clear
+                    ${t('logs.clear', locale)}
                   </a>
                 </div>
               </div>
 
               <div class="flex items-center justify-end pt-2">
-                <span class="text-sm/6 font-medium text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm">${pagination.totalItems} ${pagination.totalItems === 1 ? 'entry' : 'entries'}</span>
+                <span class="text-sm/6 font-medium text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-full bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm">${pagination.totalItems === 1 ? t('logs.entry', locale, { count: pagination.totalItems.toString() }) : t('logs.entriesPlural', locale, { count: pagination.totalItems.toString() })}</span>
               </div>
             </form>
           </div>
@@ -210,22 +212,22 @@ export function renderLogsListPage(data: LogsListPageData) {
             <thead>
               <tr class="border-b border-zinc-950/5 dark:border-white/5">
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white sm:pl-6">
-                  Level
+                  ${t('logs.columnLevel', locale)}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Category
+                  ${t('logs.columnCategory', locale)}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Message
+                  ${t('logs.columnMessage', locale)}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Source
+                  ${t('logs.columnSource', locale)}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Time
+                  ${t('logs.columnTime', locale)}
                 </th>
                 <th scope="col" class="relative px-4 py-3.5 sm:pr-6">
-                  <span class="sr-only">Actions</span>
+                  <span class="sr-only">${t('common.actions', locale)}</span>
                 </th>
               </tr>
             </thead>
@@ -257,7 +259,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                   </td>
                   <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium sm:pr-6">
                     <a href="/admin/logs/${log.id}" class="text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
-                      View Details
+                      ${t('logs.viewDetails', locale)}
                     </a>
                   </td>
                 </tr>
@@ -271,8 +273,8 @@ export function renderLogsListPage(data: LogsListPageData) {
             <svg class="mx-auto h-12 w-12 text-zinc-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-zinc-950 dark:text-white">No log entries</h3>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">No log entries found matching your criteria.</p>
+            <h3 class="mt-2 text-sm font-medium text-zinc-950 dark:text-white">${t('logs.noLogEntries', locale)}</h3>
+            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">${t('logs.noLogEntriesMessage', locale)}</p>
           </div>
         ` : ''}
       </div>
@@ -286,11 +288,11 @@ export function renderLogsListPage(data: LogsListPageData) {
                 href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage - 1).toString()}).toString()}"
                 class="relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Previous
+                ${t('logs.previous', locale)}
               </a>
             ` : `
               <span class="relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Previous
+                ${t('logs.previous', locale)}
               </span>
             `}
             ${pagination.currentPage < pagination.totalPages ? `
@@ -298,19 +300,18 @@ export function renderLogsListPage(data: LogsListPageData) {
                 href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage + 1).toString()}).toString()}"
                 class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Next
+                ${t('logs.next', locale)}
               </a>
             ` : `
               <span class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Next
+                ${t('logs.next', locale)}
               </span>
             `}
           </div>
           <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                Showing <span class="font-medium">${pagination.startItem}</span> to <span class="font-medium">${pagination.endItem}</span> of{' '}
-                <span class="font-medium">${pagination.totalItems}</span> results
+                ${t('logs.showingResults', locale, { start: `<span class="font-medium">${pagination.startItem}</span>`, end: `<span class="font-medium">${pagination.endItem}</span>`, total: `<span class="font-medium">${pagination.totalItems}</span>` })}
               </p>
             </div>
             <div>
@@ -320,7 +321,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage - 1).toString()}).toString()}"
                     class="relative inline-flex items-center px-2 py-2 rounded-l-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
                   >
-                    <span class="sr-only">Previous</span>
+                    <span class="sr-only">${t('logs.previous', locale)}</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
@@ -350,7 +351,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage + 1).toString()}).toString()}"
                     class="relative inline-flex items-center px-2 py-2 rounded-r-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
                   >
-                    <span class="sr-only">Next</span>
+                    <span class="sr-only">${t('logs.next', locale)}</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
@@ -365,11 +366,12 @@ export function renderLogsListPage(data: LogsListPageData) {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'System Logs',
-    pageTitle: 'System Logs',
+    title: t('logs.title', locale),
+    pageTitle: t('logs.title', locale),
     currentPath: '/admin/logs',
     user,
-    content
+    content,
+    locale
   }
 
   return renderAdminLayoutCatalyst(layoutData)

@@ -7,7 +7,7 @@ import { renderLogsListPage, type LogsListPageData } from '../templates/pages/ad
 import { renderLogDetailsPage, type LogDetailsPageData } from '../templates/pages/admin-log-details.template'
 import { renderLogConfigPage, type LogConfigPageData } from '../templates/pages/admin-log-config.template'
 import type { Bindings, Variables } from '../app'
-import { getLocale } from '../i18n'
+import { getLocale, t } from '../i18n'
 
 const adminLogsRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -134,7 +134,7 @@ adminLogsRoutes.get('/:id', async (c) => {
     const log = logs.find(l => l.id === id)
     
     if (!log) {
-      return c.html(html`<p>Log entry not found</p>`)
+      return c.html(html`<p>${t('logs.logNotFound', locale)}</p>`)
     }
     
     const formattedLog = {
@@ -196,12 +196,13 @@ adminLogsRoutes.post('/config/:category', async (c) => {
   try {
     const category = c.req.param('category') as LogCategory
     const formData = await c.req.formData()
-    
+    const locale = await getLocale(c)
+
     const enabled = formData.get('enabled') === 'on'
     const level = formData.get('level') as string
     const retention = parseInt(formData.get('retention') as string)
     const maxSize = parseInt(formData.get('max_size') as string)
-    
+
     const logger = getLogger(c.env.DB)
     await logger.updateConfig(category, {
       enabled,
@@ -209,17 +210,18 @@ adminLogsRoutes.post('/config/:category', async (c) => {
       retention,
       maxSize
     })
-    
+
     return c.html(html`
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        Configuration updated successfully!
+        ${t('logs.configUpdatedSuccess', locale)}
       </div>
     `)
   } catch (error) {
     console.error('Error updating log config:', error)
+    const locale = await getLocale(c).catch(() => 'en')
     return c.html(html`
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        Failed to update configuration. Please try again.
+        ${t('logs.configUpdateFailed', locale)}
       </div>
     `)
   }
@@ -313,28 +315,30 @@ adminLogsRoutes.get('/export', async (c) => {
 adminLogsRoutes.post('/cleanup', async (c) => {
   try {
     const user = c.get('user')
-    
+    const locale = await getLocale(c)
+
     // Only allow admin users to run cleanup
     if (!user || user.role !== 'admin') {
-      return c.json({ 
-        success: false, 
-        error: 'Unauthorized. Admin access required.' 
+      return c.json({
+        success: false,
+        error: 'Unauthorized. Admin access required.'
       }, 403)
     }
-    
+
     const logger = getLogger(c.env.DB)
     await logger.cleanupByRetention()
-    
+
     return c.html(html`
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        Log cleanup completed successfully!
+        ${t('logs.cleanupSuccess', locale)}
       </div>
     `)
   } catch (error) {
     console.error('Error cleaning up logs:', error)
+    const locale = await getLocale(c).catch(() => 'en')
     return c.html(html`
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        Failed to clean up logs. Please try again.
+        ${t('logs.cleanupFailed', locale)}
       </div>
     `)
   }
@@ -347,22 +351,23 @@ adminLogsRoutes.post('/search', async (c) => {
     const search = formData.get('search') as string
     const level = formData.get('level') as string
     const category = formData.get('category') as string
-    
+    const locale = await getLocale(c)
+
     const logger = getLogger(c.env.DB)
-    
+
     const filter: LogFilter = {
       limit: 20,
       offset: 0,
       sortBy: 'created_at',
       sortOrder: 'desc'
     }
-    
+
     if (search) filter.search = search
     if (level) filter.level = [level] as LogLevel[]
     if (category) filter.category = [category] as LogCategory[]
-    
+
     const { logs } = await logger.getLogs(filter)
-    
+
     // Return just the logs table rows for HTMX
     const rows = logs.map(log => {
       const formattedLog = {
@@ -390,7 +395,7 @@ adminLogsRoutes.post('/search', async (c) => {
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedLog.source || '-'}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedLog.formattedDate}</td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <a href="/admin/logs/${formattedLog.id}" class="text-indigo-600 hover:text-indigo-900">View</a>
+            <a href="/admin/logs/${formattedLog.id}" class="text-indigo-600 hover:text-indigo-900">${t('logs.view', locale)}</a>
           </td>
         </tr>
       `
@@ -399,7 +404,8 @@ adminLogsRoutes.post('/search', async (c) => {
     return c.html(rows)
   } catch (error) {
     console.error('Error searching logs:', error)
-    return c.html(html`<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error searching logs</td></tr>`)
+    const locale = await getLocale(c).catch(() => 'en')
+    return c.html(html`<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">${t('logs.errorSearchingLogs', locale)}</td></tr>`)
   }
 })
 

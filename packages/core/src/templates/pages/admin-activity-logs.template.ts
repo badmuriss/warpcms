@@ -1,4 +1,5 @@
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
+import { t } from '../../i18n'
 
 export interface ActivityLog {
   id: string
@@ -38,13 +39,15 @@ export interface ActivityLogsPageData {
 }
 
 export function renderActivityLogsPage(data: ActivityLogsPageData): string {
+  const locale = data.locale || 'en'
+
   const pageContent = `
     <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl font-semibold text-white">Activity Logs</h1>
-          <p class="mt-2 text-sm text-gray-300">Monitor user actions and system activity</p>
+          <h1 class="text-2xl font-semibold text-white">${t('activity.title', locale)}</h1>
+          <p class="mt-2 text-sm text-gray-300">${t('activity.subtitle', locale)}</p>
         </div>
       </div>
 
@@ -62,78 +65,78 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
             <svg class="h-5 w-5 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm font-medium text-gray-200">Activity Logs</span>
+            <span class="text-sm font-medium text-gray-200">${t('activity.title', locale)}</span>
           </li>
         </ol>
       </nav>
 
       <!-- Filters -->
       <div class="backdrop-blur-xl bg-white/10 rounded-xl border border-white/20 shadow-2xl p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Filters</h3>
-        
+        <h3 class="text-lg font-semibold text-white mb-4">${t('activity.filters', locale)}</h3>
+
         <form method="GET" action="/admin/activity-logs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">Action</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">${t('activity.action', locale)}</label>
             <select name="action" class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30">
-              <option value="">All Actions</option>
-              <option value="user.login" ${data.filters.action === 'user.login' ? 'selected' : ''}>User Login</option>
-              <option value="user.logout" ${data.filters.action === 'user.logout' ? 'selected' : ''}>User Logout</option>
-              <option value="user.invite_sent" ${data.filters.action === 'user.invite_sent' ? 'selected' : ''}>User Invited</option>
-              <option value="user.invitation_accepted" ${data.filters.action === 'user.invitation_accepted' ? 'selected' : ''}>Invitation Accepted</option>
-              <option value="profile.update" ${data.filters.action === 'profile.update' ? 'selected' : ''}>Profile Update</option>
-              <option value="profile.password_change" ${data.filters.action === 'profile.password_change' ? 'selected' : ''}>Password Change</option>
-              <option value="content.create" ${data.filters.action === 'content.create' ? 'selected' : ''}>Content Created</option>
-              <option value="content.update" ${data.filters.action === 'content.update' ? 'selected' : ''}>Content Updated</option>
-              <option value="content.delete" ${data.filters.action === 'content.delete' ? 'selected' : ''}>Content Deleted</option>
-              <option value="collection.create" ${data.filters.action === 'collection.create' ? 'selected' : ''}>Collection Created</option>
-              <option value="collection.update" ${data.filters.action === 'collection.update' ? 'selected' : ''}>Collection Updated</option>
+              <option value="">${t('activity.allActions', locale)}</option>
+              <option value="user.login" ${data.filters.action === 'user.login' ? 'selected' : ''}>${t('activity.actionUserLogin', locale)}</option>
+              <option value="user.logout" ${data.filters.action === 'user.logout' ? 'selected' : ''}>${t('activity.actionUserLogout', locale)}</option>
+              <option value="user.invite_sent" ${data.filters.action === 'user.invite_sent' ? 'selected' : ''}>${t('activity.actionUserInvited', locale)}</option>
+              <option value="user.invitation_accepted" ${data.filters.action === 'user.invitation_accepted' ? 'selected' : ''}>${t('activity.actionInvitationAccepted', locale)}</option>
+              <option value="profile.update" ${data.filters.action === 'profile.update' ? 'selected' : ''}>${t('activity.actionProfileUpdate', locale)}</option>
+              <option value="profile.password_change" ${data.filters.action === 'profile.password_change' ? 'selected' : ''}>${t('activity.actionPasswordChange', locale)}</option>
+              <option value="content.create" ${data.filters.action === 'content.create' ? 'selected' : ''}>${t('activity.actionContentCreated', locale)}</option>
+              <option value="content.update" ${data.filters.action === 'content.update' ? 'selected' : ''}>${t('activity.actionContentUpdated', locale)}</option>
+              <option value="content.delete" ${data.filters.action === 'content.delete' ? 'selected' : ''}>${t('activity.actionContentDeleted', locale)}</option>
+              <option value="collection.create" ${data.filters.action === 'collection.create' ? 'selected' : ''}>${t('activity.actionCollectionCreated', locale)}</option>
+              <option value="collection.update" ${data.filters.action === 'collection.update' ? 'selected' : ''}>${t('activity.actionCollectionUpdated', locale)}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">Resource Type</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">${t('activity.resourceType', locale)}</label>
             <select name="resource_type" class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30">
-              <option value="">All Resources</option>
-              <option value="users" ${data.filters.resource_type === 'users' ? 'selected' : ''}>Users</option>
-              <option value="content" ${data.filters.resource_type === 'content' ? 'selected' : ''}>Content</option>
-              <option value="collections" ${data.filters.resource_type === 'collections' ? 'selected' : ''}>Collections</option>
-              <option value="media" ${data.filters.resource_type === 'media' ? 'selected' : ''}>Media</option>
-              <option value="settings" ${data.filters.resource_type === 'settings' ? 'selected' : ''}>Settings</option>
+              <option value="">${t('activity.allResources', locale)}</option>
+              <option value="users" ${data.filters.resource_type === 'users' ? 'selected' : ''}>${t('activity.resourceUsers', locale)}</option>
+              <option value="content" ${data.filters.resource_type === 'content' ? 'selected' : ''}>${t('activity.resourceContent', locale)}</option>
+              <option value="collections" ${data.filters.resource_type === 'collections' ? 'selected' : ''}>${t('activity.resourceCollections', locale)}</option>
+              <option value="media" ${data.filters.resource_type === 'media' ? 'selected' : ''}>${t('activity.resourceMedia', locale)}</option>
+              <option value="settings" ${data.filters.resource_type === 'settings' ? 'selected' : ''}>${t('activity.resourceSettings', locale)}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">From Date</label>
-            <input 
-              type="date" 
-              name="date_from" 
+            <label class="block text-sm font-medium text-gray-300 mb-2">${t('activity.fromDate', locale)}</label>
+            <input
+              type="date"
+              name="date_from"
               value="${data.filters.date_from || ''}"
               class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30"
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">To Date</label>
-            <input 
-              type="date" 
-              name="date_to" 
+            <label class="block text-sm font-medium text-gray-300 mb-2">${t('activity.toDate', locale)}</label>
+            <input
+              type="date"
+              name="date_to"
               value="${data.filters.date_to || ''}"
               class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30"
             >
           </div>
 
           <div class="md:col-span-2 lg:col-span-4 flex gap-3">
-            <button 
+            <button
               type="submit"
               class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all"
             >
-              Apply Filters
+              ${t('activity.applyFilters', locale)}
             </button>
-            <a 
+            <a
               href="/admin/activity-logs"
               class="px-6 py-2 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-white/20 transition-all"
             >
-              Clear Filters
+              ${t('activity.clearFilters', locale)}
             </a>
           </div>
         </form>
@@ -144,9 +147,9 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
         <div class="relative px-6 py-4 border-b border-white/10">
           <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
           <div class="relative flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-white">Recent Activity</h2>
+            <h2 class="text-xl font-semibold text-white">${t('activity.recentActivity', locale)}</h2>
             <div class="text-sm text-gray-300">
-              Showing ${data.logs.length} of ${data.pagination.total} logs
+              ${t('activity.showingLogs', locale, { count: data.logs.length.toString(), total: data.pagination.total.toString() })}
             </div>
           </div>
         </div>
@@ -155,12 +158,12 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
           <table class="w-full">
             <thead class="bg-white/5">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Timestamp</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Resource</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">IP Address</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.timestamp', locale)}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.user', locale)}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.action', locale)}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.resource', locale)}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.ipAddress', locale)}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('activity.details', locale)}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-white/10">
@@ -170,8 +173,8 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
                     ${new Date(log.created_at).toLocaleString()}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-white">${log.user_name || 'Unknown'}</div>
-                    <div class="text-xs text-gray-400">${log.user_email || 'N/A'}</div>
+                    <div class="text-sm text-white">${log.user_name || t('activity.unknown', locale)}</div>
+                    <div class="text-xs text-gray-400">${log.user_email || t('activity.na', locale)}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${getActionBadgeClass(log.action)}">
@@ -182,18 +185,18 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
                     ${log.resource_type ? `
                       <div class="text-white">${log.resource_type}</div>
                       ${log.resource_id ? `<div class="text-xs text-gray-400">${log.resource_id}</div>` : ''}
-                    ` : 'N/A'}
+                    ` : t('activity.na', locale)}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    ${log.ip_address || 'N/A'}
+                    ${log.ip_address || t('activity.na', locale)}
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-300">
                     ${log.details ? `
                       <details class="cursor-pointer">
-                        <summary class="text-blue-400 hover:text-blue-300">View Details</summary>
+                        <summary class="text-blue-400 hover:text-blue-300">${t('activity.viewDetails', locale)}</summary>
                         <pre class="mt-2 text-xs bg-black/20 p-2 rounded overflow-x-auto">${JSON.stringify(log.details, null, 2)}</pre>
                       </details>
-                    ` : 'N/A'}
+                    ` : t('activity.na', locale)}
                   </td>
                 </tr>
               `).join('')}
@@ -206,8 +209,8 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-300">No activity logs found</h3>
-            <p class="mt-1 text-sm text-gray-500">Try adjusting your filters or check back later.</p>
+            <h3 class="mt-2 text-sm font-medium text-gray-300">${t('activity.noActivityLogs', locale)}</h3>
+            <p class="mt-1 text-sm text-gray-500">${t('activity.noActivityLogsHint', locale)}</p>
           </div>
         ` : ''}
 
@@ -215,19 +218,19 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
         ${data.pagination.pages > 1 ? `
           <div class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
             <div class="text-sm text-gray-300">
-              Page ${data.pagination.page} of ${data.pagination.pages} (${data.pagination.total} total logs)
+              ${t('activity.pageInfo', locale, { page: data.pagination.page.toString(), pages: data.pagination.pages.toString(), total: data.pagination.total.toString() })}
             </div>
             <div class="flex space-x-2">
               ${data.pagination.page > 1 ? `
-                <a href="?page=${data.pagination.page - 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}" 
+                <a href="?page=${data.pagination.page - 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}"
                    class="px-3 py-1 bg-white/10 text-white rounded-lg border border-white/20 hover:bg-white/20 transition-all">
-                  Previous
+                  ${t('activity.previous', locale)}
                 </a>
               ` : ''}
               ${data.pagination.page < data.pagination.pages ? `
-                <a href="?page=${data.pagination.page + 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}" 
+                <a href="?page=${data.pagination.page + 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}"
                    class="px-3 py-1 bg-white/10 text-white rounded-lg border border-white/20 hover:bg-white/20 transition-all">
-                  Next
+                  ${t('activity.next', locale)}
                 </a>
               ` : ''}
             </div>
@@ -238,11 +241,12 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
   `
 
   const layoutData: AdminLayoutData = {
-    title: 'Activity Logs',
-    pageTitle: 'Activity Logs',
+    title: t('activity.title', locale),
+    pageTitle: t('activity.title', locale),
     currentPath: '/admin/activity-logs',
     user: data.user,
-    content: pageContent
+    content: pageContent,
+    locale
   }
 
   return renderAdminLayout(layoutData)
