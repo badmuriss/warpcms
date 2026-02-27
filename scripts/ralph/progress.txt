@@ -28,6 +28,10 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - i18n: For dynamic status labels that used `.charAt(0).toUpperCase() + .slice(1)`, replace with a `statusLabels` Record lookup using translated strings
 - i18n: Client-side concatenation like `Plugin ${action}d successfully` doesn't work for i18n — use separate keys per action
 - Pre-existing plugin errors in typecheck (email-templates-plugin, ai-search-plugin, design routes) — ignore these
+- Design template: `admin-design.template.ts` does NOT exist in core — it's a plugin template via `@warpcms/templates/pages/admin-design.template`. Skip for core i18n.
+- Log templates: list uses catalyst layout, details/config/activity use v2 layout — all need locale in layout data
+- HTMX: `hx-confirm` attribute content also needs t() calls for translated confirm dialogs
+- Route error handlers: use `await getLocale(c).catch(() => 'en')` in catch blocks since context may not have valid user
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
 - Schema: Drizzle schema in `src/db/schema.ts` — `User`/`NewUser` types auto-derived. Zod schemas via `createInsertSchema`/`createSelectSchema`
@@ -252,4 +256,24 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - Cache template has multiple private render functions (`renderNamespaceRow`, `renderPerformanceMetric`, `renderHealthStatus`) — each gets locale as last param with default 'en'
   - Cache health status config object has labels and messages per status level — all need t() calls with locale
   - The "Core" badge text on plugin cards needs translation — easily missed since it's a short inline conditional
+---
+
+## 2026-02-27 - US-014
+- Extracted and translated all Log page strings across 4 templates and 1 route file
+- No admin-design.template.ts exists in the codebase — the design page is handled by a plugin (design routes import from `@warpcms/templates/pages/admin-design.template`)
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `logs` namespace (100+ keys: list page, details page, config page, route responses) and `activity` namespace (45+ keys: activity logs page)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for logs and activity namespaces
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for logs and activity namespaces
+  - `packages/core/src/templates/pages/admin-logs-list.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; filter labels, level/category option labels, table headers, empty state, pagination; passed locale to layout data
+  - `packages/core/src/templates/pages/admin-log-details.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; field labels (ID, Timestamp, Level, Category, Source, User ID, Session ID, etc.), section headers (Message, Tags, Additional Data, Stack Trace), action buttons; passed locale to layout data
+  - `packages/core/src/templates/pages/admin-log-config.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; log level reference descriptions, config card labels, form field labels and help text, global settings section; passed locale to layout data
+  - `packages/core/src/templates/pages/admin-activity-logs.template.ts` — imported `t`, replaced all hardcoded strings with t() calls; filter labels, action option labels, resource type labels, table headers, empty state, pagination info; passed locale to layout data
+  - `packages/core/src/routes/admin-logs.ts` — imported `t`, translated HTMX response strings (config updated, config update failed, cleanup success, cleanup failed, search error, log not found, view link)
+- **Learnings for future iterations:**
+  - admin-design.template.ts does NOT exist in the codebase — the design page is rendered by a plugin via `@warpcms/templates/pages/admin-design.template` (see design routes error in typecheck). Skip design template translation in core.
+  - Log list template (`admin-logs-list.template.ts`) uses the catalyst layout; log details and log config use the v2 layout; activity logs use the v2 layout via `renderAdminLayout()`. All need locale passed to layout data.
+  - The `hx-confirm` attribute on HTMX buttons needs translated strings too — it renders a browser-native confirm dialog with the text content.
+  - Route error handlers in catch blocks should also get locale — use `await getLocale(c).catch(() => 'en')` since the context might not have a valid user in error paths.
+  - Log level/category badges in table rows display the raw level/category value (e.g., "debug", "auth") — these are system identifiers, NOT translated labels. Only the filter dropdown options are translated.
 ---
