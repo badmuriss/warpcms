@@ -2,6 +2,11 @@ import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/a
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 import { t } from '../../i18n'
 
+/** Escape a string for safe embedding in a JS single-quoted string literal */
+function jsStr(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r')
+}
+
 export interface SettingsPageData {
   user?: {
     name: string
@@ -91,36 +96,36 @@ export function renderSettingsPage(data: SettingsPageData): string {
     <script>
       // i18n strings for client-side JS
       window.__i18n = {
-        saving: '${t('settings.saving', locale)}',
-        savedSuccess: '${t('settings.savedSuccess', locale)}',
-        saveFailed: '${t('settings.saveFailed', locale)}',
-        saveFailedRetry: '${t('settings.saveFailedRetry', locale)}',
-        running: '${t('settings.running', locale)}',
-        runPending: '${t('settings.runPending', locale)}',
-        failedToRunMigrations: '${t('settings.failedToRunMigrations', locale)}',
-        errorRunningMigrations: '${t('settings.errorRunningMigrations', locale)}',
-        schemaValid: '${t('settings.schemaValid', locale)}',
-        schemaValidationFailed: '${t('settings.schemaValidationFailed', locale)}',
-        failedToValidateSchema: '${t('settings.failedToValidateSchema', locale)}',
-        errorValidatingSchema: '${t('settings.errorValidatingSchema', locale)}',
-        applied: '${t('settings.applied', locale)}',
-        pending: '${t('settings.pending', locale)}',
-        creatingBackup: '${t('settings.creatingBackup', locale)}',
-        createBackup: '${t('settings.createBackup', locale)}',
-        failedToCreateBackup: '${t('settings.failedToCreateBackup', locale)}',
-        errorCreatingBackup: '${t('settings.errorCreatingBackup', locale)}',
-        truncatePrompt: '${t('settings.truncatePrompt', locale)}',
-        truncateCancelled: '${t('settings.truncateCancelled', locale)}',
-        truncating: '${t('settings.truncating', locale)}',
-        truncateAllData: '${t('settings.truncateAllData', locale)}',
-        tablesCleared: '${t('settings.tablesCleared', locale)}',
-        failedToTruncate: '${t('settings.failedToTruncate', locale)}',
-        errorTruncating: '${t('settings.errorTruncating', locale)}',
-        dbValidationPassed: '${t('settings.dbValidationPassed', locale)}',
-        dbValidationFailed: '${t('settings.dbValidationFailed', locale)}',
-        failedToValidateDb: '${t('settings.failedToValidateDb', locale)}',
-        errorValidatingDb: '${t('settings.errorValidatingDb', locale)}',
-        rows: '${t('settings.rows', locale)}',
+        saving: '${jsStr(t('settings.saving', locale))}',
+        savedSuccess: '${jsStr(t('settings.savedSuccess', locale))}',
+        saveFailed: '${jsStr(t('settings.saveFailed', locale))}',
+        saveFailedRetry: '${jsStr(t('settings.saveFailedRetry', locale))}',
+        running: '${jsStr(t('settings.running', locale))}',
+        runPending: '${jsStr(t('settings.runPending', locale))}',
+        failedToRunMigrations: '${jsStr(t('settings.failedToRunMigrations', locale))}',
+        errorRunningMigrations: '${jsStr(t('settings.errorRunningMigrations', locale))}',
+        schemaValid: '${jsStr(t('settings.schemaValid', locale))}',
+        schemaValidationFailed: '${jsStr(t('settings.schemaValidationFailed', locale))}',
+        failedToValidateSchema: '${jsStr(t('settings.failedToValidateSchema', locale))}',
+        errorValidatingSchema: '${jsStr(t('settings.errorValidatingSchema', locale))}',
+        applied: '${jsStr(t('settings.applied', locale))}',
+        pending: '${jsStr(t('settings.pending', locale))}',
+        creatingBackup: '${jsStr(t('settings.creatingBackup', locale))}',
+        createBackup: '${jsStr(t('settings.createBackup', locale))}',
+        failedToCreateBackup: '${jsStr(t('settings.failedToCreateBackup', locale))}',
+        errorCreatingBackup: '${jsStr(t('settings.errorCreatingBackup', locale))}',
+        truncatePrompt: '${jsStr(t('settings.truncatePrompt', locale))}',
+        truncateCancelled: '${jsStr(t('settings.truncateCancelled', locale))}',
+        truncating: '${jsStr(t('settings.truncating', locale))}',
+        truncateAllData: '${jsStr(t('settings.truncateAllData', locale))}',
+        tablesCleared: '${jsStr(t('settings.tablesCleared', locale))}',
+        failedToTruncate: '${jsStr(t('settings.failedToTruncate', locale))}',
+        errorTruncating: '${jsStr(t('settings.errorTruncating', locale))}',
+        dbValidationPassed: '${jsStr(t('settings.dbValidationPassed', locale))}',
+        dbValidationFailed: '${jsStr(t('settings.dbValidationFailed', locale))}',
+        failedToValidateDb: '${jsStr(t('settings.failedToValidateDb', locale))}',
+        errorValidatingDb: '${jsStr(t('settings.errorValidatingDb', locale))}',
+        rows: '${jsStr(t('settings.rows', locale))}',
       };
 
       // Initialize tab-specific features on page load

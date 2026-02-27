@@ -4,12 +4,16 @@ node_modules/
 .pnp.js
 
 # Production builds
-dist/
+packages/core/dist/
 build/
+docs/
 
 # Development
 .wrangler/
 .dev.vars
+.planning/
+scripts/ralph/
+tasks/
 
 # Environment variables
 .env
