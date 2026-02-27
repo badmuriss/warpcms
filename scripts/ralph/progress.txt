@@ -23,6 +23,8 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - i18n: Confirmation dialog props (title, message, confirmText, cancelText) accept translated strings directly — no locale param needed on the component itself
 - i18n: Private render helpers (e.g. `renderField`, `renderTabContent`, `renderGeneralSettings`) get locale as a param with default `'en'` so they can use `t()` internally
 - i18n: Auth template files are named `auth-login.template.ts` and `auth-register.template.ts` (NOT `admin-login`/`admin-register`)
+- i18n: Shared components use locale as a second positional param with default 'en' (e.g., `renderTable(data, locale)`) — NOT as part of data interfaces
+- i18n: Confirmation dialog reuses `common.confirm` / `common.cancel` for defaults via `t()` — no duplicate component keys needed
 - Pre-existing plugin errors in typecheck (email-templates-plugin, ai-search-plugin, design routes) — ignore these
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
@@ -210,4 +212,25 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - Demo mode script strings are inside a template literal so `${t(...)}` works server-side (no window.__i18n needed)
   - HTMX form response strings in auth.ts route file also need i18n — they render visible user-facing text (error messages, success messages)
   - Auth route has many other inline HTML pages (accept-invitation, reset-password) with hardcoded strings — these are NOT in scope for US-011 (separate feature)
+---
+
+## 2026-02-27 - US-012
+- Extracted and translated all shared component strings and added locale params to all component render functions
+- Files changed:
+  - `packages/core/src/i18n/locales/en.ts` — added `components` namespace with 6 keys (dismiss, previous, next, showingResults, perPage, noDataAvailable)
+  - `packages/core/src/i18n/locales/pt.ts` — Portuguese translations for components namespace
+  - `packages/core/src/i18n/locales/es.ts` — Spanish translations for components namespace
+  - `packages/core/src/templates/components/alert.template.ts` — imported `t`, added `locale = 'en'` param to `renderAlert()`, translated sr-only "Dismiss" text
+  - `packages/core/src/templates/components/confirmation-dialog.template.ts` — imported `t`, added `locale?: string` to options interface, default confirmText/cancelText now use `t('common.confirm')` / `t('common.cancel')`
+  - `packages/core/src/templates/components/pagination.template.ts` — imported `t`, added `locale = 'en'` param to `renderPagination()`, translated "Previous", "Next", "Showing X to Y of Z results", "Per page:"
+  - `packages/core/src/templates/components/table.template.ts` — imported `t`, added `locale = 'en'` param to `renderTable()`, translated default "No data available" empty state
+  - `packages/core/src/templates/filter-bar.template.ts` — imported `t`, added `locale = 'en'` param to `renderFilterBar()` (no hardcoded strings — all text passed as params)
+  - `packages/core/src/templates/pages/admin-content-list.template.ts` — passes locale to `renderTable()` and `renderPagination()` calls
+  - `packages/core/src/templates/pages/admin-users-list.template.ts` — passes locale to `renderTable()` and `renderPagination()` calls
+- **Learnings for future iterations:**
+  - alert.template.ts only has one hardcoded string: "Dismiss" (sr-only) — all other text (title, message) comes from callers
+  - confirmation-dialog.template.ts defaults ('Confirm', 'Cancel') reuse `common.confirm` / `common.cancel` — no need for duplicate component keys
+  - filter-bar.template.ts has NO hardcoded strings — filter labels, options, and action labels all come from parent templates
+  - pagination.template.ts "Showing X to Y of Z results" uses `showingResults` key with `{{start}}`, `{{end}}`, `{{total}}` interpolation — HTML spans are passed as interpolation values to preserve styling
+  - Components use locale as a second param with default 'en' (e.g., `renderTable(data, locale)`) NOT as part of the data interface — keeps data interfaces clean
 ---
