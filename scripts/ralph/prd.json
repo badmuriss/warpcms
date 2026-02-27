@@ -271,7 +271,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "The language dropdown in general settings (admin-settings.template.ts lines 530-540) already shows pt/en/es options but is non-functional. Wire it to actually save."
     }
   ]

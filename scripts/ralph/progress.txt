@@ -32,6 +32,9 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
 - Log templates: list uses catalyst layout, details/config/activity use v2 layout — all need locale in layout data
 - HTMX: `hx-confirm` attribute content also needs t() calls for translated confirm dialogs
 - Route error handlers: use `await getLocale(c).catch(() => 'en')` in catch blocks since context may not have valid user
+- i18n: Supported locales are `['en', 'pt', 'es']` — always validate server-side and fall back to 'en'
+- i18n: Language dropdown options use native names (English, Português, Español) so users can identify their language
+- i18n: To reload page after language change in HTMX forms: track original value, listen for `htmx:afterSettle`, compare, then `setTimeout(reload, 600)`
 - Migrations: SQL files in `packages/core/migrations/NNNN_slug.sql`, then run `npx tsx scripts/generate-migrations.ts` to bundle
 - Migrations: Service skips "already exists" / "duplicate column name" errors — ALTER TABLE ADD COLUMN is safe even if column exists
 - Schema: Drizzle schema in `src/db/schema.ts` — `User`/`NewUser` types auto-derived. Zod schemas via `createInsertSchema`/`createSelectSchema`
@@ -276,4 +279,20 @@ Started: Thu Feb 26 07:24:30 PM -03 2026
   - The `hx-confirm` attribute on HTMX buttons needs translated strings too — it renders a browser-native confirm dialog with the text content.
   - Route error handlers in catch blocks should also get locale — use `await getLocale(c).catch(() => 'en')` since the context might not have a valid user in error paths.
   - Log level/category badges in table rows display the raw level/category value (e.g., "debug", "auth") — these are system identifiers, NOT translated labels. Only the filter dropdown options are translated.
+---
+
+## 2026-02-27 - US-015
+- Wired language preference in user profile and settings pages to be fully functional
+- Files changed:
+  - `packages/core/src/routes/admin-users.ts` — updated `LANGUAGES` constant to only include supported locales (en, pt, es) with native names; added locale validation (`validLocales` array check) in profile update handler
+  - `packages/core/src/templates/pages/admin-profile.template.ts` — added JS to track original language value and reload page after successful HTMX save if language changed (via `htmx:afterSettle` event listener)
+  - `packages/core/src/templates/pages/admin-settings.template.ts` — added `userLanguage` to `SettingsPageData` interface; threaded `userLanguage` through `renderTabContent` → `renderGeneralSettings`; updated language dropdown to show en/pt/es with native names and use `userLanguage` for selected value; added `id="settings-language"` to dropdown; added JS to track original language and reload after save if changed
+  - `packages/core/src/routes/admin-settings.ts` — passed `userLanguage: locale` in GET /general page data; added DB update for user's language column in POST /general handler alongside site settings save; added locale validation
+- **Learnings for future iterations:**
+  - The settings page language was previously a site-level setting (stored in `settings` table) — it now also updates the user's `language` column in the `users` table for per-user i18n
+  - Language dropdown options should use native language names (English, Português, Español) so users can find their language regardless of current locale
+  - HTMX form responses that don't cause a full page reload need client-side JS to detect language changes: store original value before submit, compare after response, then `setTimeout(reload, 600)` for UX
+  - The `htmx:afterSettle` event fires after HTMX content is swapped and settled — good hook for post-save language detection
+  - Locale validation should happen server-side: check against `['en', 'pt', 'es']` and fall back to 'en' for unsupported values
+  - The `LANGUAGES` constant in admin-users.ts was previously a generic list of 9 languages — trimmed to 3 supported i18n locales
 ---
