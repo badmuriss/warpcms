@@ -705,4 +705,48 @@ export const es: TranslationData = {
     perPage: 'Por página:',
     noDataAvailable: 'No hay datos disponibles',
   },
+  contentTypes: {
+    image: {
+      displayName: 'Imagen',
+      description: 'Subir y gestionar imágenes con metadatos',
+      fields: {
+        title: 'Título',
+        titlePlaceholder: 'Título de la imagen',
+        altText: 'Texto Alternativo',
+        altTextPlaceholder: 'Texto alternativo descriptivo para accesibilidad',
+        description: 'Descripción',
+        descriptionPlaceholder: 'Descripción opcional',
+        imageFile: 'Archivo de Imagen',
+        imageFileHelp: 'JPG, PNG, GIF, WebP, SVG',
+        tags: 'Etiquetas',
+        tagsPlaceholder: 'Etiquetas separadas por coma',
+      },
+    },
+    text: {
+      displayName: 'Texto',
+      description: 'Crear contenido de texto simple',
+      fields: {
+        title: 'Título',
+        titlePlaceholder: 'Título del contenido',
+        content: 'Contenido',
+        contentPlaceholder: 'Escribe tu contenido aquí...',
+        tags: 'Etiquetas',
+        tagsPlaceholder: 'Etiquetas separadas por coma',
+      },
+    },
+    file: {
+      displayName: 'Archivo',
+      description: 'Subir y gestionar cualquier tipo de archivo',
+      fields: {
+        title: 'Título',
+        titlePlaceholder: 'Título del archivo',
+        description: 'Descripción',
+        descriptionPlaceholder: 'Descripción opcional',
+        file: 'Archivo',
+        fileHelp: 'Cualquier tipo de archivo',
+        tags: 'Etiquetas',
+        tagsPlaceholder: 'Etiquetas separadas por coma',
+      },
+    },
+  },
 }

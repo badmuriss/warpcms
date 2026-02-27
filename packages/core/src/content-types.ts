@@ -87,3 +87,46 @@ export function getContentType(name: string): ContentType | undefined {
 export function getAllContentTypes(): ContentType[] {
   return Object.values(CONTENT_TYPES)
 }
+
+/** Field key mapping: content-type field name → i18n field key */
+const FIELD_KEY_MAP: Record<string, Record<string, { label: string; placeholder?: string; helpText?: string }>> = {
+  image: {
+    title:       { label: 'title', placeholder: 'titlePlaceholder' },
+    alt_text:    { label: 'altText', placeholder: 'altTextPlaceholder' },
+    description: { label: 'description', placeholder: 'descriptionPlaceholder' },
+    file:        { label: 'imageFile', helpText: 'imageFileHelp' },
+    tags:        { label: 'tags', placeholder: 'tagsPlaceholder' },
+  },
+  text: {
+    title:   { label: 'title', placeholder: 'titlePlaceholder' },
+    content: { label: 'content', placeholder: 'contentPlaceholder' },
+    tags:    { label: 'tags', placeholder: 'tagsPlaceholder' },
+  },
+  file: {
+    title:       { label: 'title', placeholder: 'titlePlaceholder' },
+    description: { label: 'description', placeholder: 'descriptionPlaceholder' },
+    file:        { label: 'file', helpText: 'fileHelp' },
+    tags:        { label: 'tags', placeholder: 'tagsPlaceholder' },
+  },
+}
+
+/**
+ * Return a localized copy of a ContentType using i18n keys.
+ * Falls back to the original English strings if a translation is missing.
+ */
+export function localizeContentType(ct: ContentType, t: (key: any, locale: string) => string, locale: string): ContentType {
+  const displayName = t(`contentTypes.${ct.name}.displayName`, locale) || ct.displayName
+  const description = t(`contentTypes.${ct.name}.description`, locale) || ct.description
+  const fieldMap = FIELD_KEY_MAP[ct.name] || {}
+
+  const fields = ct.fields.map(f => {
+    const keys = fieldMap[f.name]
+    if (!keys) return f
+    const label = t(`contentTypes.${ct.name}.fields.${keys.label}`, locale) || f.label
+    const placeholder = keys.placeholder ? (t(`contentTypes.${ct.name}.fields.${keys.placeholder}`, locale) || f.placeholder) : f.placeholder
+    const helpText = keys.helpText ? (t(`contentTypes.${ct.name}.fields.${keys.helpText}`, locale) || f.helpText) : f.helpText
+    return { ...f, label, placeholder, helpText }
+  })
+
+  return { ...ct, displayName, description, fields }
+}

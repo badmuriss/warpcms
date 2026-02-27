@@ -6,7 +6,7 @@ import { renderContentListPage, ContentListPageData } from '../templates/pages/a
 import { renderAlert } from '../templates/components/alert.template'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import type { Bindings, Variables } from '../app'
-import { getContentType, getAllContentTypes } from '../content-types'
+import { getContentType, getAllContentTypes, localizeContentType } from '../content-types'
 import type { ContentTypeField } from '../content-types'
 import { getLocale, t } from '../i18n'
 
@@ -109,7 +109,8 @@ adminContentRoutes.get('/', async (c) => {
         : row.author_email || 'Unknown'
 
       // Resolve display name from content type
-      const ct = getContentType(row.collection_id)
+      const rawCt = getContentType(row.collection_id)
+      const ct = rawCt ? localizeContentType(rawCt, t, locale) : undefined
       const typeDisplayName = ct?.displayName || row.collection_id || 'Unknown'
 
       // Generate preview from data
@@ -138,10 +139,10 @@ adminContentRoutes.get('/', async (c) => {
     })
 
     // Build type list for filter dropdown
-    const types = getAllContentTypes().map(ct => ({
-      name: ct.name,
-      displayName: ct.displayName,
-    }))
+    const types = getAllContentTypes().map(raw => {
+      const loc = localizeContentType(raw, t, locale)
+      return { name: loc.name, displayName: loc.displayName }
+    })
 
     const pageData: ContentListPageData = {
       modelName: typeName,
@@ -176,7 +177,7 @@ adminContentRoutes.get('/new', async (c) => {
 
     if (!typeName) {
       // Show type picker page
-      const types = getAllContentTypes()
+      const types = getAllContentTypes().map(raw => localizeContentType(raw, t, locale))
       const { renderAdminLayoutCatalyst } = await import('../templates/layouts/admin-layout-catalyst.template')
 
       const cards = types.map(ct => `
@@ -220,8 +221,8 @@ adminContentRoutes.get('/new', async (c) => {
       }))
     }
 
-    const contentType = getContentType(typeName)
-    if (!contentType) {
+    const rawContentType = getContentType(typeName)
+    if (!rawContentType) {
       return c.html(renderContentFormPage({
         contentType: { name: 'unknown', displayName: 'Unknown', description: '', icon: '', primaryField: '', fields: [] },
         error: 'Content type not found.',
@@ -231,7 +232,7 @@ adminContentRoutes.get('/new', async (c) => {
     }
 
     return c.html(renderContentFormPage({
-      contentType,
+      contentType: localizeContentType(rawContentType, t, locale),
       isEdit: false,
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       version: c.get('appVersion'),
@@ -280,7 +281,8 @@ adminContentRoutes.get('/:id/edit', async (c) => {
     }
 
     // Resolve content type from collection_id
-    const contentType = getContentType(content.collection_id) || {
+    const rawCt = getContentType(content.collection_id)
+    const contentType = rawCt ? localizeContentType(rawCt, t, locale) : {
       name: content.collection_id || 'unknown',
       displayName: content.collection_id || 'Unknown',
       description: '',
@@ -325,10 +327,11 @@ adminContentRoutes.post('/', async (c) => {
     const formData = await c.req.formData()
     const typeName = formData.get('content_type') as string
 
-    const contentType = getContentType(typeName)
-    if (!contentType) {
+    const rawCType = getContentType(typeName)
+    if (!rawCType) {
       return c.html(html`<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Invalid content type.</div>`)
     }
+    const contentType = localizeContentType(rawCType, t, locale)
 
     const db = c.env.DB
     const { data, errors } = extractFormData(contentType.fields, formData)
@@ -418,10 +421,11 @@ adminContentRoutes.put('/:id', async (c) => {
       return c.html(html`<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Content not found.</div>`)
     }
 
-    const contentType = getContentType(existingContent.collection_id)
-    if (!contentType) {
+    const rawCtPut = getContentType(existingContent.collection_id)
+    if (!rawCtPut) {
       return c.html(html`<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Content type not found.</div>`)
     }
+    const contentType = localizeContentType(rawCtPut, t, locale)
 
     const { data, errors } = extractFormData(contentType.fields, formData)
 

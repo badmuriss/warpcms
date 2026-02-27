@@ -712,4 +712,48 @@ export const en = {
     perPage: 'Per page:',
     noDataAvailable: 'No data available',
   },
+  contentTypes: {
+    image: {
+      displayName: 'Image',
+      description: 'Upload and manage images with metadata',
+      fields: {
+        title: 'Title',
+        titlePlaceholder: 'Image title',
+        altText: 'Alt Text',
+        altTextPlaceholder: 'Descriptive alt text for accessibility',
+        description: 'Description',
+        descriptionPlaceholder: 'Optional description',
+        imageFile: 'Image File',
+        imageFileHelp: 'JPG, PNG, GIF, WebP, SVG',
+        tags: 'Tags',
+        tagsPlaceholder: 'Comma-separated tags',
+      },
+    },
+    text: {
+      displayName: 'Text',
+      description: 'Create plain text content',
+      fields: {
+        title: 'Title',
+        titlePlaceholder: 'Content title',
+        content: 'Content',
+        contentPlaceholder: 'Write your content here...',
+        tags: 'Tags',
+        tagsPlaceholder: 'Comma-separated tags',
+      },
+    },
+    file: {
+      displayName: 'File',
+      description: 'Upload and manage any type of file',
+      fields: {
+        title: 'Title',
+        titlePlaceholder: 'File title',
+        description: 'Description',
+        descriptionPlaceholder: 'Optional description',
+        file: 'File',
+        fileHelp: 'Any file type',
+        tags: 'Tags',
+        tagsPlaceholder: 'Comma-separated tags',
+      },
+    },
+  },
 } as const
