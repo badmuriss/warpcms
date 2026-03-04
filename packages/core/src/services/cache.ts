@@ -142,6 +142,17 @@ export class CacheService {
   }
 }
 
+const DEFAULT_CACHE_TTL = 300
+
+/**
+ * Parse CACHE_TTL from environment bindings, falling back to 300s default.
+ */
+export function parseCacheTtl(env: { CACHE_TTL?: string }): number {
+  if (!env.CACHE_TTL) return DEFAULT_CACHE_TTL
+  const parsed = parseInt(env.CACHE_TTL, 10)
+  return Number.isNaN(parsed) || parsed <= 0 ? DEFAULT_CACHE_TTL : parsed
+}
+
 /**
  * Cache configurations for different data types
  */

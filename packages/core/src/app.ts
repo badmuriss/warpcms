@@ -30,6 +30,7 @@ import { faviconSvg } from './assets/favicon'
 export interface Bindings {
   DB: D1Database
   CACHE_KV: KVNamespace
+  CACHE_TTL?: string
   MEDIA_BUCKET: R2Bucket
   ASSETS: Fetcher
   EMAIL_QUEUE?: Queue
