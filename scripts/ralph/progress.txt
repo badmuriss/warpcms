@@ -1,0 +1,38 @@
+# Ralph Progress Log
+Started: Wed Mar  4 05:37:38 PM -03 2026
+
+## Codebase Patterns
+- Zod v4 (4.3.6) is installed, use `import { z } from 'zod'` (not zod/v4)
+- @hono/zod-openapi@1.2.2 supports Zod v4 peer dependency
+- Schemas dir: `src/schemas/` — `index.ts` has legacy placeholder, `api-schemas.ts` has API schemas
+- DB user fields: id, email, username, firstName, lastName, role (camelCase in Drizzle, snake_case in DB)
+- Auth: `AuthManager` class in `src/middleware/auth.ts`, also exports `requireAuth`
+- Routes pattern: export Hono instances from `src/routes/*.ts`, re-export from `src/routes/index.ts`
+- CORS already applied on `/api/*` routes in `api.ts`
+- OpenAPI factory: `createOpenAPIApp()` in `src/routes/openapi-app.ts`, exports `openAPIDocInfo` and `openAPITags`
+- Security schemes registered via `app.openAPIRegistry.registerComponent('securitySchemes', name, config)`
+- 3 pre-existing TS errors (ai-search-plugin, admin-design.template) — not blocking
+- Build tool: tsup, typecheck: `tsc --noEmit`, tests: `npx vitest --run`
+---
+
+## 2026-03-04 - US-001
+- Installed `@hono/zod-openapi@^1.2.2` as devDependency in packages/core
+- Created `src/schemas/api-schemas.ts` with schemas: ErrorResponseSchema, TokenResponseSchema, UserResponseSchema, ContentItemSchema
+- All schemas export both the Zod schema and inferred TypeScript type
+- Files changed: packages/core/package.json, package-lock.json, packages/core/src/schemas/api-schemas.ts
+- **Learnings for future iterations:**
+  - Zod v4 is active in this project — @hono/zod-openapi v1.2.2 is compatible
+  - `data` field in content uses `z.unknown()` since it's JSON blob
+  - Timestamps in content are stored as Date objects (mode: 'timestamp') but API returns strings
+  - Don't forget to `git add package-lock.json` when installing packages
+---
+
+## 2026-03-04 - US-002
+- Created `src/routes/openapi-app.ts` with `createOpenAPIApp()` factory function
+- Registers bearerAuth security scheme on the OpenAPI registry
+- Exports `openAPIDocInfo` (title, version, contact, license) and `openAPITags` (Auth, Content, Media, System)
+- Files changed: packages/core/src/routes/openapi-app.ts
+- **Learnings for future iterations:**
+  - `OpenAPIHono` is a drop-in replacement for `Hono` — same generic `<{ Bindings; Variables }>` pattern
+  - Doc info and tags are exported as constants for use when generating the final spec (not set on app instance)
+---

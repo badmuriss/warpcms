@@ -1,0 +1,204 @@
+{
+  "project": "WarpCMS",
+  "branchName": "ralph/api-auth-openapi",
+  "description": "API Authentication Endpoint & Auto-Generated OpenAPI Spec - Add stateless token-only auth for external developers and migrate to @hono/zod-openapi for auto-generated API documentation",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Install @hono/zod-openapi and create shared API schemas",
+      "description": "As a developer, I need @hono/zod-openapi installed and shared Zod schemas created so all API routes can be defined with OpenAPI metadata.",
+      "acceptanceCriteria": [
+        "Add @hono/zod-openapi as a devDependency in packages/core/package.json",
+        "Create src/schemas/api-schemas.ts with reusable Zod schemas: ErrorResponse ({ error: string, details?: string[] }), TokenResponse ({ token: string, expires_in: number, token_type: 'Bearer' }), UserResponse ({ id, email, username, firstName, lastName, role }), ContentItem ({ id, title, slug, collectionId, data, created_at, updated_at })",
+        "Export all schemas from src/schemas/api-schemas.ts",
+        "Run npm install successfully",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Installed @hono/zod-openapi@1.2.2 (supports Zod v4). Created api-schemas.ts with ErrorResponse, TokenResponse, UserResponse, ContentItem schemas."
+    },
+    {
+      "id": "US-002",
+      "title": "Create OpenAPI base app factory",
+      "description": "As a developer, I need an OpenAPI-enabled Hono app factory so routes defined with createRoute() automatically contribute to the generated spec.",
+      "acceptanceCriteria": [
+        "Create src/routes/openapi-app.ts that exports a function to create an OpenAPIHono app instance",
+        "Configure OpenAPI registry with base info: title 'WarpCMS API', version '0.1.0', contact, license (reuse existing values from api.ts)",
+        "Register bearerAuth security scheme (type: http, scheme: bearer, bearerFormat: JWT)",
+        "Register tags: System, Content, Media, Auth",
+        "Export the factory function for use by route files",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Created openapi-app.ts with createOpenAPIApp() factory, bearerAuth security scheme, openAPIDocInfo metadata, and openAPITags (Auth, Content, Media, System)."
+    },
+    {
+      "id": "US-003",
+      "title": "Create POST /api/auth/token endpoint",
+      "description": "As an external developer, I want to POST credentials to /api/auth/token and receive only a JWT token as JSON, so I can authenticate API requests without cookies.",
+      "acceptanceCriteria": [
+        "Create src/routes/api-auth.ts with a new OpenAPIHono router",
+        "POST /api/auth/token accepts { email: string, password: string } as JSON body validated with Zod",
+        "On success returns { token: string, expires_in: 86400, token_type: 'Bearer' } with status 200",
+        "On invalid credentials returns { error: 'Invalid email or password' } with status 401",
+        "On validation failure returns { error: string, details: [...] } with status 400",
+        "Does NOT set any cookies",
+        "Does NOT update last_login_at",
+        "Route defined with createRoute() and registered with @hono/zod-openapi",
+        "CORS middleware applied (same as other /api/* routes)",
+        "Reuses existing AuthManager.verifyPassword and AuthManager.generateToken",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create GET /api/auth/me endpoint",
+      "description": "As an external developer, I want to verify my token and get my user info via the API.",
+      "acceptanceCriteria": [
+        "GET /api/auth/me requires Authorization: Bearer <token> header",
+        "On success returns { user: { id, email, username, firstName, lastName, role } } with status 200",
+        "On missing/invalid token returns { error: string } with status 401",
+        "Uses existing requireAuth() middleware",
+        "Route defined with createRoute() and registered with @hono/zod-openapi",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Create POST /api/auth/refresh endpoint",
+      "description": "As an external developer, I want to refresh my token before it expires to maintain long-running integrations.",
+      "acceptanceCriteria": [
+        "POST /api/auth/refresh requires Authorization: Bearer <token> header",
+        "On success returns { token: string, expires_in: 86400, token_type: 'Bearer' } with status 200",
+        "On missing/invalid token returns { error: string } with status 401",
+        "Does NOT set any cookies",
+        "Uses existing requireAuth() middleware and AuthManager.generateToken",
+        "Route defined with createRoute() and registered with @hono/zod-openapi",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Mount /api/auth routes in app.ts",
+      "description": "As a developer, I need the new API auth routes mounted in the main app so they are accessible.",
+      "acceptanceCriteria": [
+        "Import apiAuthRoutes from src/routes/api-auth.ts in app.ts",
+        "Mount with app.route('/api/auth', apiAuthRoutes)",
+        "Export apiAuthRoutes from src/routes/index.ts",
+        "CORS middleware applied to /api/auth/* routes",
+        "Existing /auth/* routes remain unchanged and functional",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Migrate /api/content list and create routes to zod-openapi",
+      "description": "As a developer, I need GET /api/content and POST /api/content defined as OpenAPI routes with schemas.",
+      "acceptanceCriteria": [
+        "GET /api/content defined with createRoute() including query param schemas (collection: string, limit: integer, offset: integer)",
+        "POST /api/content defined with createRoute() including request body schema (collection_id, title, slug, data) and bearerAuth security",
+        "All existing behavior preserved — no functional changes to handlers",
+        "Typecheck passes",
+        "Tests pass (npx vitest --run)"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Migrate /api/content/{id} CRUD routes to zod-openapi",
+      "description": "As a developer, I need GET/PUT/DELETE /api/content/{id} and slug routes defined as OpenAPI routes.",
+      "acceptanceCriteria": [
+        "GET /api/content/{id} defined with createRoute() including path param schema",
+        "PUT /api/content/{id} defined with createRoute() including path param, body schema, and bearerAuth security",
+        "DELETE /api/content/{id} defined with createRoute() including path param and bearerAuth security",
+        "GET /api/content/by-slug/{slug} defined with createRoute() (currently missing from spec)",
+        "GET /api/content/check-slug defined with createRoute() (currently missing from spec)",
+        "All existing behavior preserved — no functional changes",
+        "Typecheck passes",
+        "Tests pass (npx vitest --run)"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Migrate /api/media routes to zod-openapi",
+      "description": "As a developer, I need the media routes defined with OpenAPI schemas.",
+      "acceptanceCriteria": [
+        "GET /api/media defined as an OpenAPI route with response schema",
+        "POST /api/media/upload defined with multipart schema and bearerAuth security",
+        "All existing behavior preserved — no functional changes",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Migrate /api/system and /api/health routes to zod-openapi",
+      "description": "As a developer, I need the system and health check routes defined with OpenAPI schemas.",
+      "acceptanceCriteria": [
+        "GET /api/health defined as an OpenAPI route with response schema ({ status, timestamp, schemas })",
+        "GET /api/system/health defined with response schema (DB/KV/R2 status with latencies)",
+        "GET /api/system/info defined with response schema",
+        "GET /api/system/stats defined with response schema",
+        "All existing behavior preserved — no functional changes",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Replace hand-written OpenAPI spec with auto-generated GET /api/",
+      "description": "As a developer, I want GET /api/ to return the auto-generated OpenAPI spec instead of the current hard-coded JSON object.",
+      "acceptanceCriteria": [
+        "GET /api/ returns full OpenAPI 3.0.0 spec auto-generated from all registered route definitions",
+        "Spec includes all /api/* and /api/auth/* routes",
+        "Spec includes bearerAuth security scheme",
+        "Spec includes component schemas (Content, Collection, Media, Error, TokenResponse, User)",
+        "Remove the old ~300-line hand-written spec object from api.ts",
+        "Output is valid OpenAPI 3.0.0 JSON",
+        "Typecheck passes",
+        "Tests pass (npx vitest --run)"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Add API documentation page at GET /api/docs",
+      "description": "As an external developer, I want a human-readable docs page so I can explore the API interactively.",
+      "acceptanceCriteria": [
+        "GET /api/docs serves a Scalar or Swagger UI page rendering the OpenAPI spec",
+        "Page loads the spec from /api/ dynamically",
+        "No authentication required to view docs",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
