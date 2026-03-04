@@ -125,7 +125,7 @@ describe('CacheService', () => {
       expect(result.ttl).toBeGreaterThan(0)
     })
 
-    it('should return expired source when entry has expired', async () => {
+    it('should return none source when entry has expired', async () => {
       vi.useFakeTimers()
       const now = Date.now()
       vi.setSystemTime(now)
@@ -139,7 +139,7 @@ describe('CacheService', () => {
       expect(result).toEqual({
         hit: false,
         data: null,
-        source: 'expired'
+        source: 'none'
       })
     })
 
@@ -350,6 +350,151 @@ describe('CACHE_CONFIGS', () => {
       ttl: 600,
       keyPrefix: 'collection'
     })
+  })
+})
+
+describe('CacheService with KV', () => {
+  let mockKv: {
+    get: ReturnType<typeof vi.fn>
+    put: ReturnType<typeof vi.fn>
+    delete: ReturnType<typeof vi.fn>
+  }
+  let kvCache: CacheService
+
+  beforeEach(() => {
+    mockKv = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    }
+    kvCache = new CacheService(
+      { ttl: 60, keyPrefix: 'test' },
+      mockKv as unknown as KVNamespace
+    )
+  })
+
+  it('should fall back to KV on memory miss', async () => {
+    mockKv.get.mockResolvedValue({ id: 1, title: 'from kv' })
+
+    const result = await kvCache.get('content:item:1')
+    expect(result).toEqual({ id: 1, title: 'from kv' })
+    expect(mockKv.get).toHaveBeenCalledWith('content:item:1', 'json')
+  })
+
+  it('should not call KV when memory has a hit', async () => {
+    await kvCache.set('mykey', 'memvalue')
+    const result = await kvCache.get('mykey')
+    expect(result).toBe('memvalue')
+    // KV get should not be called for the get (it's called 0 times for reads)
+    expect(mockKv.get).not.toHaveBeenCalled()
+  })
+
+  it('should populate memory cache after KV hit', async () => {
+    mockKv.get.mockResolvedValue('kvdata')
+
+    // First call hits KV
+    await kvCache.get('popkey')
+    expect(mockKv.get).toHaveBeenCalledTimes(1)
+
+    // Second call should hit memory, not KV again
+    mockKv.get.mockClear()
+    const result = await kvCache.get('popkey')
+    expect(result).toBe('kvdata')
+    expect(mockKv.get).not.toHaveBeenCalled()
+  })
+
+  it('should write to both memory and KV on set', async () => {
+    await kvCache.set('writekey', { data: true }, 120)
+
+    expect(mockKv.put).toHaveBeenCalledWith(
+      'writekey',
+      JSON.stringify({ data: true }),
+      { expirationTtl: 120 }
+    )
+
+    // Memory should also have it
+    const result = await kvCache.get('writekey')
+    expect(result).toEqual({ data: true })
+    expect(mockKv.get).not.toHaveBeenCalled()
+  })
+
+  it('should delete from both memory and KV', async () => {
+    await kvCache.set('delkey', 'val')
+    await kvCache.delete('delkey')
+
+    expect(mockKv.delete).toHaveBeenCalledWith('delkey')
+    expect(await kvCache.get('delkey')).toBeNull()
+  })
+
+  it('should only invalidate memory, not KV', async () => {
+    await kvCache.set('content:list:a', 'data')
+    await kvCache.invalidate('content:list:*')
+
+    // Memory should be cleared
+    expect(await kvCache.get('content:list:a')).toBeNull()
+    // KV delete should NOT have been called by invalidate
+    expect(mockKv.delete).not.toHaveBeenCalled()
+  })
+
+  it('should return kv source from getWithSource', async () => {
+    mockKv.get.mockResolvedValue({ from: 'kv' })
+
+    const result = await kvCache.getWithSource('kvitem')
+    expect(result).toEqual({
+      hit: true,
+      data: { from: 'kv' },
+      source: 'kv',
+      ttl: 60
+    })
+  })
+
+  it('should return memory source from getWithSource', async () => {
+    await kvCache.set('memitem', 'memdata')
+
+    const result = await kvCache.getWithSource('memitem')
+    expect(result.hit).toBe(true)
+    expect(result.source).toBe('memory')
+    expect(result.data).toBe('memdata')
+  })
+
+  it('should silently skip KV errors on get', async () => {
+    mockKv.get.mockRejectedValue(new Error('KV unavailable'))
+
+    const result = await kvCache.get('errorkey')
+    expect(result).toBeNull()
+  })
+
+  it('should silently skip KV errors on set', async () => {
+    mockKv.put.mockRejectedValue(new Error('KV unavailable'))
+
+    // Should not throw, and memory cache should still work
+    await expect(kvCache.set('errorkey', 'val')).resolves.not.toThrow()
+    const result = await kvCache.get('errorkey')
+    expect(result).toBe('val')
+  })
+
+  it('should silently skip KV errors on delete', async () => {
+    mockKv.delete.mockRejectedValue(new Error('KV unavailable'))
+    await expect(kvCache.delete('errorkey')).resolves.not.toThrow()
+  })
+
+  it('getOrSet should use two-tier lookup before calling fetcher', async () => {
+    mockKv.get.mockResolvedValue('kv-cached')
+    const fetcher = vi.fn().mockResolvedValue('fresh')
+
+    const result = await kvCache.getOrSet('orsetkey', fetcher)
+    expect(result).toBe('kv-cached')
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+})
+
+describe('CacheService without KV (undefined)', () => {
+  it('should work as memory-only when kvNamespace is undefined', async () => {
+    const cache = new CacheService({ ttl: 60, keyPrefix: 'test' })
+    await cache.set('key', 'value')
+    expect(await cache.get('key')).toBe('value')
+    await cache.delete('key')
+    expect(await cache.get('key')).toBeNull()
   })
 })
 

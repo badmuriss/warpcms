@@ -20,7 +20,7 @@ export type { CorePlugin } from './plugin-bootstrap'
 
 // Cache Service
 export { CacheService, getCacheService, CACHE_CONFIGS, parseCacheTtl } from './cache'
-export type { CacheConfig } from './cache'
+export type { CacheConfig, CacheSource } from './cache'
 
 // Settings Service
 export { SettingsService } from './settings'

@@ -2,7 +2,7 @@
  * Simple Cache Service
  *
  * Provides basic caching functionality for the core package
- * Can be extended with KV or other storage backends
+ * Supports optional KV namespace for persistent caching across cold starts
  */
 
 export interface CacheConfig {
@@ -10,12 +10,16 @@ export interface CacheConfig {
   keyPrefix: string
 }
 
+export type CacheSource = 'memory' | 'kv' | 'none'
+
 export class CacheService {
   private config: CacheConfig
   private memoryCache: Map<string, { value: any; expires: number }> = new Map()
+  private kvNamespace?: KVNamespace
 
-  constructor(config: CacheConfig) {
+  constructor(config: CacheConfig, kvNamespace?: KVNamespace) {
     this.config = config
+    this.kvNamespace = kvNamespace
   }
 
   /**
@@ -30,22 +34,36 @@ export class CacheService {
   }
 
   /**
-   * Get value from cache
+   * Get value from cache (memory first, then KV fallback)
    */
   async get<T>(key: string): Promise<T | null> {
+    // Check memory first
     const cached = this.memoryCache.get(key)
 
-    if (!cached) {
-      return null
+    if (cached) {
+      if (Date.now() > cached.expires) {
+        this.memoryCache.delete(key)
+      } else {
+        return cached.value as T
+      }
     }
 
-    // Check if expired
-    if (Date.now() > cached.expires) {
-      this.memoryCache.delete(key)
-      return null
+    // Fall back to KV
+    if (this.kvNamespace) {
+      try {
+        const kvValue = await this.kvNamespace.get<T>(key, 'json')
+        if (kvValue !== null) {
+          // Populate memory cache from KV hit
+          const expires = Date.now() + this.config.ttl * 1000
+          this.memoryCache.set(key, { value: kvValue, expires })
+          return kvValue
+        }
+      } catch {
+        // Silently skip KV errors
+      }
     }
 
-    return cached.value as T
+    return null
   }
 
   /**
@@ -54,55 +72,90 @@ export class CacheService {
   async getWithSource<T>(key: string): Promise<{
     hit: boolean
     data: T | null
-    source: string
+    source: CacheSource
     ttl?: number
   }> {
+    // Check memory first
     const cached = this.memoryCache.get(key)
 
-    if (!cached) {
-      return {
-        hit: false,
-        data: null,
-        source: 'none'
+    if (cached) {
+      if (Date.now() > cached.expires) {
+        this.memoryCache.delete(key)
+      } else {
+        return {
+          hit: true,
+          data: cached.value as T,
+          source: 'memory',
+          ttl: (cached.expires - Date.now()) / 1000
+        }
       }
     }
 
-    // Check if expired
-    if (Date.now() > cached.expires) {
-      this.memoryCache.delete(key)
-      return {
-        hit: false,
-        data: null,
-        source: 'expired'
+    // Fall back to KV
+    if (this.kvNamespace) {
+      try {
+        const kvValue = await this.kvNamespace.get<T>(key, 'json')
+        if (kvValue !== null) {
+          // Populate memory cache from KV hit
+          const expires = Date.now() + this.config.ttl * 1000
+          this.memoryCache.set(key, { value: kvValue, expires })
+          return {
+            hit: true,
+            data: kvValue,
+            source: 'kv',
+            ttl: this.config.ttl
+          }
+        }
+      } catch {
+        // Silently skip KV errors
       }
     }
 
     return {
-      hit: true,
-      data: cached.value as T,
-      source: 'memory',
-      ttl: (cached.expires - Date.now()) / 1000 // TTL in seconds
+      hit: false,
+      data: null,
+      source: 'none'
     }
   }
 
   /**
-   * Set value in cache
+   * Set value in both memory and KV cache
    */
   async set(key: string, value: any, ttl?: number): Promise<void> {
-    const expires = Date.now() + ((ttl || this.config.ttl) * 1000)
+    const effectiveTtl = ttl || this.config.ttl
+    const expires = Date.now() + effectiveTtl * 1000
     this.memoryCache.set(key, { value, expires })
+
+    // Write-through to KV
+    if (this.kvNamespace) {
+      try {
+        await this.kvNamespace.put(key, JSON.stringify(value), {
+          expirationTtl: effectiveTtl
+        })
+      } catch {
+        // Silently skip KV errors
+      }
+    }
   }
 
   /**
-   * Delete specific key from cache
+   * Delete specific key from both memory and KV cache
    */
   async delete(key: string): Promise<void> {
     this.memoryCache.delete(key)
+
+    if (this.kvNamespace) {
+      try {
+        await this.kvNamespace.delete(key)
+      } catch {
+        // Silently skip KV errors
+      }
+    }
   }
 
   /**
    * Invalidate cache keys matching a pattern
-   * For memory cache, we do simple string matching
+   * Memory only — KV entries expire via TTL
    */
   async invalidate(pattern: string): Promise<void> {
     // Convert glob pattern to regex
@@ -111,7 +164,7 @@ export class CacheService {
       .replace(/\?/g, '.')
     const regex = new RegExp(`^${regexPattern}$`)
 
-    // Find and delete matching keys
+    // Find and delete matching keys from memory only
     for (const key of this.memoryCache.keys()) {
       if (regex.test(key)) {
         this.memoryCache.delete(key)
@@ -120,14 +173,14 @@ export class CacheService {
   }
 
   /**
-   * Clear all cache
+   * Clear all memory cache
    */
   async clear(): Promise<void> {
     this.memoryCache.clear()
   }
 
   /**
-   * Get value from cache or set it using a callback
+   * Get value from cache or set it using a callback (two-tier lookup)
    */
   async getOrSet<T>(key: string, callback: () => Promise<T>, ttl?: number): Promise<T> {
     const cached = await this.get<T>(key)
@@ -176,8 +229,8 @@ export const CACHE_CONFIGS = {
 }
 
 /**
- * Get cache service instance for a config
+ * Get cache service instance for a config, optionally backed by KV
  */
-export function getCacheService(config: CacheConfig): CacheService {
-  return new CacheService(config)
+export function getCacheService(config: CacheConfig, kvNamespace?: KVNamespace): CacheService {
+  return new CacheService(config, kvNamespace)
 }
