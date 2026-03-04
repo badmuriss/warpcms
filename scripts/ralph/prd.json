@@ -134,8 +134,8 @@
         "Tests pass (npx vitest --run)"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Migrated GET /{id}, GET /by-slug/{slug}, GET /check-slug, PUT /{id}, DELETE /{id} to createRoute(). Added FlatContentSchema and ContentMutationSchema to api-schemas.ts. All handlers use c.req.valid('param')/c.req.valid('json') for typed access. PUT uses UpdateContentBodySchema (title, slug, data all optional). Explicit status codes on all c.json() calls for strict type checking. Zod v4 requires z.record(z.string(), z.unknown()) for record types."
     },
     {
       "id": "US-009",

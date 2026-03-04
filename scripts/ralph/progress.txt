@@ -11,8 +11,20 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
 - CORS already applied on `/api/*` routes in `api.ts`
 - OpenAPI factory: `createOpenAPIApp()` in `src/routes/openapi-app.ts`, exports `openAPIDocInfo` and `openAPITags`
 - Security schemes registered via `app.openAPIRegistry.registerComponent('securitySchemes', name, config)`
+- Protected routes: apply `requireAuth()` with `app.use('/path', requireAuth())` BEFORE `app.openapi()`, add `security: [{ bearerAuth: [] }]` to route definition
+- JWT payload from `requireAuth()`: `{ userId, email, role }` — query DB for full user profile
 - 3 pre-existing TS errors (ai-search-plugin, admin-design.template) — not blocking
 - Build tool: tsup, typecheck: `tsc --noEmit`, tests: `npx vitest --run`
+- OpenAPI route pattern: use `createRoute()` + `app.openapi(route, handler)` — handler gets typed `c.req.valid('json')` for free
+- Converting Hono → OpenAPIHono is a drop-in replacement; can mix `.get()` and `.openapi()` routes on the same instance
+- For protected `.openapi()` routes: register `app.post('/path', requireAuth())` BEFORE `app.openapi(route, handler)` to chain middleware
+- Query params: use `z.coerce.number()` for int params (handles string→number); handler can still use `c.req.query()` for raw access
+- Sub-routers need their own `registerComponent('securitySchemes', 'bearerAuth', ...)` if routes reference bearerAuth
+- Cast D1 `.first()` result with inline type literal for type-safe field access without a separate interface
+- Token endpoint returns `token_type: 'Bearer' as const` to satisfy literal type in schema
+- Zod v4: `z.record()` requires 2 args: `z.record(z.string(), z.unknown())`
+- Zod v4: `z.unknown().nullable()` is invalid — `z.unknown()` already includes null
+- Always use explicit status codes in `.openapi()` handlers: `c.json(data, 200)` not `c.json(data)`
 ---
 
 ## 2026-03-04 - US-001
@@ -35,4 +47,93 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
 - **Learnings for future iterations:**
   - `OpenAPIHono` is a drop-in replacement for `Hono` — same generic `<{ Bindings; Variables }>` pattern
   - Doc info and tags are exported as constants for use when generating the final spec (not set on app instance)
+---
+
+## 2026-03-04 - US-003
+- Created `src/routes/api-auth.ts` with POST /token endpoint using `createRoute()` + `app.openapi()`
+- Validates email+password with Zod schema, queries D1 for active user, verifies password with `AuthManager.verifyPassword`
+- Returns `{ token, expires_in: 86400, token_type: 'Bearer' }` on success
+- Returns 401 with `{ error: 'Invalid email or password' }` on invalid credentials
+- Zod validation failures auto-handled by @hono/zod-openapi (returns 400)
+- Does NOT set cookies, does NOT update last_login_at
+- CORS middleware applied with same config as api.ts
+- Files changed: packages/core/src/routes/api-auth.ts
+- **Learnings for future iterations:**
+  - `@hono/zod-openapi` auto-validates request body and returns 400 with Zod errors — no manual validation needed
+  - DB user row has `password_hash`, `first_name`, `last_name` (snake_case) — cast `.first()` with inline type for safety
+  - `createOpenAPIApp()` already registers bearerAuth — no need to re-register in sub-routers
+  - This is the first actual `createRoute()` usage in the codebase — future stories can follow this pattern
+---
+
+## 2026-03-04 - US-004
+- Added GET /me endpoint to `src/routes/api-auth.ts`
+- Uses `requireAuth()` middleware applied with `apiAuthRoutes.use('/me', requireAuth())`
+- Queries DB for full user profile since JWT payload only has userId, email, role
+- Maps snake_case DB fields (first_name, last_name) to camelCase response (firstName, lastName)
+- Returns `{ user: { id, email, username, firstName, lastName, role } }` on 200
+- 401 handled by requireAuth() middleware automatically
+- Files changed: packages/core/src/routes/api-auth.ts
+- **Learnings for future iterations:**
+  - `requireAuth()` sets `c.get('user')` with JWT payload `{ userId, email, role }` — not full user profile
+  - Must query DB for fields not in JWT (username, firstName, lastName)
+  - Apply middleware with `app.use('/path', requireAuth())` before the `app.openapi()` call
+  - Security scheme in route definition: `security: [{ bearerAuth: [] }]`
+---
+
+## 2026-03-04 - US-005
+- Added POST /refresh endpoint to `src/routes/api-auth.ts`
+- Uses `requireAuth()` middleware applied with `apiAuthRoutes.use('/refresh', requireAuth())`
+- Generates new JWT from existing JWT payload — no DB query needed
+- Returns `{ token, expires_in: 86400, token_type: 'Bearer' }` on 200
+- 401 handled by requireAuth() middleware automatically
+- Does NOT set any cookies
+- Files changed: packages/core/src/routes/api-auth.ts
+- **Learnings for future iterations:**
+  - Refresh endpoint doesn't need DB lookup — JWT payload has userId, email, role which is all generateToken needs
+  - Pattern: `requireAuth()` + `c.get('user')` for any protected endpoint
+  - POST method chosen for refresh (not GET) since it issues a new token (side effect)
+---
+
+## 2026-03-04 - US-006
+- Exported `apiAuthRoutes` from `src/routes/index.ts`
+- Imported `apiAuthRoutes` in `src/app.ts` and mounted at `/api/auth`
+- Added `apiAuthRoutes` to ROUTES_INFO available list
+- CORS already handled inside api-auth.ts — no additional CORS config needed in app.ts
+- Files changed: packages/core/src/routes/index.ts, packages/core/src/app.ts
+- **Learnings for future iterations:**
+  - Mount order matters: `/api/auth` must come before generic `/api` catch-all routes if any overlap
+  - Sub-routers with their own CORS middleware don't need CORS applied again at the mount point
+  - ROUTES_INFO in index.ts is informational only — keep it in sync for documentation purposes
+---
+
+## 2026-03-04 - US-007
+- Migrated GET /api/content and POST /api/content to zod-openapi `createRoute()` definitions
+- Converted `api.ts` from `Hono` to `OpenAPIHono` — all existing middleware/routes preserved
+- Defined `getContentRoute` with `ContentListQuerySchema` (collection: string, limit: int, offset: int)
+- Converted `api-content-crud.ts` from `Hono` to `OpenAPIHono` with bearerAuth security scheme
+- Defined `postContentRoute` with `CreateContentBodySchema` (collectionId, title, slug, data) and bearerAuth
+- POST handler now uses `c.req.valid('json')` instead of manual `c.req.json()` — Zod validates body
+- Added `ServerErrorSchema` to `api-schemas.ts` for 500 responses (accepts `details: string | string[]`)
+- Files changed: packages/core/src/routes/api.ts, packages/core/src/routes/api-content-crud.ts, packages/core/src/schemas/api-schemas.ts
+- **Learnings for future iterations:**
+  - OpenAPIHono is a true drop-in for Hono — `.get()`, `.use()`, `.route()` all work alongside `.openapi()`
+  - For method-specific auth on `.openapi()` routes, use `app.post('/path', requireAuth())` before `app.openapi(route, handler)` — they chain correctly
+  - Query params come as strings; use `z.coerce.number()` to auto-convert in the schema while keeping raw access via `c.req.query()`
+  - Sub-routers that reference bearerAuth in route definitions need `registerComponent()` on their own registry
+  - Response type checking IS strict — use `as const` for literal types and match schema to actual handler return shape
+  - `details` field in error responses is inconsistent (string vs string[]) across handlers — ServerErrorSchema uses union to handle both
+---
+
+## 2026-03-04 - US-008
+- Migrated GET /{id}, GET /by-slug/{slug}, GET /check-slug, PUT /{id}, DELETE /{id} to `createRoute()` definitions
+- Added `FlatContentSchema` and `ContentMutationSchema` to `api-schemas.ts` for typed responses
+- All handlers now use `c.req.valid('param')` and `c.req.valid('json')` for typed access
+- PUT uses `UpdateContentBodySchema` (title, slug, data — all optional)
+- Files changed: packages/core/src/routes/api-content-crud.ts, packages/core/src/schemas/api-schemas.ts
+- **Learnings for future iterations:**
+  - Zod v4: `z.record()` requires 2 args — `z.record(z.string(), z.unknown())`, single-arg form errors
+  - Zod v4: `z.unknown().nullable()` is invalid — `z.unknown()` already includes null
+  - Always pass explicit status codes to `c.json()` in `.openapi()` handlers (e.g., `c.json(data, 200)`) to avoid TS status union errors
+  - For PUT with partial updates, define all body fields as `.optional()` — dynamic SQL build pattern still works with `c.req.valid('json')`
+  - Route order matters: `/check-slug` and `/by-slug/:slug` must be defined BEFORE `/:id` to avoid path conflicts
 ---
