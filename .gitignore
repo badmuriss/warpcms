@@ -12,7 +12,7 @@ docs/
 .wrangler/
 .dev.vars
 .planning/
-scripts/ralph/
+scripts/
 tasks/
 
 # Environment variables
