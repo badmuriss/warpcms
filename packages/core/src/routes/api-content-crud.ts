@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { requireAuth } from '../middleware'
-import { getCacheService, CACHE_CONFIGS } from '../services'
+import { getCacheService, CACHE_CONFIGS, parseCacheTtl } from '../services'
 import { getContentType } from '../content-types'
 import { ErrorResponseSchema, ServerErrorSchema, FlatContentSchema, ContentMutationSchema } from '../schemas/api-schemas'
 import type { Bindings, Variables } from '../app'
@@ -153,12 +153,15 @@ apiContentCrudRoutes.openapi(getBySlugRoute, async (c) => {
     const { slug } = c.req.valid('param')
     const db = c.env.DB
 
-    const cache = getCacheService(CACHE_CONFIGS.api!)
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
     const cacheKey = `content:by-slug:${slug}`
 
-    const cached = await cache.get(cacheKey)
-    if (cached) {
-      return c.json({ data: cached }, 200)
+    const cacheResult = await cache.getWithSource<any>(cacheKey)
+    if (cacheResult.hit && cacheResult.data) {
+      c.header('X-Cache-Status', 'HIT')
+      c.header('X-Cache-Source', cacheResult.source)
+      return c.json({ data: cacheResult.data }, 200)
     }
 
     const stmt = db.prepare('SELECT * FROM content WHERE slug = ?')
@@ -172,6 +175,8 @@ apiContentCrudRoutes.openapi(getBySlugRoute, async (c) => {
 
     await cache.set(cacheKey, flatContent)
 
+    c.header('X-Cache-Status', 'MISS')
+    c.header('X-Cache-Source', 'database')
     return c.json({ data: flatContent }, 200)
   } catch (error) {
     console.error('Error fetching content by slug:', error)
