@@ -27,6 +27,8 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
 - Always use explicit status codes in `.openapi()` handlers: `c.json(data, 200)` not `c.json(data)`
 - Multipart/form-data in OpenAPI route: schema is for spec only; handler still uses `c.req.formData()` for runtime access
 - Media table columns are snake_case (original_name, mime_type, r2_key) — map to camelCase in API responses
+- Auto-generated spec: `apiRoutes.doc('/', config)` — sub-routers mounted via `.route()` contribute their createRoute() definitions
+- All API sub-routers (auth, media, system) now mounted on apiRoutes in api.ts, not individually in app.ts
 ---
 
 ## 2026-03-04 - US-001
@@ -175,4 +177,19 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
   - `c.get('appVersion')` may return undefined — use fallback `|| '1.0.0'`
   - D1 `.first()` returns null if no rows, use optional chaining with fallback for aggregate queries
   - 503 status code used for unhealthy responses (not 500) — matches HTTP semantics for service unavailable
+---
+
+## 2026-03-04 - US-011
+- Replaced ~300-line hand-written OpenAPI spec at GET /api/ with auto-generated spec via `apiRoutes.doc('/', config)`
+- Mounted apiAuthRoutes, apiMediaRoutes, apiSystemRoutes on apiRoutes via `.route()` so all OpenAPI routes merge into one spec
+- Registered bearerAuth security scheme on apiRoutes' own registry
+- Removed individual sub-router mounts from app.ts — now nested under `/api` via apiRoutes
+- Used `openAPIDocInfo` and `openAPITags` from openapi-app.ts for consistent metadata
+- Files changed: packages/core/src/routes/api.ts, packages/core/src/app.ts
+- **Learnings for future iterations:**
+  - `apiRoutes.doc('/', config)` registers a GET handler that returns the full OpenAPI spec as JSON
+  - Sub-routers mounted via `.route()` on an OpenAPIHono parent contribute their `createRoute()` definitions to the generated spec
+  - Parent middleware (`use('*')`) runs for sub-router requests too — timing, cache check, CORS all apply to /api/auth/*, /api/media/*, /api/system/*
+  - Sub-routers that already have their own CORS middleware will have double CORS — Hono's `cors()` just overwrites same headers, so no breakage
+  - bearerAuth must be registered on the parent apiRoutes registry for it to appear in the generated spec's components.securitySchemes
 ---

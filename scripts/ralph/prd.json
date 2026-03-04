@@ -182,8 +182,8 @@
         "Tests pass (npx vitest --run)"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Replaced ~300-line hand-written OpenAPI spec with apiRoutes.doc('/', config) auto-generation. Mounted apiAuthRoutes, apiMediaRoutes, apiSystemRoutes on apiRoutes via .route() so all OpenAPI-defined routes contribute to the generated spec. Registered bearerAuth security scheme on apiRoutes registry. Removed individual sub-router mounts from app.ts (now nested under /api). Spec auto-includes all routes defined with createRoute(), bearerAuth scheme, and component schemas from Zod definitions."
     },
     {
       "id": "US-012",
