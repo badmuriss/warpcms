@@ -9,6 +9,7 @@ import type { Bindings, Variables as AppVariables } from '../app'
 import {
   ContentItemSchema,
   ErrorResponseSchema,
+  HealthCheckSchema,
   ServerErrorSchema,
 } from '../schemas/api-schemas'
 
@@ -362,13 +363,28 @@ apiRoutes.get('/', (c) => {
   })
 })
 
-// Health check endpoint
-apiRoutes.get('/health', (c) => {
+// --- GET /health route definition ---
+
+const healthRoute = createRoute({
+  method: 'get',
+  path: '/health',
+  tags: ['System'],
+  summary: 'Health Check',
+  description: 'Returns API health status and available schemas',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: HealthCheckSchema } },
+      description: 'Health status',
+    },
+  },
+})
+
+apiRoutes.openapi(healthRoute, (c) => {
   return c.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    schemas: schemaDefinitions.map(s => s.name)
-  })
+    schemas: schemaDefinitions.map(s => s.name),
+  }, 200)
 })
 
 // --- GET /content route definition ---

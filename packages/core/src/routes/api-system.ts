@@ -5,16 +5,39 @@
  * These are lightweight routes without heavy dependencies
  */
 
-import { Hono } from 'hono'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import type { Bindings, Variables } from '../app'
+import {
+  SystemHealthSchema,
+  SystemHealthErrorSchema,
+  SystemInfoSchema,
+  SystemStatsSchema,
+  ErrorResponseSchema,
+} from '../schemas/api-schemas'
 
-export const apiSystemRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+export const apiSystemRoutes = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>()
 
-/**
- * System health check
- * GET /api/system/health
- */
-apiSystemRoutes.get('/health', async (c) => {
+// --- GET /health ---
+
+const systemHealthRoute = createRoute({
+  method: 'get',
+  path: '/health',
+  tags: ['System'],
+  summary: 'System Health Check',
+  description: 'Full health check with DB, KV, and R2 connectivity status and latencies',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: SystemHealthSchema } },
+      description: 'System health status',
+    },
+    503: {
+      content: { 'application/json': { schema: SystemHealthErrorSchema } },
+      description: 'System unhealthy',
+    },
+  },
+})
+
+apiSystemRoutes.openapi(systemHealthRoute, async (c) => {
   try {
     const startTime = Date.now()
 
@@ -72,33 +95,45 @@ apiSystemRoutes.get('/health', async (c) => {
       checks: {
         database: {
           status: dbStatus,
-          latency: dbLatency
+          latency: dbLatency,
         },
         cache: {
           status: kvStatus,
-          latency: kvLatency
+          latency: kvLatency,
         },
         storage: {
-          status: r2Status
-        }
+          status: r2Status,
+        },
       },
-      environment: c.env.ENVIRONMENT || 'production'
-    })
+      environment: c.env.ENVIRONMENT || 'production',
+    }, 200)
   } catch (error) {
     console.error('Health check failed:', error)
     return c.json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      error: 'Health check failed'
+      error: 'Health check failed',
     }, 503)
   }
 })
 
-/**
- * System information
- * GET /api/system/info
- */
-apiSystemRoutes.get('/info', (c) => {
+// --- GET /info ---
+
+const systemInfoRoute = createRoute({
+  method: 'get',
+  path: '/info',
+  tags: ['System'],
+  summary: 'System Information',
+  description: 'Returns system metadata, version, and feature availability',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: SystemInfoSchema } },
+      description: 'System information',
+    },
+  },
+})
+
+apiSystemRoutes.openapi(systemInfoRoute, (c) => {
   const appVersion = c.get('appVersion') || '1.0.0'
 
   return c.json({
@@ -109,7 +144,7 @@ apiSystemRoutes.get('/info', (c) => {
       api: '/api',
       auth: '/auth',
       health: '/api/system/health',
-      docs: '/docs'
+      docs: '/docs',
     },
     features: {
       content: true,
@@ -117,17 +152,33 @@ apiSystemRoutes.get('/info', (c) => {
       auth: true,
       collections: true,
       caching: !!c.env.CACHE_KV,
-      storage: !!c.env.MEDIA_BUCKET
+      storage: !!c.env.MEDIA_BUCKET,
     },
-    timestamp: new Date().toISOString()
-  })
+    timestamp: new Date().toISOString(),
+  }, 200)
 })
 
-/**
- * System stats
- * GET /api/system/stats
- */
-apiSystemRoutes.get('/stats', async (c) => {
+// --- GET /stats ---
+
+const systemStatsRoute = createRoute({
+  method: 'get',
+  path: '/stats',
+  tags: ['System'],
+  summary: 'System Statistics',
+  description: 'Returns content, media, and user statistics',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: SystemStatsSchema } },
+      description: 'System statistics',
+    },
+    500: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Failed to fetch statistics',
+    },
+  },
+})
+
+apiSystemRoutes.openapi(systemStatsRoute, async (c) => {
   try {
     const db = c.env.DB
 
@@ -136,7 +187,7 @@ apiSystemRoutes.get('/stats', async (c) => {
       SELECT COUNT(*) as total_content
       FROM content
       WHERE deleted_at IS NULL
-    `).first() as any
+    `).first() as { total_content: number } | null
 
     // Get media statistics
     const mediaStats = await db.prepare(`
@@ -145,38 +196,36 @@ apiSystemRoutes.get('/stats', async (c) => {
         SUM(size) as total_size
       FROM media
       WHERE deleted_at IS NULL
-    `).first() as any
+    `).first() as { total_files: number; total_size: number } | null
 
     // Get user statistics
     const userStats = await db.prepare(`
       SELECT COUNT(*) as total_users
       FROM users
-    `).first() as any
+    `).first() as { total_users: number } | null
 
     return c.json({
       content: {
-        total: contentStats?.total_content || 0
+        total: contentStats?.total_content || 0,
       },
       media: {
         total_files: mediaStats?.total_files || 0,
         total_size_bytes: mediaStats?.total_size || 0,
-        total_size_mb: Math.round((mediaStats?.total_size || 0) / 1024 / 1024 * 100) / 100
+        total_size_mb: Math.round((mediaStats?.total_size || 0) / 1024 / 1024 * 100) / 100,
       },
       users: {
-        total: userStats?.total_users || 0
+        total: userStats?.total_users || 0,
       },
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    }, 200)
   } catch (error) {
     console.error('Stats query failed:', error)
     return c.json({ error: 'Failed to fetch system statistics' }, 500)
   }
 })
 
-/**
- * Database ping
- * GET /api/system/ping
- */
+// --- GET /ping (not in OpenAPI spec, kept as plain route) ---
+
 apiSystemRoutes.get('/ping', async (c) => {
   try {
     const start = Date.now()
@@ -186,21 +235,19 @@ apiSystemRoutes.get('/ping', async (c) => {
     return c.json({
       pong: true,
       latency,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
     console.error('Ping failed:', error)
     return c.json({
       pong: false,
-      error: 'Database connection failed'
+      error: 'Database connection failed',
     }, 503)
   }
 })
 
-/**
- * Environment check
- * GET /api/system/env
- */
+// --- GET /env (not in OpenAPI spec, kept as plain route) ---
+
 apiSystemRoutes.get('/env', (c) => {
   return c.json({
     environment: c.env.ENVIRONMENT || 'production',
@@ -210,9 +257,8 @@ apiSystemRoutes.get('/env', (c) => {
       media_bucket: !!c.env.MEDIA_BUCKET,
       email_queue: !!c.env.EMAIL_QUEUE,
       sendgrid: !!c.env.SENDGRID_API_KEY,
-      cloudflare_images: !!(c.env.IMAGES_ACCOUNT_ID && c.env.IMAGES_API_TOKEN)
+      cloudflare_images: !!(c.env.IMAGES_ACCOUNT_ID && c.env.IMAGES_API_TOKEN),
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 })
-

@@ -105,6 +105,71 @@ export const MediaUploadResponseSchema = z.object({
 
 export type MediaUploadResponse = z.infer<typeof MediaUploadResponseSchema>
 
+// --- Health Check (GET /api/health) ---
+
+export const HealthCheckSchema = z.object({
+  status: z.string(),
+  timestamp: z.string(),
+  schemas: z.array(z.string()),
+})
+
+export type HealthCheck = z.infer<typeof HealthCheckSchema>
+
+// --- System Health (GET /api/system/health) ---
+
+const ServiceCheckSchema = z.object({
+  status: z.string(),
+  latency: z.number().int().optional(),
+})
+
+export const SystemHealthSchema = z.object({
+  status: z.string(),
+  timestamp: z.string(),
+  uptime: z.number().int(),
+  checks: z.object({
+    database: ServiceCheckSchema,
+    cache: ServiceCheckSchema,
+    storage: z.object({ status: z.string() }),
+  }),
+  environment: z.string(),
+})
+
+export type SystemHealth = z.infer<typeof SystemHealthSchema>
+
+export const SystemHealthErrorSchema = z.object({
+  status: z.string(),
+  timestamp: z.string(),
+  error: z.string(),
+})
+
+// --- System Info (GET /api/system/info) ---
+
+export const SystemInfoSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  description: z.string(),
+  endpoints: z.record(z.string(), z.string()),
+  features: z.record(z.string(), z.boolean()),
+  timestamp: z.string(),
+})
+
+export type SystemInfo = z.infer<typeof SystemInfoSchema>
+
+// --- System Stats (GET /api/system/stats) ---
+
+export const SystemStatsSchema = z.object({
+  content: z.object({ total: z.number().int() }),
+  media: z.object({
+    total_files: z.number().int(),
+    total_size_bytes: z.number(),
+    total_size_mb: z.number(),
+  }),
+  users: z.object({ total: z.number().int() }),
+  timestamp: z.string(),
+})
+
+export type SystemStats = z.infer<typeof SystemStatsSchema>
+
 // --- Server Error (allows details as string or string[]) ---
 
 export const ServerErrorSchema = z.object({
