@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { requireAuth } from '../middleware'
-import { getCacheService, CACHE_CONFIGS, parseCacheTtl } from '../services'
+import { getCacheService, parseCacheTtl } from '../services'
 import { getContentType } from '../content-types'
 import { ErrorResponseSchema, ServerErrorSchema, FlatContentSchema, ContentMutationSchema } from '../schemas/api-schemas'
 import type { Bindings, Variables } from '../app'
@@ -353,11 +353,11 @@ apiContentCrudRoutes.openapi(postContentRoute, async (c) => {
       now
     ).run()
 
-    // Invalidate cache
-    const cache = getCacheService(CACHE_CONFIGS.api!)
+    // Invalidate memory cache (KV entries expire via TTL)
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
     await cache.invalidate('content:list:*')
     await cache.invalidate('content:by-slug:*')
-    await cache.invalidate('content-filtered:*')
 
     // Get the created content
     const getStmt = db.prepare('SELECT * FROM content WHERE id = ?')
@@ -500,12 +500,12 @@ apiContentCrudRoutes.openapi(putContentRoute, async (c) => {
 
     await updateStmt.bind(...params).run()
 
-    // Invalidate cache
-    const cache = getCacheService(CACHE_CONFIGS.api!)
-    await cache.delete(cache.generateKey('content', id))
-    await cache.invalidate('content:list:*')
+    // Invalidate memory cache (KV entries expire via TTL)
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
+    await cache.delete(`content:by-id:${id}`)
     await cache.invalidate('content:by-slug:*')
-    await cache.invalidate('content-filtered:*')
+    await cache.invalidate('content:list:*')
 
     // Get updated content
     const getStmt = db.prepare('SELECT * FROM content WHERE id = ?')
@@ -583,12 +583,12 @@ apiContentCrudRoutes.openapi(deleteContentRoute, async (c) => {
     const deleteStmt = db.prepare('DELETE FROM content WHERE id = ?')
     await deleteStmt.bind(id).run()
 
-    // Invalidate cache
-    const cache = getCacheService(CACHE_CONFIGS.api!)
-    await cache.delete(cache.generateKey('content', id))
-    await cache.invalidate('content:list:*')
+    // Invalidate memory cache (KV entries expire via TTL)
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
+    await cache.delete(`content:by-id:${id}`)
     await cache.invalidate('content:by-slug:*')
-    await cache.invalidate('content-filtered:*')
+    await cache.invalidate('content:list:*')
 
     return c.json({ success: true as const }, 200)
   } catch (error) {
