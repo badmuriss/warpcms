@@ -482,19 +482,6 @@ CREATE TABLE IF NOT EXISTS plugin_routes (
   UNIQUE(plugin_id, path, method)
 );
 
--- Plugin assets (CSS, JS files)
-CREATE TABLE IF NOT EXISTS plugin_assets (
-  id TEXT PRIMARY KEY,
-  plugin_id TEXT NOT NULL,
-  asset_type TEXT NOT NULL CHECK (asset_type IN ('css', 'js', 'image', 'font')),
-  asset_path TEXT NOT NULL,
-  load_order INTEGER DEFAULT 100,
-  load_location TEXT DEFAULT 'footer' CHECK (load_location IN ('header', 'footer')),
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at INTEGER DEFAULT (unixepoch()),
-  FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE
-);
-
 -- Plugin activity log
 CREATE TABLE IF NOT EXISTS plugin_activity_log (
   id TEXT PRIMARY KEY,
@@ -578,18 +565,6 @@ CREATE TABLE IF NOT EXISTS system_logs (
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
--- Log configuration per category
-CREATE TABLE IF NOT EXISTS log_config (
-  id TEXT PRIMARY KEY,
-  category TEXT NOT NULL UNIQUE CHECK (category IN ('auth', 'api', 'workflow', 'plugin', 'media', 'system', 'security', 'error')),
-  enabled BOOLEAN NOT NULL DEFAULT TRUE,
-  level TEXT NOT NULL DEFAULT 'info' CHECK (level IN ('debug', 'info', 'warn', 'error', 'fatal')),
-  retention_days INTEGER NOT NULL DEFAULT 30,
-  max_size_mb INTEGER NOT NULL DEFAULT 100,
-  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-  updated_at INTEGER NOT NULL DEFAULT (unixepoch())
-);
-
 -- =============================================================================
 -- SECTION 8: SETTINGS
 -- =============================================================================
@@ -634,68 +609,6 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   user_agent TEXT,
   attempts INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL
-);
-
--- =============================================================================
--- SECTION 10: FORMS SYSTEM
--- =============================================================================
-
--- Form definitions with Form.io integration and Turnstile support
-CREATE TABLE IF NOT EXISTS forms (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  display_name TEXT NOT NULL,
-  description TEXT,
-  category TEXT DEFAULT 'general',
-  formio_schema TEXT NOT NULL, -- Complete Form.io JSON schema
-  settings TEXT, -- JSON settings
-  is_active INTEGER DEFAULT 1,
-  is_public INTEGER DEFAULT 1,
-  managed INTEGER DEFAULT 0,
-  icon TEXT,
-  color TEXT,
-  tags TEXT, -- JSON array of tags
-  submission_count INTEGER DEFAULT 0,
-  view_count INTEGER DEFAULT 0,
-  created_by TEXT REFERENCES users(id),
-  updated_by TEXT REFERENCES users(id),
-  turnstile_enabled INTEGER DEFAULT 0,
-  turnstile_settings TEXT,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
--- Form submissions
-CREATE TABLE IF NOT EXISTS form_submissions (
-  id TEXT PRIMARY KEY,
-  form_id TEXT NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
-  submission_data TEXT NOT NULL, -- JSON
-  status TEXT DEFAULT 'pending',
-  submission_number INTEGER,
-  user_id TEXT REFERENCES users(id),
-  user_email TEXT,
-  ip_address TEXT,
-  user_agent TEXT,
-  referrer TEXT,
-  utm_source TEXT,
-  utm_medium TEXT,
-  utm_campaign TEXT,
-  reviewed_by TEXT REFERENCES users(id),
-  reviewed_at INTEGER,
-  review_notes TEXT,
-  is_spam INTEGER DEFAULT 0,
-  is_archived INTEGER DEFAULT 0,
-  submitted_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
--- Form file attachments
-CREATE TABLE IF NOT EXISTS form_files (
-  id TEXT PRIMARY KEY,
-  submission_id TEXT NOT NULL REFERENCES form_submissions(id) ON DELETE CASCADE,
-  media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
-  field_name TEXT NOT NULL,
-  uploaded_at INTEGER NOT NULL
 );
 
 -- =============================================================================
@@ -839,7 +752,6 @@ CREATE INDEX IF NOT EXISTS idx_plugins_status ON plugins(status);
 CREATE INDEX IF NOT EXISTS idx_plugins_category ON plugins(category);
 CREATE INDEX IF NOT EXISTS idx_plugin_hooks_plugin ON plugin_hooks(plugin_id);
 CREATE INDEX IF NOT EXISTS idx_plugin_routes_plugin ON plugin_routes(plugin_id);
-CREATE INDEX IF NOT EXISTS idx_plugin_assets_plugin ON plugin_assets(plugin_id);
 CREATE INDEX IF NOT EXISTS idx_plugin_activity_plugin ON plugin_activity_log(plugin_id);
 CREATE INDEX IF NOT EXISTS idx_plugin_activity_timestamp ON plugin_activity_log(timestamp);
 
@@ -881,26 +793,6 @@ CREATE INDEX IF NOT EXISTS idx_otp_email_code ON otp_codes(user_email, code);
 CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_codes(expires_at);
 CREATE INDEX IF NOT EXISTS idx_otp_used ON otp_codes(used);
 
--- Forms indexes
-CREATE INDEX IF NOT EXISTS idx_forms_name ON forms(name);
-CREATE INDEX IF NOT EXISTS idx_forms_category ON forms(category);
-CREATE INDEX IF NOT EXISTS idx_forms_active ON forms(is_active);
-CREATE INDEX IF NOT EXISTS idx_forms_public ON forms(is_public);
-CREATE INDEX IF NOT EXISTS idx_forms_created_by ON forms(created_by);
-CREATE INDEX IF NOT EXISTS idx_forms_turnstile ON forms(turnstile_enabled);
-
--- Form submissions indexes
-CREATE INDEX IF NOT EXISTS idx_form_submissions_form_id ON form_submissions(form_id);
-CREATE INDEX IF NOT EXISTS idx_form_submissions_status ON form_submissions(status);
-CREATE INDEX IF NOT EXISTS idx_form_submissions_user_id ON form_submissions(user_id);
-CREATE INDEX IF NOT EXISTS idx_form_submissions_email ON form_submissions(user_email);
-CREATE INDEX IF NOT EXISTS idx_form_submissions_submitted_at ON form_submissions(submitted_at);
-CREATE INDEX IF NOT EXISTS idx_form_submissions_spam ON form_submissions(is_spam);
-
--- Form files indexes
-CREATE INDEX IF NOT EXISTS idx_form_files_submission ON form_files(submission_id);
-CREATE INDEX IF NOT EXISTS idx_form_files_media ON form_files(media_id);
-
 -- AI search indexes
 CREATE INDEX IF NOT EXISTS idx_ai_search_history_created_at ON ai_search_history(created_at);
 CREATE INDEX IF NOT EXISTS idx_ai_search_history_mode ON ai_search_history(mode);
@@ -930,30 +822,6 @@ CREATE TRIGGER IF NOT EXISTS code_examples_updated_at
   AFTER UPDATE ON code_examples
 BEGIN
   UPDATE code_examples SET updated_at = strftime('%s', 'now') WHERE id = NEW.id;
-END;
-
--- Auto-increment submission_number per form
-CREATE TRIGGER IF NOT EXISTS set_submission_number
-AFTER INSERT ON form_submissions
-BEGIN
-  UPDATE form_submissions
-  SET submission_number = (
-    SELECT COUNT(*)
-    FROM form_submissions
-    WHERE form_id = NEW.form_id
-    AND id <= NEW.id
-  )
-  WHERE id = NEW.id;
-END;
-
--- Auto-increment form submission_count
-CREATE TRIGGER IF NOT EXISTS increment_form_submission_count
-AFTER INSERT ON form_submissions
-BEGIN
-  UPDATE forms
-  SET submission_count = submission_count + 1,
-      updated_at = unixepoch() * 1000
-  WHERE id = NEW.form_id;
 END;
 
 -- =============================================================================
@@ -1100,20 +968,6 @@ INSERT OR IGNORE INTO role_permissions (id, role, permission_id, created_at) VAL
   ('rp_viewer_users_read', 'viewer', 'perm_users_read', strftime('%s', 'now') * 1000);
 
 -- ---------------------------------------------------------------------------
--- 14f: Log configuration (8 entries)
--- ---------------------------------------------------------------------------
-
-INSERT OR IGNORE INTO log_config (id, category, enabled, level, retention_days, max_size_mb) VALUES
-  ('log-config-auth', 'auth', TRUE, 'info', 90, 50),
-  ('log-config-api', 'api', TRUE, 'info', 30, 100),
-  ('log-config-workflow', 'workflow', TRUE, 'info', 60, 50),
-  ('log-config-plugin', 'plugin', TRUE, 'warn', 30, 25),
-  ('log-config-media', 'media', TRUE, 'info', 30, 50),
-  ('log-config-system', 'system', TRUE, 'info', 90, 100),
-  ('log-config-security', 'security', TRUE, 'warn', 180, 100),
-  ('log-config-error', 'error', TRUE, 'error', 90, 200);
-
--- ---------------------------------------------------------------------------
 -- 14g: Default settings (5 entries)
 -- ---------------------------------------------------------------------------
 
@@ -1124,32 +978,6 @@ VALUES
   (lower(hex(randomblob(16))), 'general', 'timezone', '"UTC"', unixepoch() * 1000, unixepoch() * 1000),
   (lower(hex(randomblob(16))), 'general', 'language', '"en"', unixepoch() * 1000, unixepoch() * 1000),
   (lower(hex(randomblob(16))), 'general', 'maintenanceMode', 'false', unixepoch() * 1000, unixepoch() * 1000);
-
--- ---------------------------------------------------------------------------
--- 14h: Default contact form
--- ---------------------------------------------------------------------------
-
-INSERT OR IGNORE INTO forms (
-  id, name, display_name, description, category,
-  formio_schema, settings,
-  is_active, is_public,
-  turnstile_enabled, turnstile_settings,
-  created_at, updated_at
-) VALUES (
-  'default-contact-form',
-  'contact',
-  'Contact Form',
-  'A simple contact form for getting in touch',
-  'contact',
-  '{"components":[]}',
-  '{"emailNotifications":false,"successMessage":"Thank you for your submission!","submitButtonText":"Submit","requireAuth":false}',
-  1,
-  1,
-  0,
-  '{"inherit":true}',
-  unixepoch() * 1000,
-  unixepoch() * 1000
-);
 
 -- ---------------------------------------------------------------------------
 -- 14i: Plugin registrations (all 19 plugins, final state)

@@ -6,6 +6,9 @@ Started: Wed Mar  4 05:16:21 PM -03 2026
 - pluginAssets table/type exports also had zero imports outside schema.ts and index.ts — same pattern, safe to remove
 - Pre-existing typecheck errors exist in plugins/available/ and plugins/core-plugins/ (unrelated to schema)
 - Test file `__tests__/services/forms.test.ts` uses raw SQL strings, not schema imports — not affected by schema table removal
+- When removing a table that has active service code, refactor the service to use in-memory defaults rather than just deleting the table
+- migrations-bundle.ts and migrations/*.sql always contain raw SQL `log_config`/`plugin_assets` strings — these are expected and not code dependencies
+- After editing migration .sql files, regenerate bundle with: `npx tsx packages/core/scripts/generate-migrations.ts`
 
 ---
 
@@ -29,4 +32,31 @@ Started: Wed Mar  4 05:16:21 PM -03 2026
 - **Learnings for future iterations:**
   - migrations-bundle.ts contains raw SQL string referencing `plugin_assets` — this is expected and not a code dependency
   - Same removal pattern as US-001: check schema.ts + index.ts, grep confirms no other imports
+---
+
+## 2026-03-04 - US-003
+- Removed log_config table definition from db/schema.ts (10 lines)
+- Removed insertLogConfigSchema, selectLogConfigSchema Zod schemas (6 lines)
+- Removed LogConfig, NewLogConfig type exports (2 lines)
+- Removed logConfig + schema/type re-exports from index.ts (5 lines)
+- Refactored logger.ts: replaced DB-based config queries with in-memory defaults
+- Updated admin-log-config.template.ts to import LogConfig from services/logger instead of db/schema
+- Files changed: schema.ts, index.ts, logger.ts, admin-log-config.template.ts
+- **Learnings for future iterations:**
+  - Unlike forms/pluginAssets, logConfig was actively queried by logger.ts and admin routes — required refactoring, not just deletion
+  - Logger config is now in-memory with hardcoded defaults; updateConfig/getAllConfigs still work but don't persist
+  - migrations-bundle.ts and migrations.ts reference `log_config` as raw SQL strings — these are DB-level references, not schema imports
+  - No test files referenced logConfig directly
+---
+
+## 2026-03-04 - US-004
+- Removed CREATE TABLE statements for forms, form_submissions, form_files, plugin_assets, log_config from 0001_initial_schema.sql
+- Removed all related indexes (18 indexes), triggers (2 triggers), and seed data (log_config entries + default contact form)
+- Regenerated migrations-bundle.ts via scripts/generate-migrations.ts
+- Files changed: packages/core/migrations/0001_initial_schema.sql, packages/core/src/db/migrations-bundle.ts
+- **Learnings for future iterations:**
+  - Migration cleanup has 4 categories to check: CREATE TABLE, CREATE INDEX, CREATE TRIGGER, INSERT seed data
+  - migrations-bundle.ts is auto-generated — run `npx tsx packages/core/scripts/generate-migrations.ts` after editing .sql files
+  - After removing tables from migration, grep for table name to ensure no orphaned references remain
+  - Build, typecheck, and tests all unaffected by migration SQL changes (they don't parse raw SQL)
 ---
