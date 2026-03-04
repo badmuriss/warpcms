@@ -158,3 +158,21 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
   - GET /api/media didn't exist before — added as part of OpenAPI migration to match hand-written spec
   - Existing routes that don't need OpenAPI spec can stay as plain Hono methods on OpenAPIHono (drop-in compatible)
 ---
+
+## 2026-03-04 - US-010
+- Converted `api-system.ts` from `Hono` to `OpenAPIHono`
+- Defined `systemHealthRoute` (GET /health) with `SystemHealthSchema` — DB, KV, R2 connectivity checks with latencies
+- Defined `systemInfoRoute` (GET /info) with `SystemInfoSchema` — name, version, endpoints, features
+- Defined `systemStatsRoute` (GET /stats) with `SystemStatsSchema` — content, media, user counts
+- Kept `/ping` and `/env` as plain routes (not in acceptance criteria, not in hand-written spec)
+- Converted GET `/api/health` in `api.ts` to `createRoute()` with `HealthCheckSchema`
+- Added 5 new schemas to `api-schemas.ts`: HealthCheckSchema, SystemHealthSchema, SystemHealthErrorSchema, SystemInfoSchema, SystemStatsSchema
+- All handlers preserve existing behavior; typed DB query results with inline type literals
+- Files changed: packages/core/src/routes/api-system.ts, packages/core/src/routes/api.ts, packages/core/src/schemas/api-schemas.ts
+- **Learnings for future iterations:**
+  - System routes don't need bearerAuth — they're public diagnostic endpoints
+  - `/ping` and `/env` are internal diagnostic tools not in the OpenAPI spec — fine to keep as plain Hono routes on OpenAPIHono
+  - `c.get('appVersion')` may return undefined — use fallback `|| '1.0.0'`
+  - D1 `.first()` returns null if no rows, use optional chaining with fallback for aggregate queries
+  - 503 status code used for unhealthy responses (not 500) — matches HTTP semantics for service unavailable
+---

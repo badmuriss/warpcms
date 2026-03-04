@@ -164,8 +164,8 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Converted api-system.ts from Hono to OpenAPIHono. Defined createRoute() for GET /health (SystemHealthSchema with DB/KV/R2 checks), GET /info (SystemInfoSchema), GET /stats (SystemStatsSchema). Added HealthCheckSchema, SystemHealthSchema, SystemHealthErrorSchema, SystemInfoSchema, SystemStatsSchema to api-schemas.ts. Converted GET /api/health in api.ts to createRoute() with HealthCheckSchema. Kept /ping and /env as plain routes (not in acceptance criteria). All handlers preserve existing behavior with explicit status codes."
     },
     {
       "id": "US-011",
