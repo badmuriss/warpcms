@@ -1,10 +1,11 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
 import { createOpenAPIApp } from './openapi-app'
-import { AuthManager } from '../middleware/auth'
+import { AuthManager, requireAuth } from '../middleware/auth'
 import {
   ErrorResponseSchema,
   TokenResponseSchema,
+  UserResponseSchema,
 } from '../schemas/api-schemas'
 
 const apiAuthRoutes = createOpenAPIApp()
@@ -90,6 +91,67 @@ apiAuthRoutes.openapi(postTokenRoute, async (c) => {
       token,
       expires_in: 86400,
       token_type: 'Bearer' as const,
+    },
+    200
+  )
+})
+
+// --- GET /me ---
+
+const getMeRoute = createRoute({
+  method: 'get',
+  path: '/me',
+  tags: ['Auth'],
+  summary: 'Get current authenticated user info',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({ user: UserResponseSchema }),
+        },
+      },
+      description: 'Current user info',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Missing or invalid token',
+    },
+  },
+})
+
+apiAuthRoutes.use('/me', requireAuth())
+
+apiAuthRoutes.openapi(getMeRoute, async (c) => {
+  const jwtPayload = c.get('user') as { userId: string; email: string; role: string }
+  const db = c.env.DB
+
+  const user = (await db
+    .prepare('SELECT id, email, username, first_name, last_name, role FROM users WHERE id = ?')
+    .bind(jwtPayload.userId)
+    .first()) as {
+    id: string
+    email: string
+    username: string
+    first_name: string
+    last_name: string
+    role: string
+  } | null
+
+  if (!user) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+
+  return c.json(
+    {
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+      },
     },
     200
   )
