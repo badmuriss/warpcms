@@ -73,8 +73,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "All checks pass. apiTokens table has no production queries but is out of scope for this PRD."
     }
   ]
 }

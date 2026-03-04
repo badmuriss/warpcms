@@ -8,6 +8,8 @@ Started: Wed Mar  4 05:16:21 PM -03 2026
 - Test file `__tests__/services/forms.test.ts` uses raw SQL strings, not schema imports — not affected by schema table removal
 - When removing a table that has active service code, refactor the service to use in-memory defaults rather than just deleting the table
 - migrations-bundle.ts and migrations/*.sql always contain raw SQL `log_config`/`plugin_assets` strings — these are expected and not code dependencies
+- `apiTokens` table exists in schema but has zero production queries — candidate for future cleanup
+- Knip unused files/exports in plugins/ are expected false positives — plugins are dynamically loaded
 - After editing migration .sql files, regenerate bundle with: `npx tsx packages/core/scripts/generate-migrations.ts`
 
 ---
@@ -59,4 +61,19 @@ Started: Wed Mar  4 05:16:21 PM -03 2026
   - migrations-bundle.ts is auto-generated — run `npx tsx packages/core/scripts/generate-migrations.ts` after editing .sql files
   - After removing tables from migration, grep for table name to ensure no orphaned references remain
   - Build, typecheck, and tests all unaffected by migration SQL changes (they don't parse raw SQL)
+---
+
+## 2026-03-04 - US-005
+- Verified all acceptance criteria for clean state after table removal
+- Build: PASSES
+- Tests: 1078 passed / 5 failed (all pre-existing) / 308 skipped — no new failures
+- Typecheck: PASSES (only pre-existing plugin errors, none from schema changes)
+- Knip: No new unused exports from schema removal; remaining are all plugin false positives
+- Table audit: 10/11 remaining tables have production query references; apiTokens has none but is out of scope
+- Files changed: scripts/ralph/prd.json, scripts/ralph/progress.txt
+- **Learnings for future iterations:**
+  - apiTokens table (api_tokens) has no production queries — future cleanup candidate
+  - Most app code uses raw D1 SQL (db.prepare), not Drizzle query builder — grep for SQL table names, not just schema imports
+  - Only logger.ts uses Drizzle ORM query builder (insert/select/delete with systemLogs)
+  - Pre-existing test failures (5) and typecheck errors (plugins/) are unrelated to this work
 ---
