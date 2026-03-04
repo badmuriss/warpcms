@@ -1,6 +1,11 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { requireAuth } from '../middleware'
+import {
+  ErrorResponseSchema,
+  ServerErrorSchema,
+  MediaItemSchema,
+  MediaUploadResponseSchema,
+} from '../schemas/api-schemas'
 import type { Bindings, Variables } from '../app'
 
 // Helper function to generate short IDs (replacement for nanoid)
@@ -37,13 +42,154 @@ const fileValidationSchema = z.object({
   size: z.number().min(1).max(50 * 1024 * 1024) // 50MB max
 })
 
-export const apiMediaRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+export const apiMediaRoutes = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Register bearerAuth security scheme for this sub-router
+apiMediaRoutes.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+  type: 'http',
+  scheme: 'bearer',
+  bearerFormat: 'JWT',
+})
 
 // Apply auth middleware to all routes
 apiMediaRoutes.use('*', requireAuth())
 
+// --- OpenAPI route definitions ---
+
+const MediaListResponseSchema = z.object({
+  data: z.array(MediaItemSchema),
+  meta: z.object({
+    count: z.number().int(),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  }),
+})
+
+const MediaListQuerySchema = z.object({
+  folder: z.string().optional().openapi({ description: 'Filter by folder name' }),
+  limit: z.coerce.number().int().min(1).max(100).optional().openapi({ description: 'Maximum items to return (default 50, max 100)' }),
+  offset: z.coerce.number().int().min(0).optional().openapi({ description: 'Number of items to skip' }),
+})
+
+const getMediaRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags: ['Media'],
+  summary: 'List Media',
+  description: 'Returns media files with pagination. Excludes soft-deleted files.',
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: MediaListQuerySchema,
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: MediaListResponseSchema } },
+      description: 'List of media files',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+apiMediaRoutes.openapi(getMediaRoute, async (c) => {
+  try {
+    const { folder, limit: rawLimit, offset: rawOffset } = c.req.valid('query')
+    const limit = rawLimit ?? 50
+    const offset = rawOffset ?? 0
+
+    let sql = 'SELECT * FROM media WHERE deleted_at IS NULL'
+    const params: unknown[] = []
+
+    if (folder) {
+      sql += ' AND folder = ?'
+      params.push(folder)
+    }
+
+    // Get total count
+    const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) as total')
+    const countResult = await c.env.DB.prepare(countSql).bind(...params).first() as { total: number } | null
+    const total = countResult?.total ?? 0
+
+    sql += ' ORDER BY uploaded_at DESC LIMIT ? OFFSET ?'
+    params.push(limit, offset)
+
+    const { results } = await c.env.DB.prepare(sql).bind(...params).all()
+
+    const data = (results as any[]).map((row) => ({
+      id: row.id,
+      filename: row.filename,
+      originalName: row.original_name,
+      mimeType: row.mime_type,
+      size: row.size,
+      width: row.width ?? null,
+      height: row.height ?? null,
+      folder: row.folder,
+      r2Key: row.r2_key,
+      publicUrl: row.public_url,
+      thumbnailUrl: row.thumbnail_url ?? null,
+      uploadedAt: row.uploaded_at
+        ? new Date((row.uploaded_at as number) * 1000).toISOString()
+        : new Date().toISOString(),
+    }))
+
+    return c.json({
+      data,
+      meta: { count: data.length, total, limit, offset },
+    }, 200)
+  } catch (error) {
+    console.error('List media error:', error)
+    return c.json({
+      error: 'Failed to list media',
+      details: error instanceof Error ? error.message : String(error),
+    }, 500)
+  }
+})
+
+const uploadMediaRoute = createRoute({
+  method: 'post',
+  path: '/upload',
+  tags: ['Media'],
+  summary: 'Upload Media',
+  description: 'Uploads a new media file to R2 storage',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      required: true,
+      content: {
+        'multipart/form-data': {
+          schema: z.object({
+            file: z.string().openapi({ type: 'string', format: 'binary', description: 'File to upload' }),
+            folder: z.string().optional().openapi({ description: 'Target folder (default: uploads)' }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: MediaUploadResponseSchema } },
+      description: 'File uploaded successfully',
+    },
+    400: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Invalid file or validation error',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Upload failed',
+    },
+    503: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'R2 storage not configured',
+    },
+  },
+})
+
 // Upload single file
-apiMediaRoutes.post('/upload', async (c) => {
+apiMediaRoutes.openapi(uploadMediaRoute, async (c) => {
   try {
     if (!c.env.MEDIA_BUCKET) {
       return c.json({ error: 'R2 storage is not configured. Set the MEDIA_BUCKET binding.' }, 503)
@@ -167,7 +313,7 @@ apiMediaRoutes.post('/upload', async (c) => {
     await emitEvent('media.upload', { id: mediaRecord.id, filename: mediaRecord.filename })
 
     return c.json({
-      success: true,
+      success: true as const,
       url: `/api/media/file/${r2Key}`,
       filename: mediaRecord.original_name,
       size: mediaRecord.size,
@@ -178,14 +324,15 @@ apiMediaRoutes.post('/upload', async (c) => {
         originalName: mediaRecord.original_name,
         mimeType: mediaRecord.mime_type,
         size: mediaRecord.size,
-        width: mediaRecord.width,
-        height: mediaRecord.height,
-        r2_key: mediaRecord.r2_key,
+        width: mediaRecord.width ?? null,
+        height: mediaRecord.height ?? null,
+        folder: mediaRecord.folder,
+        r2Key: mediaRecord.r2_key,
         publicUrl: mediaRecord.public_url,
-        thumbnailUrl: mediaRecord.thumbnail_url,
+        thumbnailUrl: mediaRecord.thumbnail_url ?? null,
         uploadedAt: new Date(mediaRecord.uploaded_at * 1000).toISOString()
       }
-    })
+    }, 200)
   } catch (error) {
     console.error('Upload error:', error)
     return c.json({ error: 'Upload failed' }, 500)

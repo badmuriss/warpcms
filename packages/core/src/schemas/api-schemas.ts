@@ -75,6 +75,36 @@ export const ContentMutationSchema = z.object({
 
 export type ContentMutation = z.infer<typeof ContentMutationSchema>
 
+// --- Media ---
+
+export const MediaItemSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  originalName: z.string(),
+  mimeType: z.string(),
+  size: z.number().int(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  folder: z.string(),
+  r2Key: z.string(),
+  publicUrl: z.string(),
+  thumbnailUrl: z.string().nullable(),
+  uploadedAt: z.string(),
+})
+
+export type MediaItem = z.infer<typeof MediaItemSchema>
+
+export const MediaUploadResponseSchema = z.object({
+  success: z.boolean(),
+  url: z.string(),
+  filename: z.string(),
+  size: z.number().int(),
+  type: z.string(),
+  file: MediaItemSchema,
+})
+
+export type MediaUploadResponse = z.infer<typeof MediaUploadResponseSchema>
+
 // --- Server Error (allows details as string or string[]) ---
 
 export const ServerErrorSchema = z.object({
