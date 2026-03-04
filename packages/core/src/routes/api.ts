@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
 import { schemaDefinitions } from '../schemas'
 import { getCacheService, CACHE_CONFIGS } from '../services'
@@ -6,6 +6,11 @@ import { QueryFilterBuilder, QueryFilter } from '../utils'
 import { isPluginActive } from '../middleware'
 import apiContentCrudRoutes from './api-content-crud'
 import type { Bindings, Variables as AppVariables } from '../app'
+import {
+  ContentItemSchema,
+  ErrorResponseSchema,
+  ServerErrorSchema,
+} from '../schemas/api-schemas'
 
 // Extend Variables with API-specific fields
 interface Variables extends AppVariables {
@@ -13,7 +18,7 @@ interface Variables extends AppVariables {
   cacheEnabled?: boolean
 }
 
-const apiRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+const apiRoutes = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>()
 
 // Add timing middleware
 apiRoutes.use('*', async (c, next) => {
@@ -366,8 +371,46 @@ apiRoutes.get('/health', (c) => {
   })
 })
 
+// --- GET /content route definition ---
+
+const ContentListQuerySchema = z.object({
+  collection: z.string().optional(),
+  limit: z.coerce.number().int().max(1000).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+})
+
+const ContentListResponseSchema = z.object({
+  data: z.array(ContentItemSchema),
+  meta: z.record(z.string(), z.unknown()),
+})
+
+const getContentRoute = createRoute({
+  method: 'get',
+  path: '/content',
+  tags: ['Content'],
+  summary: 'List Content',
+  description: 'Returns content items with advanced filtering support',
+  request: {
+    query: ContentListQuerySchema,
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: ContentListResponseSchema } },
+      description: 'List of content items',
+    },
+    400: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Invalid filter parameters',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
 // Basic content endpoint with advanced filtering
-apiRoutes.get('/content', async (c) => {
+apiRoutes.openapi(getContentRoute, async (c) => {
   const executionStart = Date.now()
 
   try {

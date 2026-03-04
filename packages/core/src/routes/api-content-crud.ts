@@ -1,7 +1,8 @@
-import { Hono } from 'hono'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { requireAuth } from '../middleware'
 import { getCacheService, CACHE_CONFIGS } from '../services'
 import { getContentType } from '../content-types'
+import { ErrorResponseSchema, ServerErrorSchema } from '../schemas/api-schemas'
 import type { Bindings, Variables } from '../app'
 
 /** Flatten raw content row into the public API shape with `value` + `meta` */
@@ -31,7 +32,14 @@ function flattenContent(row: any) {
   }
 }
 
-const apiContentCrudRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+const apiContentCrudRoutes = new OpenAPIHono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Register bearerAuth security scheme for this sub-router
+apiContentCrudRoutes.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+  type: 'http',
+  scheme: 'bearer',
+  bearerFormat: 'JWT',
+})
 
 // GET /api/content/check-slug - Check if slug is available (globally unique)
 // Query params: slug, excludeId (optional - when editing)
@@ -133,23 +141,70 @@ apiContentCrudRoutes.get('/:id', async (c) => {
   }
 })
 
-// POST /api/content - Create new content (requires authentication)
-apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
+// --- POST / (Create Content) ---
+
+const CreateContentBodySchema = z.object({
+  collectionId: z.string().min(1),
+  title: z.string().min(1),
+  slug: z.string().optional(),
+  data: z.unknown().optional(),
+})
+
+const CreateContentResponseSchema = z.object({
+  data: z.object({
+    id: z.string(),
+    title: z.string(),
+    slug: z.string(),
+    contentType: z.string(),
+    data: z.unknown(),
+    created_at: z.number(),
+    updated_at: z.number(),
+  }),
+})
+
+const postContentRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['Content'],
+  summary: 'Create Content',
+  description: 'Creates a new content item',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': { schema: CreateContentBodySchema },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      content: { 'application/json': { schema: CreateContentResponseSchema } },
+      description: 'Content created successfully',
+    },
+    400: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Validation error',
+    },
+    409: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Duplicate slug',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+// Auth middleware for POST /
+apiContentCrudRoutes.post('/', requireAuth())
+
+apiContentCrudRoutes.openapi(postContentRoute, async (c) => {
   try {
     const db = c.env.DB
     const user = c.get('user')
-    const body = await c.req.json()
-
-    const { collectionId, title, slug, data } = body
-
-    // Validate required fields
-    if (!collectionId) {
-      return c.json({ error: 'collectionId is required' }, 400)
-    }
-
-    if (!title) {
-      return c.json({ error: 'title is required' }, 400)
-    }
+    const { collectionId, title, slug, data } = c.req.valid('json')
 
     // Generate slug from title if not provided
     let finalSlug = slug || title

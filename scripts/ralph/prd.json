@@ -52,8 +52,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created api-auth.ts with OpenAPIHono router. POST /token validates email+password via Zod, queries D1, verifies with AuthManager.verifyPassword, returns JWT via AuthManager.generateToken. No cookies set, no last_login_at update. CORS applied. Route defined with createRoute()."
     },
     {
       "id": "US-004",
@@ -68,8 +68,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added GET /me endpoint to api-auth.ts. Uses requireAuth() middleware for token validation. Queries DB for full user profile (JWT only has userId/email/role). Maps snake_case DB fields to camelCase response. Returns { user: { id, email, username, firstName, lastName, role } }."
     },
     {
       "id": "US-005",
@@ -85,8 +85,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added POST /refresh endpoint to api-auth.ts. Uses requireAuth() middleware for token validation. Generates new JWT from existing payload (userId, email, role). Returns { token, expires_in: 86400, token_type: 'Bearer' }. No cookies set. No DB query needed — JWT payload has all required fields."
     },
     {
       "id": "US-006",
@@ -101,8 +101,8 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Exported apiAuthRoutes from routes/index.ts. Imported in app.ts and mounted with app.route('/api/auth', apiAuthRoutes). CORS already applied in api-auth.ts. Existing /auth/* routes unchanged."
     },
     {
       "id": "US-007",
@@ -116,8 +116,8 @@
         "Tests pass (npx vitest --run)"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Migrated GET /api/content and POST /api/content to zod-openapi. api.ts converted from Hono to OpenAPIHono. GET /content defined with createRoute() including ContentListQuerySchema (collection, limit, offset). api-content-crud.ts converted to OpenAPIHono with bearerAuth. POST / defined with createRoute() and CreateContentBodySchema (collectionId, title, slug, data). Added ServerErrorSchema to api-schemas.ts for 500 responses. All handlers preserve existing behavior."
     },
     {
       "id": "US-008",

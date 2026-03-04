@@ -45,3 +45,12 @@ export const ContentItemSchema = z.object({
 })
 
 export type ContentItem = z.infer<typeof ContentItemSchema>
+
+// --- Server Error (allows details as string or string[]) ---
+
+export const ServerErrorSchema = z.object({
+  error: z.string(),
+  details: z.union([z.string(), z.array(z.string())]).optional(),
+})
+
+export type ServerError = z.infer<typeof ServerErrorSchema>
