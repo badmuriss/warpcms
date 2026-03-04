@@ -221,6 +221,17 @@ apiContentCrudRoutes.openapi(getContentByIdRoute, async (c) => {
     const { id } = c.req.valid('param')
     const db = c.env.DB
 
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
+    const cacheKey = `content:by-id:${id}`
+
+    const cacheResult = await cache.getWithSource<any>(cacheKey)
+    if (cacheResult.hit && cacheResult.data) {
+      c.header('X-Cache-Status', 'HIT')
+      c.header('X-Cache-Source', cacheResult.source)
+      return c.json({ data: cacheResult.data }, 200)
+    }
+
     const stmt = db.prepare('SELECT * FROM content WHERE id = ?')
     const content = await stmt.bind(id).first()
 
@@ -228,7 +239,13 @@ apiContentCrudRoutes.openapi(getContentByIdRoute, async (c) => {
       return c.json({ error: 'Content not found' }, 404)
     }
 
-    return c.json({ data: flattenContent(content) }, 200)
+    const flatContent = flattenContent(content)
+
+    await cache.set(cacheKey, flatContent)
+
+    c.header('X-Cache-Status', 'MISS')
+    c.header('X-Cache-Source', 'database')
+    return c.json({ data: flatContent }, 200)
   } catch (error) {
     console.error('Error fetching content:', error)
     return c.json({
