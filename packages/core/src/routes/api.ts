@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { Scalar } from '@scalar/hono-api-reference'
 import { cors } from 'hono/cors'
 import { schemaDefinitions } from '../schemas'
 import { getCacheService, CACHE_CONFIGS } from '../services'
@@ -81,6 +82,9 @@ apiRoutes.doc('/', {
   info: openAPIDocInfo,
   tags: [...openAPITags],
 })
+
+// Interactive API documentation at GET /api/docs
+apiRoutes.get('/docs', Scalar({ url: '/api/' }))
 
 // --- GET /health route definition ---
 

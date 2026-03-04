@@ -197,8 +197,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Installed @scalar/hono-api-reference@0.10.0 as devDependency. Added GET /docs route to apiRoutes using Scalar({ url: '/api/' }) to load the auto-generated OpenAPI spec. No authentication required. Scalar renders interactive API docs with try-it-out functionality."
     }
   ]
 }

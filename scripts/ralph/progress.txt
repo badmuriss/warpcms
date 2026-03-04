@@ -29,6 +29,7 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
 - Media table columns are snake_case (original_name, mime_type, r2_key) — map to camelCase in API responses
 - Auto-generated spec: `apiRoutes.doc('/', config)` — sub-routers mounted via `.route()` contribute their createRoute() definitions
 - All API sub-routers (auth, media, system) now mounted on apiRoutes in api.ts, not individually in app.ts
+- Scalar API docs: `@scalar/hono-api-reference` — import `Scalar`, use `app.get('/docs', Scalar({ url: '/api/' }))`
 ---
 
 ## 2026-03-04 - US-001
@@ -192,4 +193,17 @@ Started: Wed Mar  4 05:37:38 PM -03 2026
   - Parent middleware (`use('*')`) runs for sub-router requests too — timing, cache check, CORS all apply to /api/auth/*, /api/media/*, /api/system/*
   - Sub-routers that already have their own CORS middleware will have double CORS — Hono's `cors()` just overwrites same headers, so no breakage
   - bearerAuth must be registered on the parent apiRoutes registry for it to appear in the generated spec's components.securitySchemes
+---
+
+## 2026-03-04 - US-012
+- Installed `@scalar/hono-api-reference@^0.10.0` as devDependency in packages/core
+- Added `GET /docs` route to `apiRoutes` in `src/routes/api.ts` using `Scalar({ url: '/api/' })`
+- Scalar loads the auto-generated OpenAPI spec from `/api/` and renders interactive docs
+- No authentication required — public endpoint
+- Files changed: packages/core/package.json, package-lock.json, packages/core/src/routes/api.ts, scripts/ralph/prd.json
+- **Learnings for future iterations:**
+  - `@scalar/hono-api-reference` exports `Scalar` (capital S) — it's a Hono middleware/handler
+  - `Scalar({ url: '/api/' })` — the url must point to the OpenAPI spec endpoint (absolute path)
+  - No additional config needed — Scalar auto-detects themes and renders interactive try-it-out UI
+  - Works on Cloudflare Workers — Scalar serves a single HTML page with CDN-loaded JS
 ---
