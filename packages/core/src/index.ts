@@ -216,7 +216,6 @@ export {
   pluginRoutes,
   pluginActivityLog,
   systemLogs,
-  logConfig,
   // Zod validation schemas
   insertUserSchema,
   selectUserSchema,
@@ -236,8 +235,6 @@ export {
   selectPluginActivityLogSchema,
   insertSystemLogSchema,
   selectSystemLogSchema,
-  insertLogConfigSchema,
-  selectLogConfigSchema,
 } from './db'
 
 export type {
@@ -259,8 +256,6 @@ export type {
   NewPluginActivityLog,
   SystemLog,
   NewSystemLog,
-  LogConfig,
-  NewLogConfig,
 } from './db'
 
 // ============================================================================

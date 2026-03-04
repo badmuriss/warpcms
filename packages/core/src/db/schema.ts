@@ -236,17 +236,6 @@ export const systemLogs = sqliteTable('system_logs', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-// Log configuration table
-export const logConfig = sqliteTable('log_config', {
-  id: text('id').primaryKey(),
-  category: text('category').notNull().unique(),
-  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
-  level: text('level').notNull().default('info'), // minimum log level to store
-  retention: integer('retention').notNull().default(30), // days to keep logs
-  maxSize: integer('max_size').default(10000), // max number of logs per category
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-});
 
 // Insert and select schemas for system logs
 export const insertSystemLogSchema = createInsertSchema(systemLogs, {
@@ -256,13 +245,6 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs, {
 });
 
 export const selectSystemLogSchema = createSelectSchema(systemLogs);
-
-export const insertLogConfigSchema = createInsertSchema(logConfig, {
-  category: (schema: any) => schema.min(1),
-  level: (schema: any) => schema.min(1),
-});
-
-export const selectLogConfigSchema = createSelectSchema(logConfig);
 
 // Type exports
 export type User = typeof users.$inferSelect;
@@ -283,6 +265,4 @@ export type PluginActivityLog = typeof pluginActivityLog.$inferSelect;
 export type NewPluginActivityLog = typeof pluginActivityLog.$inferInsert;
 export type SystemLog = typeof systemLogs.$inferSelect;
 export type NewSystemLog = typeof systemLogs.$inferInsert;
-export type LogConfig = typeof logConfig.$inferSelect;
-export type NewLogConfig = typeof logConfig.$inferInsert;
 

@@ -1,5 +1,16 @@
 import type { D1Database } from '@cloudflare/workers-types'
-import { systemLogs, logConfig, type NewSystemLog, type LogConfig } from '../db/schema'
+import { systemLogs, type NewSystemLog } from '../db/schema'
+
+export interface LogConfig {
+  id: string
+  category: string
+  enabled: boolean
+  level: string
+  retention: number
+  maxSize: number | null
+  createdAt: Date
+  updatedAt: Date
+}
 import { drizzle } from 'drizzle-orm/d1'
 import { eq, and, gte, lte, desc, asc, count, like, inArray } from 'drizzle-orm'
 
@@ -40,15 +51,33 @@ export interface LogFilter {
   sortOrder?: 'asc' | 'desc'
 }
 
+const DEFAULT_CATEGORIES: LogCategory[] = ['auth', 'api', 'workflow', 'plugin', 'media', 'system', 'security', 'error']
+
+function createDefaultConfigs(): Map<string, LogConfig> {
+  const configs = new Map<string, LogConfig>()
+  for (const category of DEFAULT_CATEGORIES) {
+    configs.set(category, {
+      id: category,
+      category,
+      enabled: true,
+      level: 'info',
+      retention: 30,
+      maxSize: 10000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+  }
+  return configs
+}
+
 export class Logger {
   private db: ReturnType<typeof drizzle>
   private enabled: boolean = true
-  private configCache: Map<string, LogConfig> = new Map()
-  private lastConfigRefresh: number = 0
-  private configRefreshInterval: number = 60000 // 1 minute
+  private configs: Map<string, LogConfig>
 
   constructor(database: D1Database) {
     this.db = drizzle(database)
+    this.configs = createDefaultConfigs()
   }
 
   /**
@@ -288,50 +317,16 @@ export class Logger {
    * Get log configuration for a category
    */
   private async getConfig(category: LogCategory): Promise<LogConfig | null> {
-    try {
-      // Check cache first
-      const now = Date.now()
-      if (this.configCache.has(category) && (now - this.lastConfigRefresh) < this.configRefreshInterval) {
-        return this.configCache.get(category) || null
-      }
-
-      // Refresh config from database
-      const configs = await this.db
-        .select()
-        .from(logConfig)
-        .where(eq(logConfig.category, category))
-
-      const config = configs[0] || null
-      
-      if (config) {
-        this.configCache.set(category, config)
-        this.lastConfigRefresh = now
-      }
-
-      return config
-    } catch (error) {
-      console.error('Error getting log config:', error)
-      return null
-    }
+    return this.configs.get(category) || null
   }
 
   /**
-   * Update log configuration
+   * Update log configuration (in-memory only)
    */
   async updateConfig(category: LogCategory, updates: Partial<LogConfig>): Promise<void> {
-    try {
-      await this.db
-        .update(logConfig)
-        .set({
-          ...updates,
-          updatedAt: new Date()
-        })
-        .where(eq(logConfig.category, category))
-
-      // Clear cache for this category
-      this.configCache.delete(category)
-    } catch (error) {
-      console.error('Error updating log config:', error)
+    const existing = this.configs.get(category)
+    if (existing) {
+      this.configs.set(category, { ...existing, ...updates, updatedAt: new Date() })
     }
   }
 
@@ -339,12 +334,7 @@ export class Logger {
    * Get all log configurations
    */
   async getAllConfigs(): Promise<LogConfig[]> {
-    try {
-      return await this.db.select().from(logConfig)
-    } catch (error) {
-      console.error('Error getting log configs:', error)
-      return []
-    }
+    return Array.from(this.configs.values())
   }
 
   /**
