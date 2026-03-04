@@ -137,17 +137,6 @@ export const pluginRoutes = sqliteTable('plugin_routes', {
   createdAt: integer('created_at').notNull().$defaultFn(() => Math.floor(Date.now() / 1000)),
 });
 
-export const pluginAssets = sqliteTable('plugin_assets', {
-  id: text('id').primaryKey(),
-  pluginId: text('plugin_id').notNull().references(() => plugins.id),
-  assetType: text('asset_type').notNull(), // 'css', 'js', 'image', 'font'
-  assetPath: text('asset_path').notNull(),
-  loadOrder: integer('load_order').notNull().default(100),
-  loadLocation: text('load_location').notNull().default('footer'), // 'header', 'footer'
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-  createdAt: integer('created_at').notNull().$defaultFn(() => Math.floor(Date.now() / 1000)),
-});
-
 export const pluginActivityLog = sqliteTable('plugin_activity_log', {
   id: text('id').primaryKey(),
   pluginId: text('plugin_id').notNull().references(() => plugins.id),
@@ -218,13 +207,6 @@ export const insertPluginRouteSchema = createInsertSchema(pluginRoutes, {
 });
 
 export const selectPluginRouteSchema = createSelectSchema(pluginRoutes);
-
-export const insertPluginAssetSchema = createInsertSchema(pluginAssets, {
-  assetType: (schema: any) => schema.min(1),
-  assetPath: (schema: any) => schema.min(1),
-});
-
-export const selectPluginAssetSchema = createSelectSchema(pluginAssets);
 
 export const insertPluginActivityLogSchema = createInsertSchema(pluginActivityLog, {
   action: (schema: any) => schema.min(1),
@@ -297,8 +279,6 @@ export type PluginHook = typeof pluginHooks.$inferSelect;
 export type NewPluginHook = typeof pluginHooks.$inferInsert;
 export type PluginRoute = typeof pluginRoutes.$inferSelect;
 export type NewPluginRoute = typeof pluginRoutes.$inferInsert;
-export type PluginAsset = typeof pluginAssets.$inferSelect;
-export type NewPluginAsset = typeof pluginAssets.$inferInsert;
 export type PluginActivityLog = typeof pluginActivityLog.$inferSelect;
 export type NewPluginActivityLog = typeof pluginActivityLog.$inferInsert;
 export type SystemLog = typeof systemLogs.$inferSelect;
