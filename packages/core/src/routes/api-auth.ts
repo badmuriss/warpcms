@@ -157,4 +157,45 @@ apiAuthRoutes.openapi(getMeRoute, async (c) => {
   )
 })
 
+// --- POST /refresh ---
+
+const postRefreshRoute = createRoute({
+  method: 'post',
+  path: '/refresh',
+  tags: ['Auth'],
+  summary: 'Refresh an expiring JWT token',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      content: { 'application/json': { schema: TokenResponseSchema } },
+      description: 'New JWT token issued successfully',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Missing or invalid token',
+    },
+  },
+})
+
+apiAuthRoutes.use('/refresh', requireAuth())
+
+apiAuthRoutes.openapi(postRefreshRoute, async (c) => {
+  const jwtPayload = c.get('user') as { userId: string; email: string; role: string }
+
+  const token = await AuthManager.generateToken(
+    jwtPayload.userId,
+    jwtPayload.email,
+    jwtPayload.role
+  )
+
+  return c.json(
+    {
+      token,
+      expires_in: 86400,
+      token_type: 'Bearer' as const,
+    },
+    200
+  )
+})
+
 export { apiAuthRoutes }
