@@ -46,6 +46,35 @@ export const ContentItemSchema = z.object({
 
 export type ContentItem = z.infer<typeof ContentItemSchema>
 
+// --- Flat Content (public API shape from flattenContent) ---
+
+export const FlatContentSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  contentType: z.string(),
+  value: z.unknown(),
+  meta: z.record(z.string(), z.unknown()),
+  created_at: z.unknown(),
+  updated_at: z.unknown(),
+})
+
+export type FlatContent = z.infer<typeof FlatContentSchema>
+
+// --- Content Mutation Response (create/update shape) ---
+
+export const ContentMutationSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  contentType: z.string(),
+  data: z.unknown(),
+  created_at: z.number(),
+  updated_at: z.number(),
+})
+
+export type ContentMutation = z.infer<typeof ContentMutationSchema>
+
 // --- Server Error (allows details as string or string[]) ---
 
 export const ServerErrorSchema = z.object({

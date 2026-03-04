@@ -2,7 +2,7 @@ import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { requireAuth } from '../middleware'
 import { getCacheService, CACHE_CONFIGS } from '../services'
 import { getContentType } from '../content-types'
-import { ErrorResponseSchema, ServerErrorSchema } from '../schemas/api-schemas'
+import { ErrorResponseSchema, ServerErrorSchema, FlatContentSchema, ContentMutationSchema } from '../schemas/api-schemas'
 import type { Bindings, Variables } from '../app'
 
 /** Flatten raw content row into the public API shape with `value` + `meta` */
@@ -41,20 +41,57 @@ apiContentCrudRoutes.openAPIRegistry.registerComponent('securitySchemes', 'beare
   bearerFormat: 'JWT',
 })
 
-// GET /api/content/check-slug - Check if slug is available (globally unique)
-// Query params: slug, excludeId (optional - when editing)
-// NOTE: This MUST come before /:id route to avoid route conflict
-apiContentCrudRoutes.get('/check-slug', async (c) => {
+// --- Shared schemas ---
+
+const FlatContentResponseSchema = z.object({ data: FlatContentSchema })
+const NotFoundSchema = z.object({ error: z.string() })
+
+// --- GET /check-slug ---
+
+const CheckSlugQuerySchema = z.object({
+  slug: z.string().openapi({ description: 'Slug to check availability for' }),
+  excludeId: z.string().optional().openapi({ description: 'Content ID to exclude (for edits)' }),
+})
+
+const SlugAvailableSchema = z.object({
+  available: z.boolean(),
+  message: z.string().optional(),
+})
+
+const checkSlugRoute = createRoute({
+  method: 'get',
+  path: '/check-slug',
+  tags: ['Content'],
+  summary: 'Check Slug Availability',
+  description: 'Checks if a URL slug is available (globally unique)',
+  request: {
+    query: CheckSlugQuerySchema,
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: SlugAvailableSchema } },
+      description: 'Slug availability result',
+    },
+    400: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Missing slug parameter',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+apiContentCrudRoutes.openapi(checkSlugRoute, async (c) => {
   try {
     const db = c.env.DB
-    const slug = c.req.query('slug')
-    const excludeId = c.req.query('excludeId') // When editing, exclude current item
+    const { slug, excludeId } = c.req.valid('query')
 
     if (!slug) {
       return c.json({ error: 'slug is required' }, 400)
     }
 
-    // Check for existing content with this slug (globally unique)
     let query = 'SELECT id FROM content WHERE slug = ?'
     const params: string[] = [slug]
 
@@ -67,26 +104,53 @@ apiContentCrudRoutes.get('/check-slug', async (c) => {
 
     if (existing) {
       return c.json({
-        available: false,
-        message: 'This URL slug is already in use'
-      })
+        available: false as const,
+        message: 'This URL slug is already in use',
+      }, 200)
     }
 
-    return c.json({ available: true })
+    return c.json({ available: true as const }, 200)
   } catch (error: unknown) {
     console.error('Error checking slug:', error)
     return c.json({
       error: 'Failed to check slug availability',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
     }, 500)
   }
 })
 
-// GET /api/content/by-slug/:slug - Get single content item by slug (globally unique)
-// NOTE: This MUST come before /:id route to avoid route conflict
-apiContentCrudRoutes.get('/by-slug/:slug', async (c) => {
+// --- GET /by-slug/:slug ---
+
+const getBySlugRoute = createRoute({
+  method: 'get',
+  path: '/by-slug/{slug}',
+  tags: ['Content'],
+  summary: 'Get Content by Slug',
+  description: 'Retrieves a single content item by its URL slug',
+  request: {
+    params: z.object({
+      slug: z.string().openapi({ description: 'Content URL slug' }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: FlatContentResponseSchema } },
+      description: 'Content item',
+    },
+    404: {
+      content: { 'application/json': { schema: NotFoundSchema } },
+      description: 'Content not found',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+apiContentCrudRoutes.openapi(getBySlugRoute, async (c) => {
   try {
-    const slug = c.req.param('slug')
+    const { slug } = c.req.valid('param')
     const db = c.env.DB
 
     const cache = getCacheService(CACHE_CONFIGS.api!)
@@ -94,7 +158,7 @@ apiContentCrudRoutes.get('/by-slug/:slug', async (c) => {
 
     const cached = await cache.get(cacheKey)
     if (cached) {
-      return c.json({ data: cached })
+      return c.json({ data: cached }, 200)
     }
 
     const stmt = db.prepare('SELECT * FROM content WHERE slug = ?')
@@ -108,20 +172,48 @@ apiContentCrudRoutes.get('/by-slug/:slug', async (c) => {
 
     await cache.set(cacheKey, flatContent)
 
-    return c.json({ data: flatContent })
+    return c.json({ data: flatContent }, 200)
   } catch (error) {
     console.error('Error fetching content by slug:', error)
     return c.json({
       error: 'Failed to fetch content',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
     }, 500)
   }
 })
 
-// GET /api/content/:id - Get single content item by ID
-apiContentCrudRoutes.get('/:id', async (c) => {
+// --- GET /:id ---
+
+const getContentByIdRoute = createRoute({
+  method: 'get',
+  path: '/{id}',
+  tags: ['Content'],
+  summary: 'Get Content by ID',
+  description: 'Retrieves a single content item by its ID',
+  request: {
+    params: z.object({
+      id: z.string().openapi({ description: 'Content item ID' }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: FlatContentResponseSchema } },
+      description: 'Content item',
+    },
+    404: {
+      content: { 'application/json': { schema: NotFoundSchema } },
+      description: 'Content not found',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+apiContentCrudRoutes.openapi(getContentByIdRoute, async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const db = c.env.DB
 
     const stmt = db.prepare('SELECT * FROM content WHERE id = ?')
@@ -131,12 +223,12 @@ apiContentCrudRoutes.get('/:id', async (c) => {
       return c.json({ error: 'Content not found' }, 404)
     }
 
-    return c.json({ data: flattenContent(content) })
+    return c.json({ data: flattenContent(content) }, 200)
   } catch (error) {
     console.error('Error fetching content:', error)
     return c.json({
       error: 'Failed to fetch content',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
     }, 500)
   }
 })
@@ -151,15 +243,7 @@ const CreateContentBodySchema = z.object({
 })
 
 const CreateContentResponseSchema = z.object({
-  data: z.object({
-    id: z.string(),
-    title: z.string(),
-    slug: z.string(),
-    contentType: z.string(),
-    data: z.unknown(),
-    created_at: z.number(),
-    updated_at: z.number(),
-  }),
+  data: ContentMutationSchema,
 })
 
 const postContentRoute = createRoute({
@@ -277,12 +361,64 @@ apiContentCrudRoutes.openapi(postContentRoute, async (c) => {
   }
 })
 
-// PUT /api/content/:id - Update content (requires authentication)
-apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
+// --- PUT /:id (Update Content) ---
+
+const UpdateContentBodySchema = z.object({
+  title: z.string().optional(),
+  slug: z.string().optional(),
+  data: z.unknown().optional(),
+})
+
+const UpdateContentResponseSchema = z.object({
+  data: ContentMutationSchema,
+})
+
+const putContentRoute = createRoute({
+  method: 'put',
+  path: '/{id}',
+  tags: ['Content'],
+  summary: 'Update Content',
+  description: 'Updates an existing content item by ID',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ description: 'Content item ID' }),
+    }),
+    body: {
+      content: {
+        'application/json': { schema: UpdateContentBodySchema },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: UpdateContentResponseSchema } },
+      description: 'Content updated successfully',
+    },
+    404: {
+      content: { 'application/json': { schema: NotFoundSchema } },
+      description: 'Content not found',
+    },
+    409: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Duplicate slug',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+// Auth middleware for PUT /:id
+apiContentCrudRoutes.put('/:id', requireAuth())
+
+apiContentCrudRoutes.openapi(putContentRoute, async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const db = c.env.DB
-    const body = await c.req.json()
+    const body = c.req.valid('json')
 
     // Check if content exists
     const existingStmt = db.prepare('SELECT * FROM content WHERE id = ?')
@@ -363,7 +499,7 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
         created_at: updatedContent.created_at,
         updated_at: updatedContent.updated_at
       }
-    })
+    }, 200)
   } catch (error) {
     console.error('Error updating content:', error)
     return c.json({
@@ -373,10 +509,44 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
   }
 })
 
-// DELETE /api/content/:id - Delete content (requires authentication)
-apiContentCrudRoutes.delete('/:id', requireAuth(), async (c) => {
+// --- DELETE /:id ---
+
+const DeleteSuccessSchema = z.object({ success: z.boolean() })
+
+const deleteContentRoute = createRoute({
+  method: 'delete',
+  path: '/{id}',
+  tags: ['Content'],
+  summary: 'Delete Content',
+  description: 'Deletes a content item by ID (hard delete)',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ description: 'Content item ID' }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: DeleteSuccessSchema } },
+      description: 'Content deleted successfully',
+    },
+    404: {
+      content: { 'application/json': { schema: NotFoundSchema } },
+      description: 'Content not found',
+    },
+    500: {
+      content: { 'application/json': { schema: ServerErrorSchema } },
+      description: 'Internal server error',
+    },
+  },
+})
+
+// Auth middleware for DELETE /:id
+apiContentCrudRoutes.delete('/:id', requireAuth())
+
+apiContentCrudRoutes.openapi(deleteContentRoute, async (c) => {
   try {
-    const id = c.req.param('id')
+    const { id } = c.req.valid('param')
     const db = c.env.DB
 
     // Check if content exists
@@ -398,7 +568,7 @@ apiContentCrudRoutes.delete('/:id', requireAuth(), async (c) => {
     await cache.invalidate('content:by-slug:*')
     await cache.invalidate('content-filtered:*')
 
-    return c.json({ success: true })
+    return c.json({ success: true as const }, 200)
   } catch (error) {
     console.error('Error deleting content:', error)
     return c.json({
