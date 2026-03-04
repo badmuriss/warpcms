@@ -9,9 +9,6 @@ import type { Context } from 'hono'
 import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types'
 import {
   apiRoutes,
-  apiMediaRoutes,
-  apiSystemRoutes,
-  apiAuthRoutes,
   adminApiRoutes,
   authRoutes,
   testCleanupRoutes,
@@ -188,9 +185,6 @@ export function createWarpCMSApp(config: WarpCMSConfig = {}): WarpCMSApp {
   // Routes are being imported incrementally from routes/*
   // Each route is tested and migrated one-by-one
   app.route('/api', apiRoutes)
-  app.route('/api/auth', apiAuthRoutes)
-  app.route('/api/media', apiMediaRoutes)
-  app.route('/api/system', apiSystemRoutes)
   app.route('/admin/api', adminApiRoutes)
   app.route('/admin/dashboard', adminDashboardRoutes)
   app.route('/admin/settings', adminSettingsRoutes)
