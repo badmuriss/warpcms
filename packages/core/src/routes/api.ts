@@ -2,7 +2,7 @@ import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { Scalar } from '@scalar/hono-api-reference'
 import { cors } from 'hono/cors'
 import { schemaDefinitions } from '../schemas'
-import { getCacheService, CACHE_CONFIGS } from '../services'
+import { getCacheService, CACHE_CONFIGS, parseCacheTtl } from '../services'
 import { QueryFilterBuilder, QueryFilter } from '../utils'
 import { isPluginActive } from '../middleware'
 import apiContentCrudRoutes from './api-content-crud'
@@ -148,7 +148,7 @@ const getContentRoute = createRoute({
   },
 })
 
-// Basic content endpoint with advanced filtering
+// Basic content endpoint with advanced filtering + KV-backed cache
 apiRoutes.openapi(getContentRoute, async (c) => {
   const executionStart = Date.now()
 
@@ -200,36 +200,33 @@ apiRoutes.openapi(getContentRoute, async (c) => {
       }, 400)
     }
 
-    // Only use cache if cache plugin is active
-    const cacheEnabled = c.get('cacheEnabled')
-    const cache = getCacheService(CACHE_CONFIGS.api!)
-    const cacheKey = cache.generateKey('content-filtered', JSON.stringify({ filter, query: queryResult.sql }))
+    // KV-backed cache — works regardless of cache plugin status
+    const ttl = parseCacheTtl(c.env)
+    const cache = getCacheService({ ttl, keyPrefix: 'content' }, c.env.CACHE_KV)
+    const filterHash = JSON.stringify({ filter, query: queryResult.sql })
+    const cacheKey = `content:list:${filterHash}`
 
-    if (cacheEnabled) {
-      const cacheResult = await cache.getWithSource<any>(cacheKey)
-      if (cacheResult.hit && cacheResult.data) {
-        // Add cache headers
-        c.header('X-Cache-Status', 'HIT')
-        c.header('X-Cache-Source', cacheResult.source)
-        if (cacheResult.ttl) {
-          c.header('X-Cache-TTL', Math.floor(cacheResult.ttl).toString())
-        }
-
-        // Add cache info and timing to meta
-        const dataWithMeta = {
-          ...cacheResult.data,
-          meta: addTimingMeta(c, {
-            ...cacheResult.data.meta,
-            cache: {
-              hit: true,
-              source: cacheResult.source,
-              ttl: cacheResult.ttl ? Math.floor(cacheResult.ttl) : undefined
-            }
-          }, executionStart)
-        }
-
-        return c.json(dataWithMeta)
+    const cacheResult = await cache.getWithSource<any>(cacheKey)
+    if (cacheResult.hit && cacheResult.data) {
+      c.header('X-Cache-Status', 'HIT')
+      c.header('X-Cache-Source', cacheResult.source)
+      if (cacheResult.ttl) {
+        c.header('X-Cache-TTL', Math.floor(cacheResult.ttl).toString())
       }
+
+      const dataWithMeta = {
+        ...cacheResult.data,
+        meta: addTimingMeta(c, {
+          ...cacheResult.data.meta,
+          cache: {
+            hit: true,
+            source: cacheResult.source,
+            ttl: cacheResult.ttl ? Math.floor(cacheResult.ttl) : undefined
+          }
+        }, executionStart)
+      }
+
+      return c.json(dataWithMeta)
     }
 
     // Cache miss - fetch from database
@@ -272,10 +269,7 @@ apiRoutes.openapi(getContentRoute, async (c) => {
       }, executionStart)
     }
 
-    // Cache the response only if cache is enabled
-    if (cacheEnabled) {
-      await cache.set(cacheKey, responseData)
-    }
+    await cache.set(cacheKey, responseData)
 
     return c.json(responseData)
   } catch (error) {
