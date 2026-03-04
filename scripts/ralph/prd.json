@@ -148,8 +148,8 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Converted api-media.ts from Hono to OpenAPIHono. Added MediaItemSchema, MediaUploadResponseSchema to api-schemas.ts. Defined GET / (list media) with createRoute() including MediaListQuerySchema (folder, limit, offset) and pagination response. Defined POST /upload with createRoute() including multipart/form-data schema and bearerAuth security. Registered bearerAuth on sub-router registry. Added new GET handler with folder filtering, pagination, and total count. All existing handlers preserved with explicit status codes."
     },
     {
       "id": "US-010",
