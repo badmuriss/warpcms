@@ -15,7 +15,7 @@ WarpCMS is a TypeScript-first headless CMS built for Cloudflare Workers. Manages
 
 See [`deploy/`](./deploy/) for one-click Cloudflare Workers deployment.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/badmuriss/warpcms-deploy)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/badmuriss/warpcms/tree/main/deploy)
 
 ## Monorepo Structure
 
